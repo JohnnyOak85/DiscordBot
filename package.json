@@ -1,0 +1,20 @@
+{
+    "name": "tori-bot",
+    "version": "1.0.0",
+    "description": "A bot project to help manage my servers",
+    "main": "bot.js",
+    "author": {
+        "name": "Johnny Oak",
+        "email": "joao.mendes.carvalh@gmail.com",
+        "url": "http://johnnyoak85.github.io/"
+    },
+    "dependencies": {
+        "discord.js": "^12.1.1",
+        "fs-extra": "^9.0.0",
+        "moment": "^2.24.0",
+        "winston": "^3.2.1"
+    },
+    "scripts": {
+        "start": "node bot.js"
+    }
+}
