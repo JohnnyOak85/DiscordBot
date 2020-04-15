@@ -11,7 +11,7 @@ module.exports = {
         if (!userToUnmute) return message.reply('you need to mention a valid user!');
         else if (userToUnmute.hasPermission('MANAGE_MESSAGES') && !message.member.hasPermission('ADMINISTRATOR')) return message.reply('I cannot unmute this user!');
         
-        let mutedRole = message.guild.roles.cache.find(mR => mR.name === 'Muted');
+        const mutedRole = message.guild.roles.cache.find(role => role.name === 'Muted');
 
         if (!mutedRole || !userToUnmute.roles.cache.has(mutedRole.id)) return message.channel.send('This user is not muted!');
 
