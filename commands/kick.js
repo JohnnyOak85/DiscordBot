@@ -2,18 +2,15 @@ module.exports = {
     name: 'kick',
     description: 'Kick a member',
     execute(message, args) {
-        if (!message.member.hasPermission('KICK_MEMBERS')) return message.reply('you do not have permission to kick!');
-        const userToKick = message.mentions.members.first();
-        if (!userToKick) return message.reply('you need to mention a valid user!');
-        else if (!userToKick.kickable) return message.reply('I cannot kick this user!');
-        else if (userToKick.user.id == message.author.id) return message.reply('stop kicking yourself!');
-        else if (userToKick.hasPermission('KICK_MEMBERS') && !message.member.hasPermission('ADMINISTRATOR')) return message.reply('I cannot kick this user!');
+        if (!message.member.hasPermission('KICK_MEMBERS')) return message.reply('you do not have permission for this command!');
+        const infractor = message.mentions.members.first();
+        if (!infractor || !infractor.manageable) return message.reply('you need to mention a valid user!');
 
-        let reason = args.slice(1).join(' ');
-        if (!reason) reason = "No reason provided";
+        let reason = `Reason: ${args.slice(1).join(' ')}`;
+        if (!reason) reason = 'None provided';
 
-        // userToKick.kick(reason).catch(error => message.reply(`Sorry ${message.author} I couldn't kick because of : ${error}`));
+        // infractor.kick(reason).catch(error => message.reply(`Sorry I couldn't execute this command because of : ${error}`));
 
-        message.channel.send(`${userToKick.user.username} has been kicked! Reason: ${reason}`);
+        message.channel.send(`${infractor.user.username} has been kicked!\n${reason}`);
     }
 }

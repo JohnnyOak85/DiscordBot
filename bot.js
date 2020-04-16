@@ -1,7 +1,7 @@
-const fs = require('fs-extra');
-const moment = require('moment');
-const winston = require('winston');
 const Discord = require('discord.js');
+const fs = require('fs-extra');
+const winston = require('winston');
+const moment = require('moment');
 const { prefix, token } = require('./config.json');
 
 // Initialize Discord Bot
@@ -28,30 +28,11 @@ for (const file of commandFiles) {
 // This event will only trigger one time after logging in
 // client.on('ready', () => logger.log('info', 'The bot is now online.'));
 bot.on('ready', () => {
-    console.log('The bot is now online.');
-    const muteListUrl = './lists/muted.json';
+    const now = moment().format();
+    console.log('The bot went online at:', now);
+    const muteChecker = require('./mute-checker');
     bot.setInterval(() => {
-        if (!fs.pathExistsSync(muteListUrl)) return;
-        const mutedList = fs.readJsonSync(muteListUrl);
-        if (!Object.keys(mutedList).length) return
-        const users = Object.keys(mutedList);
-        for (const user of users) {
-            let mutedUser = mutedList[user];
-            mutedUser.id = user;
-            if (moment(mutedUser.time).isAfter(moment().format())) continue;
-
-            const guild = bot.guilds.cache.get(mutedUser.guild);
-            mutedUser = guild.members.cache.get(mutedUser.id);
-            const mutedRole = mutedUser.guild.roles.cache.find(role => role.name === 'Muted');
-
-            const channel = guild.channels.cache.find(channel => channel.name === 'general');
-            mutedUser.roles.remove(mutedRole);
-            delete mutedList[user];
-            fs.writeJsonSync(muteListUrl, mutedList);
-
-            channel.send(`${mutedUser.user.username} has been unmuted!`)
-        }
-
+        muteChecker.check(bot.guilds);
     }, 5000);
 })
 
