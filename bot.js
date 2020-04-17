@@ -26,10 +26,10 @@ for (const file of commandFiles) {
 
 // When the client is ready, run this code
 // This event will only trigger one time after logging in
-// client.on('ready', () => logger.log('info', 'The bot is now online.'));
 bot.on('ready', () => {
     const now = moment().format();
     console.log('The bot went online at:', now);
+    logger.log('info', 'The bot went online at:', now);
     const muteChecker = require('./mute-checker');
     bot.setInterval(() => {
         muteChecker.check(bot.guilds);
@@ -38,7 +38,7 @@ bot.on('ready', () => {
 
 bot.on('debug', m => logger.log('debug', m));
 bot.on('warn', m => logger.log('warn', m));
-bot.on('error', m => logger.log('error', m));
+bot.on('error', error => logger.log('error', error));
 process.on('uncaughtException', error => logger.log('error', error));
 
 // Login to Discord with your app's token
@@ -46,9 +46,6 @@ bot.login(token);
 
 // Listen to messages
 bot.on('message', message => {
-    // console.log(message.member)
-    // console.log(message.guild.roles)
-    // console.log(bot.channels);
     if (!message.content.startsWith(prefix) || message.author.bot || message.channel.type === 'dm') return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
@@ -59,20 +56,29 @@ bot.on('message', message => {
     try {
         bot.commands.get(command).execute(message, args);
     } catch (error) {
-        logger.log(error);
+        const now = moment().format();
+        logger.log(error, now);
         console.error(error);
         message.reply('there was an error trying to execute that command!');
     }
-})
-
-client.on("guildMemberAdd", function(member){
-    console.log(`a user joins a guild: ${member.tag}`);
 });
 
-client.on("messageReactionAdd", function(messageReaction, user){
+bot.on("guildMemberAdd", member => {
+    const guild = member.guild; // Reading property `guild` of guildmember object.
+    const memberTag = '<@' + member.user.id + '>'; // GuildMembers don't have a tag property, read property user of guildmember to get the user object from it
+    // Need to failsafe this in case rules channel doesn't exist.
+    const rulesChannel = bot.channels.cache.find(channel => channel.name === 'rules');
+    const channelTag = '<#' + rulesChannel.id + '>'
+    if (guild.systemChannel) { // Checking if it's not null
+        guild.systemChannel.send(`Welcome ${memberTag}! Check the ${channelTag} channel!`);
+    }
+});
+
+
+bot.on("messageReactionAdd", function (messageReaction, user) {
     console.log(`a reaction is added to a message`);
 });
 
-client.on("messageReactionRemove", function(messageReaction, user){
+bot.on("messageReactionRemove", function (messageReaction, user) {
     console.log(`a reaction is removed from a message`);
 });

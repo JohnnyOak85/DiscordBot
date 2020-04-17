@@ -9,7 +9,7 @@ module.exports = {
         let reason = `Reason: ${args.slice(1).join(' ')}`;
         if (!reason) reason = 'None provided';
 
-        // infractor.kick(reason).catch(error => message.reply(`Sorry I couldn't execute this command because of : ${error}`));
+        infractor.kick(reason).catch(error => message.reply(`Sorry I couldn't execute this command because of : ${error}`));
 
         message.channel.send(`${infractor.user.username} has been kicked!\n${reason}`);
     }
