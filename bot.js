@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const fs = require('fs-extra');
 const winston = require('winston');
 const moment = require('moment');
-const { prefix, token } = require('./config.json');
+const { prefix, token } = require('./server-lists/config.json');
 const commandHelper = require('./tasks/command-helper.js');
 
 // Initialize Discord Bot
@@ -66,7 +66,7 @@ bot.on('message', message => {
         bot.commands.get(command).execute(message, args, commandHelper);
     } catch (error) {
         const now = moment().format();
-        logger.log(error.message, now);
+        logger.log('error', `${error.message}: ${now}`);
         console.error(error);
         message.reply('there was an error trying to execute that command!');
     }
