@@ -1,26 +1,29 @@
-import { Client, Collection } from 'discord.js';
-import { readdirSync } from 'fs-extra';
-import { createLogger, format as _format, transports as _transports } from 'winston';
-import moment from 'moment';
-import { prefix, token } from './config.json';
+const Discord = require('discord.js');
+const fs = require('fs-extra');
+const winston = require('winston');
+const moment = require('moment');
+const { prefix, token } = require('./config.json');
+const commandHelper = require('./tasks/command-helper.js');
 
 // Initialize Discord Bot
-const bot = new Client();
-bot.commands = new Collection();
+const bot = new Discord.Client();
+bot.commands = new Discord.Collection();
+bot.commandHelp = new Discord.Collection();
 
 // Build a list of commands
-const commandFiles = readdirSync('./commands');
+const commandFiles = fs.readdirSync('./commands');
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
     bot.commands.set(command.name, command);
+    bot.commandHelp.set(command.name, command.description);
 }
 
 // Initialize the logger
-const logger = createLogger({
+const logger = winston.createLogger({
     level: 'info',
-    format: _format.printf(log => `[${log.level.toUpperCase()}] - ${log.message}`),
+    format: winston.format.printf(log => `[${log.level.toUpperCase()}] - ${log.message}`),
     defaultMeta: { service: 'user-service' },
-    transports: [new _transports.File({ filename: 'log' })]
+    transports: [new winston.transports.File({ filename: 'log' })]
 });
 
 // When the client is ready, run this code
@@ -39,8 +42,8 @@ bot.on('ready', () => {
 
 bot.on('debug', m => logger.log('debug', m));
 bot.on('warn', m => logger.log('warn', m));
-bot.on('error', error => logger.log('error', error));
-process.on('uncaughtException', error => logger.log('error', error));
+bot.on('error', error => logger.log('error', error.message));
+process.on('uncaughtException', error => logger.log('error', error.message));
 
 // Login to Discord with the app's token
 bot.login(token);
@@ -53,14 +56,17 @@ bot.on('message', message => {
     // Check the command that was given
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
-    if (!bot.commands.has(command)) return;
+    if (!bot.commands.has(command)) {
+        message.reply('this command isn\'t available.');
+        return
+    }
 
     // Try to execute the command
     try {
-        bot.commands.get(command).execute(message, args);
+        bot.commands.get(command).execute(message, args, commandHelper);
     } catch (error) {
         const now = moment().format();
-        logger.log(error, now);
+        logger.log(error.message, now);
         console.error(error);
         message.reply('there was an error trying to execute that command!');
     }

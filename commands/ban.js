@@ -1,20 +1,18 @@
-export const name = 'ban';
-export const description = 'Ban a member';
-export function execute(message, args) {
-    // Check if the user that issued the command has permissions
-    if (!message.member.hasPermission('BAN_MEMBERS'))
-        return message.reply('you do not have permission for this command!');
+module.exports = {
+    name: 'ban',
+    description: 'Ban a member',
+    async execute(message, args, commandHelper) {
+        let infractor;
 
-    // Get the infractor to apply the command to
-    const infractor = message.mentions.members.first();
-    if (!infractor || !infractor.manageable)
-        return message.reply('you need to mention a valid user!');
+        commandHelper.start(message, args);
 
-    // Get the reason for the command if any was given
-    let reason = args.slice(1).join(' ');
-    if (!reason) reason = '';
+        if (commandHelper.verifyUser('BAN_MEMBERS')) infractor = await commandHelper.getInfractor();
 
-    // Apply the command
-    infractor.ban(reason).catch(error => message.reply(`Sorry I couldn't execute this command because of : ${error}`));
-    message.channel.send(`${infractor.user.username} has been banned!\n${reason}`);
+        if (infractor) {
+            // infractor.ban().catch(error => { throw error });
+            commandHelper.addInfractor('banned');
+        };
+
+        message.channel.send(commandHelper.getReply());
+    }
 }
