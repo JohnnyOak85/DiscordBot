@@ -3,7 +3,7 @@ Custom made discord bot for moderation purposes
 
 ## How to start
 
-You need to create aa congifuration file first. It should be a JSON with two at least two arguments:
+You need to create a configuration file first. It should be a JSON with two at least two arguments:
 ```
 {
     "token": "",
