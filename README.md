@@ -2,7 +2,6 @@
 Custom made discord bot for moderation purposes
 
 ## How to start
-
 You need to create a configuration file first. It should be a JSON with two at least two arguments:
 ```
 {
@@ -24,14 +23,14 @@ npm start
 ```
 
 ## But what does it do?
-Assuming you're using the '!' prefix:
-!help - displays a short list of these commands
-!kick - kicks a user, you can provide a reason
-!ban - bans a user, you can provide a reason
-!mute - mutes a user, you need to provide a number from 1 to 100, otherwise it will default to 5 minutes
-!unmute - unmutes a user
-!clear - clears lines, you need to provide a number from 1 to 100
-!warn - gives a user an infraction
+Moderation functions:
+Kick, ban, temporary ban, unban, mute, temporary mute, unmute, issue a warning, remove a warning.
+
+Information function:
+List banned users, list user's infractions.
+
+Others:
+Clear lines, list commands, give information on one command.
 
 ## Author
 * **João Carvalho** - [JohnnyOak](http://johnnyoak85.github.io/)

@@ -1,8 +1,33 @@
+const { prefix } = require('../server-lists/config.json');
 module.exports = {
     name: 'help',
-    description: 'help a member',
+    description: 'Displays the list of commands.',
+    usage: '<command>',
     execute(message, args) {
-        const string = "!kick - kicks a user\n!ban - bans a user\n!mute - mutes a user, you need to provide a number from 1 to 100, otherwise it will default to 5\n!unmute - unmutes a user\n!clear - clears lines, you need to provide a number from 1 to 100\n!warn - gives a user an infraction"
-        message.channel.send(string)
+        const data = [];
+        const { commands } = message.client;
+
+        if (!args.length) {
+            data.push('List of commands:');
+            data.push(commands.map(command => command.name).join('\n'));
+            data.push(`You can send \`${prefix}help [command name]\` to get info on a specific command!`);
+
+            message.channel.send(data, { split: true });
+            return;
+        }
+
+        const name = args[0].toLowerCase();
+        const command = commands.get(name);
+
+        if (!command) {
+            return message.reply('that\'s not a valid command!');
+        }
+
+        data.push(`**Name:** ${command.name}`);
+        data.push(`**Description:** ${command.description}`);
+        data.push(`**Usage:** ${prefix}${command.name} ${command.usage}`);
+
+
+        message.channel.send(data, { split: true });
     }
 }

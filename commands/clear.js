@@ -1,6 +1,7 @@
 module.exports = {
     name: 'clear',
-    description: 'Clear lines',
+    description: 'Clear a set amount of lines from 1 to 100.',
+    usage: '<number of lines>',
     execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('MANAGE_MESSAGES')) {

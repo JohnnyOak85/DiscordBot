@@ -1,9 +1,9 @@
 module.exports = {
     name: 'listbans',
-    description: 'Ban a member',
+    description: 'Lists all the users that have been banned.',
+    usage: ' ',
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-
         if (commandHelper.verifyUser('BAN_MEMBERS')) {
             const bannedList = await commandHelper.fetchBans();
             if (bannedList) {
@@ -16,7 +16,6 @@ module.exports = {
                 commandHelper.setReply(message);
             }
         }
-
         message.channel.send(commandHelper.getReply());
     }
 }

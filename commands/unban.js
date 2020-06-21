@@ -1,12 +1,13 @@
 const fs = module.require("fs-extra");
 module.exports = {
     name: 'unban',
-    description: 'Unban a member',
+    description: `Unban a user.`,
+    usage: '<user>',
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('BAN_MEMBERS')) {
             commandHelper.setReply('You need to mention a valid user!');
-            const bannedList = await fetchBans();
+            const bannedList = await commandHelper.fetchBans();
             if (bannedList) {
                 const infractor = bannedList.array().find(i => i.user.username.includes(args[0]));
                 if (infractor) {

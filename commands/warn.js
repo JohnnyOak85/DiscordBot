@@ -1,35 +1,33 @@
-const fs = module.require('fs-extra');
-const infractorDoc = './lists/warnings.json';
-
+const LIST_NAME = 'warned';
 module.exports = {
     name: 'warn',
-    description: 'Gives an infraction to a user',
+    description: 'Gives an infraction to a user. User will be muted after 3 infractions and banned after 5.',
+    usage: '<user> <reason>',
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-
-        let infractor;
-        if (commandHelper.verifyUser('MANAGE_MESSAGES')) infractor = await commandHelper.getInfractor();
-
-        if (infractor) {
-            await commandHelper.addInfractor('warned');
-            await commandHelper.setInfractions('warned', commandHelper.getReason());
-        };
-
+        if (commandHelper.verifyUser('MANAGE_MESSAGES')) {
+            const infractor = await commandHelper.getInfractor();
+            if (infractor) {
+                await commandHelper.addInfractor(LIST_NAME);
+                await commandHelper.addInfractions(LIST_NAME, commandHelper.getReason());
+                checkWarnings(infractor, commandHelper, message);
+            };
+        }
         message.channel.send(commandHelper.getReply());
-
-
-        
-
-        // // Apply the command
-        // infractorList[infractor.id].infractions++;
-        // fs.writeJsonSync(infractorDoc, infractorList);
-        // const infractions = infractorList[infractor.id].infractions;
-        // message.channel.send(`${infractor.user.username} has been warned!\n${reason}\nInfractions: ${infractions}`);
-
-        // Check if infractor is a repeated offender
-        // if (infractions > 4)
-        //     return message.channel.send(`${infractor.user.username} has been banned! Reason: repeated offender!... But not really`);
-        // else if (infractions > 2)
-        //     return message.channel.send(`${infractor.user.username} has been muted for 5 minutes!... But not really`);
     }
+}
+
+async function checkWarnings(infractor, commandHelper, message) {
+    const list = await commandHelper.getList(LIST_NAME);
+    const warnList = list[infractor.user.id].infractions.length;
+    if (warnList > 4) {
+        await infractor.ban(commandHelper.getReason()).catch(error => { throw error });
+        await commandHelper.addInfractor('banned');
+        await commandHelper.startTimer('banned', 1, 'days');
+    } else if (warnList > 2) {
+        const role = await commandHelper.ensureRole('muted').catch(err => { throw err; });
+        await commandHelper.addRole(role);
+        await commandHelper.startTimer('muted', 30, 'minutes');
+    }
+    message.channel.send(commandHelper.getReply());
 }

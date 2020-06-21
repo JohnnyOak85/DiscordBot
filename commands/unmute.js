@@ -1,6 +1,7 @@
 module.exports = {
     name: 'unmute',
-    description: 'Unmute a member',
+    description: 'Unmute a user.',
+    usage: '<user>',
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('MANAGE_MESSAGES')) {

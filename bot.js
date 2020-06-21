@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const winston = require('winston');
 const moment = require('moment');
 const { prefix, token } = require('./server-lists/config.json');
-const commandHelper = require('./tasks/command-helper.js');
+const commandHelper = require('./helpers/command-helper.js');
 
 // Initialize Discord Bot
 const bot = new Discord.Client();

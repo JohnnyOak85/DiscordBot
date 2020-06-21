@@ -1,6 +1,7 @@
 module.exports = {
     name: 'infractions',
-    description: 'Returns how many infractions a user has',
+    description: 'Lists all the infractions of a user.',
+    usage: '<user>',
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
 
@@ -9,17 +10,19 @@ module.exports = {
             let message = `I have no record of any warned users.`;
             if (warnedList) {
                 message = '';
-                console.log(warnedList)
-                Object.values(warnedList).forEach(i => {
-                    console.log(i);
-                    let reason = 'No reason provided';
-                    if (i.infractions) reason = i.infractions;
-                    message += `<@!${i.id}> ${reason}\n`
+                Object.values(warnedList).forEach(member => {
+                    message += `<@!${member.id}>\n`
+                    if (member.infractions) {
+                        member.infractions.forEach(infraction => {
+                            let reason = 'No reason provided';
+                            if (infraction != '') reason = infraction;
+                            message += `- ${reason}\n`
+                        })
+                    }
                 })
                 commandHelper.setReply(message);
             }
         }
-
         message.channel.send(commandHelper.getReply());
     }
 }

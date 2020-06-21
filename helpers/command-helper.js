@@ -5,11 +5,10 @@ const CHANNEL_LIST_URL = `./server-lists/channels.json`;
 let user;
 let infractor;
 let guild;
-let reply = '';
+let reply;
 let reason;
-let time;
 
-function updateList(listName, list) {
+async function updateList(listName, list) {
   const listUrl = `./user-lists/${listName}.json`;
   fs.writeJsonSync(listUrl, list);
 }
@@ -20,13 +19,7 @@ module.exports = {
     infractor = message.mentions.members.first();
     guild = message.guild;
     reason = args.slice(1).join(' ');
-    time = this.getNumber(args[1]);
-  },
-  getNumber(num) {
-    num = parseInt(num);
-    if (!num || num < 1 || num > 100 || isNaN(num))
-      return;
-    return num;
+    reply = '';
   },
   verifyUser(permission) {
     // Check if the user that issued the command has permissions
@@ -35,17 +28,6 @@ module.exports = {
       return;
     }
     return true;
-  },
-  getInfractor() {
-    if (!infractor || !infractor.manageable) {
-      reply = 'You need to mention a valid user!';
-      return;
-    }
-    return infractor;
-  },
-  getReason() {
-    if (!reason) reason = '';
-    return reason;
   },
   async addInfractor(listName) {
     const list = await this.getList(listName);
@@ -56,7 +38,7 @@ module.exports = {
         guild: guild.id,
         reason: this.getReason()
       };
-      updateList(listName, list);
+      await updateList(listName, list);
     }
     reply = `${infractor.user.username} has been ${listName} ${this.getReason()}`;
   },
@@ -64,13 +46,8 @@ module.exports = {
     const list = await this.getList(listName);
     if (!list[infractor.id]) return;
     delete list[infractor.id];
-    updateList(listName, list);
+    await updateList(listName, list);
     reply = `${infractor.user.username} is no longer ${listName}`
-  },
-  async getList(listName) {
-    const listUrl = `./user-lists/${listName}.json`;
-    if (!fs.pathExistsSync(listUrl)) fs.outputFileSync(listUrl, "{}");
-    return fs.readJsonSync(listUrl);
   },
   async ensureRole(roleName) {
     // Get the role information from the file
@@ -104,7 +81,6 @@ module.exports = {
     }
     await infractor.roles.add(role);
     await this.addInfractor(roleName);
-    return true;
   },
   async removeRole(role) {
     const roleName = role.name.toLowerCase();
@@ -117,11 +93,6 @@ module.exports = {
     await this.removeInfractor(roleName)
     return true;
   },
-  async setTimer(listName, timeValue) {
-    const list = this.getList(listName);
-    if (time) list[infractor.id].time = moment().add(time, timeValue).format();
-    updateList(listName, list);
-  },
   async fetchBans() {
     return guild.fetchBans()
       .then(banned => {
@@ -132,18 +103,63 @@ module.exports = {
         return banned;
       })
   },
-  async setInfractions(listName, infraction) {
+  async addInfractions(listName, infraction) {
     const list = await this.getList(listName);
-    if (!list[infractor.id].infractions) {
+    if (!list[infractor.id] && !list[infractor.id].infractions) {
       list[infractor.id].infractions = [];
     }
     list[infractor.user.id].infractions.push(infraction);
-    updateList(listName, list);
+    delete list[infractor.user.id].reason;
+    await updateList(listName, list);
+  },
+  async removeInfraction(listName) {
+    const list = await this.getList(listName);
+    if (!list[infractor.id] && !list[infractor.id].infractions) {
+      reply = 'This user has no previous infractions.';
+      return;
+    }
+    list[infractor.id].infractions.shift();
+    await updateList(listName, list);
+    reply = `An infraction was removed from ${infractor.user.username}`;
+  },
+  async startTimer(listName, num, timeValue) {
+    const list = await this.getList(listName);
+    const time = this.getNumber(num);
+    if (time) {
+      list[infractor.id].time = moment().add(time, timeValue).format();
+      reply = reply + ` for ${time} ${timeValue}`;
+    }
+    await updateList(listName, list);
   },
   setReply(message) {
     reply = message;
   },
   getReply() {
     return reply;
-  }
+  },
+  getNumber(num) {
+    num = parseInt(num);
+    if (!num || num < 1 || num > 100 || isNaN(num))
+      return;
+    return num;
+  },
+  getInfractor() {
+    if (!infractor || !infractor.manageable) {
+      reply = 'You need to mention a valid user!';
+      return;
+    }
+    return infractor;
+  },
+  getReason() {
+    if (!reason) reason = '';
+    return reason;
+  },
+  setReason(string) {
+    reason = string;
+  },
+  async getList(listName) {
+    const listUrl = `./user-lists/${listName}.json`;
+    if (!fs.pathExistsSync(listUrl)) fs.outputFileSync(listUrl, "{}");
+    return fs.readJsonSync(listUrl);
+  },
 }

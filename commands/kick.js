@@ -1,6 +1,7 @@
 module.exports = {
     name: 'kick',
-    description: 'Kick a member',
+    description: 'Kick a user.',
+    usage: '<user> <reason>',
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('KICK_MEMBERS')) {
