@@ -8,7 +8,7 @@ module.exports = {
             const infractor = await commandHelper.getInfractor();
             if (infractor) {
                 await infractor.kick(commandHelper.getReason()).catch(error => { throw error });
-                commandHelper.setReply(`${infractor.user.username} has been kicked for ${commandHelper.getReason()}`)
+                commandHelper.setReply(`${infractor.user.username} has been kicked. ${commandHelper.getReason()}`)
             };
         }
         message.channel.send(commandHelper.getReply());

@@ -1,4 +1,3 @@
-const LIST_NAME = 'warned';
 module.exports = {
     name: 'warn',
     description: 'Gives an infraction to a user. User will be muted after 3 infractions and banned after 5.',
@@ -8,8 +7,8 @@ module.exports = {
         if (commandHelper.verifyUser('MANAGE_MESSAGES')) {
             const infractor = await commandHelper.getInfractor();
             if (infractor) {
-                await commandHelper.addInfractor(LIST_NAME);
-                await commandHelper.addInfractions(LIST_NAME, commandHelper.getReason());
+                await commandHelper.addInfractor('warned');
+                await commandHelper.addInfraction('warned', commandHelper.getReason());
                 checkWarnings(infractor, commandHelper, message);
             };
         }
@@ -18,7 +17,7 @@ module.exports = {
 }
 
 async function checkWarnings(infractor, commandHelper, message) {
-    const list = await commandHelper.getList(LIST_NAME);
+    const list = await commandHelper.getList('warned');
     const warnList = list[infractor.user.id].infractions.length;
     if (warnList > 4) {
         await infractor.ban(commandHelper.getReason()).catch(error => { throw error });
@@ -27,6 +26,7 @@ async function checkWarnings(infractor, commandHelper, message) {
     } else if (warnList > 2) {
         const role = await commandHelper.ensureRole('muted').catch(err => { throw err; });
         await commandHelper.addRole(role);
+        await commandHelper.addInfractor('muted');
         await commandHelper.startTimer('muted', 30, 'minutes');
     }
     message.channel.send(commandHelper.getReply());

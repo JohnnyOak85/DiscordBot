@@ -34,10 +34,16 @@ bot.on('ready', () => {
     logger.log('info', `The bot went online at: ${now}`);
 
     // Start the automated tasks
-    const muteChecker = require('./tasks/mute-checker');
+    const taskHelper = require('./helpers/task-helper');
+    const day = 1000 * 60 * 60 * 24;
+    
     bot.setInterval(() => {
-        muteChecker.check(bot.guilds);
+        taskHelper.check(bot.guilds, 'Muted');
+        taskHelper.check(bot.guilds, 'Banned');
     }, 5000);
+    bot.setInterval(() => {
+        taskHelper.prune(bot.guilds);
+    }, day);
 })
 
 bot.on('debug', m => logger.log('debug', m));

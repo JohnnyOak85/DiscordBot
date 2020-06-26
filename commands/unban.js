@@ -1,4 +1,3 @@
-const fs = module.require("fs-extra");
 module.exports = {
     name: 'unban',
     description: `Unban a user.`,
@@ -11,6 +10,8 @@ module.exports = {
             if (bannedList) {
                 const infractor = bannedList.array().find(i => i.user.username.includes(args[0]));
                 if (infractor) {
+                    commandHelper.setInfractor(infractor.user);
+                    const guild = commandHelper.getGuild();
                     await guild.members.unban(infractor.user.id).catch(error => { throw error });
                     commandHelper.removeInfractor('banned');
                 }

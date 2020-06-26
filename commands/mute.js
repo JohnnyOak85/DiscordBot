@@ -8,7 +8,8 @@ module.exports = {
             const infractor = await commandHelper.getInfractor();
             if (infractor) {
                 const role = await commandHelper.ensureRole('muted').catch(err => { throw err; });
-                await commandHelper.addRole(role)
+                await commandHelper.addRole(role);
+                await commandHelper.addInfractor('muted');
                 await commandHelper.startTimer('muted', args[1], 'minutes');
             };
         }
