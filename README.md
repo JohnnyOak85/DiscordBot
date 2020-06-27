@@ -2,15 +2,19 @@
 Custom made discord bot for moderation purposes
 
 ## How to start
-You need to create a configuration file first. It should be a JSON with two at least two arguments:
+You need to create a configuration file first. It should be a JSON with the following arguments:
 ```
 {
-    "token": "",
-    "prefix": ""
+    "TOKEN": "",
+    "PREFIX": "",
+    "MAX_INFRACTIONS": "",
+    "RULES": []
 }
 ```
 The token should be your bot token from [Discord developers](https://discordapp.com/developers/applications/).
 The prefix can be whatever you feel like, I normally use '!'.
+The max infractions is the number of times a user can be warned before being banned.
+The rules is your own list of rules.
 
 This will install all the dependencies needed:
 ```
@@ -23,14 +27,21 @@ npm start
 ```
 
 ## But what does it do?
-Moderation functions:
-Kick, ban, temporary ban, unban, mute, temporary mute, unmute, issue a warning, remove a warning.
+**Commands**  
 
-Information function:
-List banned users, list user's infractions.
+* Moderation:  
+Kick, ban, temporary ban, remove ban, mute, temporary mute, remove mute, issue a warning, remove a warning.
 
-Others:
-Clear lines, list commands, give information on one command.
+* Information:  
+List banned users, list all users with infractions, list a user's infractions.
+
+* Others:  
+Clear lines, list commands, give information on one command, give the moderator role to a user, list all rules.
+
+**Automated Tasks**  
+
+* Moderation:
+Mute after a certain amount of infractions, ban after a certain amount of infractions, remove a temporary ban, remove a temporary mute, rename offensive usernames, delete messages with offensive words, delete messages with pornographic websites, bar bots, delete repeated messages, delete messages with too many mentions.
 
 ## Author
 * **João Carvalho** - [JohnnyOak](http://johnnyoak85.github.io/)

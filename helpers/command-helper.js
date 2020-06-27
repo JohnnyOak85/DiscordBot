@@ -139,7 +139,7 @@ async function ensureRole(roleName) {
 async function addRole(role) {
   const roleName = role.name.toLowerCase();
   if (infractor.roles.cache.has(role.id)) {
-    await this.addInfractor(roleName);
+    await addInfractor(roleName);
     reply = `${infractor.user.username} already has the ${roleName} role.`;
     return;
   }
