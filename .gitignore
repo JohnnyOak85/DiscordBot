@@ -1,7 +1,4 @@
 node_modules
-config.json
-log
-server-lists
+logs
+docs
 user-lists
-pseudocode
-notes

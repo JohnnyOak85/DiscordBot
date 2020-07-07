@@ -1,6 +1,6 @@
 const fs = module.require("fs-extra");
 const moment = require('moment');
-const ROLES_LIST = `./server-lists/roles.json`;
+const { ROLES_LIST } = require(`../docs/config.json`);
 
 let user;
 let infractor;
@@ -39,10 +39,14 @@ function verifyUser(permission) {
 }
 
 // Infractions Group
+
 function getInfractor() {
-  if (!infractor || !infractor.manageable) {
+  if (!infractor) {
     reply = 'You need to mention a valid user!';
     return;
+  }
+  if (!infractor.manageable) {
+    reply = 'You cannot moderate this user.';
   }
   return infractor;
 }
@@ -51,75 +55,36 @@ function setInfractor(user) {
   infractor = user;
 }
 
-async function addInfractor(listName) {
-  const list = await this.getList(listName);
-  if (!list[infractor.id]) {
-    list[infractor.id] = {
-      id: infractor.user.id,
-      name: infractor.user.username,
-      guild: guild.id,
-      reason: this.getReason()
-    };
-    await updateList(listName, list);
+async function unban(infractor) {
+  const list = await getList();
+  await guild.members.unban(infractor.user.id).catch(error => { throw error });
+  if (!list[infractor.id]) list[infractor.id] = { username: infractor.user.username };
+  if (list[infractor.id].banned) list[infractor.id].banned = false;
+  if (!list[infractor.id].strikes) {
+    list[infractor.id].strikes = [];
+    list[infractor.id].strikes.push('Banned!');
   }
-  reply = `${infractor.user.username} has been ${listName} ${this.getReason()}`;
 }
 
-async function removeInfractor(listName) {
-  const list = await this.getList(listName);
-  if (!list[infractor.id]) return;
-  delete list[infractor.id];
-  await updateList(listName, list);
-  reply = `${infractor.user.username} is no longer ${listName}`;
-}
-
-async function addInfraction(listName, infraction) {
-  const list = await this.getList(listName);
-  if (!list[infractor.id] || !list[infractor.id].infractions) {
-    list[infractor.id].infractions = [];
-  }
-  list[infractor.user.id].infractions.push(infraction);
-  delete list[infractor.user.id].reason;
-  await updateList(listName, list);
-}
-
-async function removeInfraction(listName) {
-  const list = await this.getList(listName);
-  if (!list[infractor.id] && !list[infractor.id].infractions) {
-    reply = 'This user has no previous infractions.';
+async function removeStrike() {
+  const list = await getList();
+  if (!list[infractor.id] || !list[infractor.id].strikes) {
+    setReply('This user has no previous strikes.');
     return;
   }
-  list[infractor.id].infractions.shift();
-  await updateList(listName, list);
-  reply = `An infraction was removed from ${infractor.user.username}`;
-}
-
-async function startTimer(listName, num, timeValue) {
-  const list = await this.getList(listName);
-  const time = this.getNumber(num);
-  reply = reply.replace(num, '');
-  if (time) {
-    list[infractor.id].time = moment().add(time, timeValue).format();
-    reply = reply + ` for ${time} ${timeValue}`;
-  }
-  await updateList(listName, list);
-}
-
-async function updateList(listName, list) {
-  const listUrl = `./user-lists/${listName}.json`;
-  fs.writeJsonSync(listUrl, list);
+  list[infractor.id].strikes.shift();
+  setReply(`An infraction was removed from ${infractor.user.username}`);
+  await saveList(list);
 }
 
 // Roles Group
 
 async function ensureRole(roleName) {
-  // Get the role information from the file
-  const role = fs.readJsonSync(ROLES_LIST)[roleName];
+  const role = ROLES_LIST[roleName];
 
   let guildRole = guild.roles.cache.find(mR => mR.name === role.name);
 
   if (!guildRole) {
-    // Create the role
     guildRole = await guild.roles.create({
       data: {
         name: role.name,
@@ -137,42 +102,65 @@ async function ensureRole(roleName) {
 }
 
 async function addRole(role) {
+  const list = getList();
   const roleName = role.name.toLowerCase();
   if (infractor.roles.cache.has(role.id)) {
-    await addInfractor(roleName);
-    reply = `${infractor.user.username} already has the ${roleName} role.`;
+    setReply(`${infractor.user.username} already has the ${roleName} role.`);
     return;
   }
   await infractor.roles.add(role).catch(err => { throw err; });
-  reply = `${infractor.user.username} now has the ${roleName} role.`
+  if (!list[infractor.id]) list[infractor.id] = { username: infractor.user.username };
+  list[infractor.id].roles.push(role.id);
+  await saveList(list);
+  setReply(`${infractor.user.username} now has the ${roleName} role.`);
 }
 
 async function removeRole(role) {
+  const list = getList();
   const roleName = role.name.toLowerCase();
   if (!infractor.roles.cache.has(role.id)) {
-    await this.removeInfractor(roleName)
-    reply = (`This user does not have the ${roleName} role.`);
+    setReply(`This user does not have the ${roleName} role.`);
     return;
   }
-  await infractor.roles.remove(role);
-  reply = `${infractor.user.username} is no longer ${roleName}`;
-  await this.removeInfractor(roleName);
-  return true;
+  await infractor.roles.remove(role).catch(err => { throw err; });
+
+  const index = list[infractor.id].roles.indexOf(role.id);
+  if (index > -1) {
+    list[infractor.id].roles.splice(index, 1);
+  }
+
+  await saveList(list);
+  setReply(`${infractor.user.username} is no longer ${roleName}`);
 }
 
 // Lists Group
 
-async function getList(listName) {
-  const listUrl = `./user-lists/${listName}.json`;
-  if (!fs.pathExistsSync(listUrl)) fs.outputFileSync(listUrl, "{}");
-  return fs.readJsonSync(listUrl);
+async function getList() {
+  const list = fs.readJsonSync(`./docs/guilds/guild_${guild.id}.json`);
+  return list.members;
+}
+
+async function updateList() {
+  const list = await getList();
+
+  if (!list[infractor.id]) list[infractor.id] = { username: infractor.user.username };
+  if (!list[infractor.id].strikes) list[infractor.id].strikes = [];
+
+  let reason = getReason();
+  if (reason === '' || reason === ' ') reason = 'No reason provided.'
+  list[infractor.id].strikes.push(reason);
+  return list;
+};
+
+async function saveList(list) {
+  fs.writeJsonSync(`./docs/guilds/guild_${guild.id}.json`, list);
 }
 
 async function fetchBans() {
   return guild.fetchBans()
     .then(banned => {
       if (!banned.array().length) {
-        reply = `I have no record of any banned users.`;
+        setReply(`I have no record of any banned users.`)
         return;
       };
       return banned;
@@ -207,6 +195,18 @@ function getNumber(num) {
   return num;
 }
 
+async function startTimer(list, num, timeValue) {
+  const time = this.getNumber(num);
+  setReply(getReply().replace(num, ''));
+
+  if (time) {
+    list[infractor.id].timer = moment().add(time, timeValue).format();
+    setReply(`${getReply()} for ${time} ${timeValue}`);
+  }
+
+  return list;
+}
+
 // Guild Group
 
 function getGuild() {
@@ -216,10 +216,7 @@ function getGuild() {
 module.exports = {
   start: start,
   verifyUser: verifyUser,
-  addInfractor: addInfractor,
-  addInfraction: addInfraction,
-  removeInfractor: removeInfractor,
-  removeInfraction: removeInfraction,
+  removeStrike: removeStrike,
   ensureRole: ensureRole,
   addRole: addRole,
   removeRole: removeRole,
@@ -233,5 +230,7 @@ module.exports = {
   setReason: setReason,
   getList: getList,
   getGuild: getGuild,
-  fetchBans: fetchBans
+  fetchBans: fetchBans,
+  updateList: updateList,
+  unban: unban
 }

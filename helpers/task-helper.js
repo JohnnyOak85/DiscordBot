@@ -1,17 +1,42 @@
 const moment = require('moment');
 const fs = module.require('fs-extra');
 
-const { BANNED_WORDS } = require('../server-lists/banned-words.json');
-const { BANNED_SITES } = require('../server-lists/banned-sites.json');
+const { BANNED_WORDS } = require('../docs/banned-words.json');
+const { BANNED_SITES } = require('../docs/banned-sites.json');
+const { ROLES_LIST } = require(`../docs/config.json`);
 
 async function prune(guilds) {
     for (const guild of guilds.cache) {
-        guild.members.prune({ days: 30 })
+        await guild[1].members.prune({ days: 30 })
             .then(pruned => {
-                const channel = guild.channels.cache.find(c => c.name === 'general');
+                const channel = guild[1].channels.cache.find(c => c.name === 'general');
                 channel.send(`${pruned} users have been pruned due to inactivity!`);
             })
             .catch(err => { throw err });
+    }
+}
+
+async function promoteBot(bot) {
+    const roleSchema = fs.readJsonSync(ROLES_LIST)['bot'];
+
+    for (const guild of bot.guilds.cache) {
+        let role = guild[1].roles.cache.find(r => r.name === roleSchema.name);
+        if (!role) {
+            role = await guild.roles.create({
+                data: {
+                    name: roleSchema.name,
+                    permissions: roleSchema.activePermissions
+                }
+            }).catch(err => { throw err; });
+
+            guild.channels.cache.forEach(async (channel) => {
+                await channel.updateOverwrite(role, roleSchema.inactivePermissions)
+                    .catch(err => { throw err; })
+            });
+        }
+        const botUser = guild[1].members.cache.find(u => u.user.id === bot.user.id);
+        if (botUser.roles.cache.has(role.id)) return;
+        await botUser.roles.add(role).catch(err => { throw err; });
     }
 }
 
@@ -74,7 +99,7 @@ function triage(member) {
         return;
     }
 
-    checkUsername(member)
+    checkUsername(member);
 
     if (guild.systemChannel) {
         guild.systemChannel.send(`Welcome ${memberTag}! Check the rules by using the !rules command.`);
@@ -82,9 +107,16 @@ function triage(member) {
 }
 
 function checkUsername(member) {
-    if (BANNED_WORDS.some(str => member.nickname.toLowerCase().includes(str)) ||
-        BANNED_SITES.some(str => member.nickname.toLowerCase().includes(str))) {
-        member.setNickname('Class Clown')
+    let name = '';
+    if (member.nickname) {
+        name = member.nickname;
+    }
+    else if (member.user.username) {
+        name = member.user.username;
+    }
+    if (BANNED_WORDS.some(word => name.toLowerCase().includes(word)) ||
+        BANNED_SITES.some(site => name.toLowerCase().includes(site))) {
+        member.setNickname('Princess Twinkletoes')
     };
 }
 
@@ -93,5 +125,6 @@ module.exports = {
     prune: prune,
     logError: logError,
     triage: triage,
-    checkUsername: checkUsername
+    checkUsername: checkUsername,
+    promoteBot: promoteBot
 }

@@ -1,5 +1,5 @@
-const { BANNED_WORDS } = require('../server-lists/banned-words.json');
-const { BANNED_SITES } = require('../server-lists/banned-sites.json');
+const { BANNED_WORDS } = require('../docs/banned-words.json');
+const { BANNED_SITES } = require('../docs/banned-sites.json');
 let previousMessage = {};
 
 function isSafe(message) {

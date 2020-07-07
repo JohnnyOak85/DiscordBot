@@ -1,5 +1,5 @@
 module.exports = {
-    name: 'listbans',
+    name: 'banned',
     description: 'Lists all the users that have been banned.',
     usage: ' ',
     async execute(message, args, commandHelper) {
@@ -11,7 +11,7 @@ module.exports = {
                 bannedList.array().forEach(i => {
                     let reason = 'No reason provided';
                     if (i.reason) reason = i.reason;
-                    message += `<@!${i.user.id}> ${reason}\n`
+                    message += `${i.user.username}: ${reason}\n`
                 })
                 commandHelper.setReply(message);
             }

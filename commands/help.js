@@ -3,7 +3,7 @@ module.exports = {
     description: 'Displays the list of commands. It can also display information on a given command.',
     usage: '<command>',
     execute(message, args, commandHelper) {
-        const { PREFIX } = require('../server-lists/config.json');
+        const { PREFIX } = require('../docs/config.json');
         const { commands } = message.client;
         const data = [];
 

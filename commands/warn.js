@@ -1,33 +1,34 @@
-const { MAX_INFRACTIONS } = require('../server-lists/config.json');
+const { MAX_STRIKES } = require('../docs/config.json');
 module.exports = {
     name: 'warn',
-    description: 'Gives an infraction to a user. User will be muted after 3 infractions and banned after 5.',
+    description: `Mention a user and give it a strike. User will be muted after ${(MAX_STRIKES / 2)} strikes and banned after ${MAX_STRIKES}.`,
     usage: '<user> <reason>',
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('MANAGE_MESSAGES')) {
             const infractor = await commandHelper.getInfractor();
             if (infractor) {
-                await commandHelper.addInfractor('warned');
-                await commandHelper.addInfraction('warned', commandHelper.getReason());
-                checkWarnings(infractor, commandHelper, message);
+                const list = await commandHelper.updateList();
+
+                const warnNum = list[infractor.user.id].strikes.length;
+                if (warnNum === MAX_STRIKES) {
+                    await infractor.ban(commandHelper.getReason()).catch(error => { throw error });
+                    list[infractor.id].banned = true;
+
+                    commandHelper.setReply(`${infractor.user.username} has been banned. ${commandHelper.getReason()}`);
+                    commandHelper.setReason(`Banned! ${commandHelper.getReason()}`);
+                } else if (warnNum === (MAX_STRIKES / 2)) {
+                    const role = await commandHelper.ensureRole('muted').catch(err => { throw err; });
+                    await commandHelper.addRole(role);
+                    list[infractor.id].muted = true;
+
+                    commandHelper.setReply(`${infractor.user.username} has been muted. ${commandHelper.getReason()}`);
+                    commandHelper.setReason(`Muted! ${commandHelper.getReason()}`);
+                }
+
+                await commandHelper.saveList(list);
             };
         }
+        message.channel.send(commandHelper.getReply());
     }
-}
-
-async function checkWarnings(infractor, commandHelper, message) {
-    const list = await commandHelper.getList('warned');
-    const warnNum = list[infractor.user.id].infractions.length;
-    if (warnNum === MAX_INFRACTIONS) {
-        await infractor.ban(commandHelper.getReason()).catch(error => { throw error });
-        await commandHelper.addInfractor('banned');
-        await commandHelper.startTimer('banned', 1, 'days');
-    } else if (warnNum === (MAX_INFRACTIONS / 2)) {
-        const role = await commandHelper.ensureRole('muted').catch(err => { throw err; });
-        await commandHelper.addRole(role);
-        await commandHelper.addInfractor('muted');
-        await commandHelper.startTimer('muted', 30, 'minutes');
-    }
-    message.channel.send(commandHelper.getReply());
 }

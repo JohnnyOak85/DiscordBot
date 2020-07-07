@@ -7,13 +7,13 @@ You need to create a configuration file first. It should be a JSON with the foll
 {
     "TOKEN": "",
     "PREFIX": "",
-    "MAX_INFRACTIONS": "",
+    "MAX_STRIKES": "",
     "RULES": []
 }
 ```
 The token should be your bot token from [Discord developers](https://discordapp.com/developers/applications/).
 The prefix can be whatever you feel like, I normally use '!'.
-The max infractions is the number of times a user can be warned before being banned.
+The max strikes is the number of times a user can be warned before being banned.
 The rules is your own list of rules.
 
 This will install all the dependencies needed:
@@ -33,7 +33,7 @@ npm start
 Kick, ban, temporary ban, remove ban, mute, temporary mute, remove mute, issue a warning, remove a warning.
 
 * Information:  
-List banned users, list all users with infractions, list a user's infractions.
+List banned users, list all users with strikes, list a user's strikes.
 
 * Others:  
 Clear lines, list commands, give information on one command, give the moderator role to a user, list all rules.
@@ -41,7 +41,7 @@ Clear lines, list commands, give information on one command, give the moderator 
 **Automated Tasks**  
 
 * Moderation:
-Mute after a certain amount of infractions, ban after a certain amount of infractions, remove a temporary ban, remove a temporary mute, rename offensive usernames, delete messages with offensive words, delete messages with pornographic websites, bar bots, delete repeated messages, delete messages with too many mentions.
+Mute after a certain amount of strikes, ban after a certain amount of strikes, remove a temporary ban, remove a temporary mute, rename offensive usernames, delete messages with offensive words, delete messages with pornographic websites, bar bots, delete repeated messages, delete messages with too many mentions.
 
 ## Author
 * **João Carvalho** - [JohnnyOak](http://johnnyoak85.github.io/)

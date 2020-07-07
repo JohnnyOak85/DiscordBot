@@ -1,6 +1,6 @@
 module.exports = {
     name: 'kick',
-    description: 'Kick a user.',
+    description: 'Mention a user and that user gets removed from the server.',
     usage: '<user> <reason>',
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
@@ -8,7 +8,12 @@ module.exports = {
             const infractor = await commandHelper.getInfractor();
             if (infractor) {
                 await infractor.kick(commandHelper.getReason()).catch(error => { throw error });
-                commandHelper.setReply(`${infractor.user.username} has been kicked. ${commandHelper.getReason()}`)
+
+                commandHelper.setReply(`${infractor.user.username} has been kicked. ${commandHelper.getReason()}`);
+                commandHelper.setReason(`Kicked! ${commandHelper.getReason()}`);
+
+                const list = await commandHelper.updateList();
+                await commandHelper.saveList(list);
             };
         }
         message.channel.send(commandHelper.getReply());
