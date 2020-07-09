@@ -17,17 +17,18 @@ module.exports = {
                     list[infractor.id].banned = true;
                     delete list[infractor.id].roles;
 
-                    commandHelper.setReply(`${infractor.user.username} has been banned. ${commandHelper.getReason()}`);
+                    commandHelper.setReply(`${infractor.user.username} has been banned.\n${commandHelper.getReason()}`);
                     commandHelper.setReason(`Banned! ${commandHelper.getReason()}`);
                 } else if (warnNum === (MAX_STRIKES / 2)) {
                     const role = await commandHelper.ensureRole('muted').catch(err => { throw err; });
                     await commandHelper.addRole(role);
-                    list[infractor.id].muted = true;
 
-                    commandHelper.setReply(`${infractor.user.username} has been muted. ${commandHelper.getReason()}`);
+                    commandHelper.setReply(`${infractor.user.username} has been muted.\n${commandHelper.getReason()}`);
                     commandHelper.setReason(`Muted! ${commandHelper.getReason()}`);
                 }
 
+                commandHelper.setReply(`${infractor.user.username} has been warned.\n${commandHelper.getReason()}`);
+                commandHelper.setReason(`Warned! ${commandHelper.getReason()}`);
                 await commandHelper.saveList(list);
             };
         }

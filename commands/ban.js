@@ -13,7 +13,7 @@ module.exports = {
                 list[infractor.id].banned = true;
                 delete list[infractor.id].roles;
                 
-                commandHelper.setReply(`${infractor.user.username} has been banned. ${commandHelper.getReason()}`);
+                commandHelper.setReply(`${infractor.user.username} has been banned.\n${commandHelper.getReason()}`);
                 commandHelper.setReason(`Banned! ${commandHelper.getReason()}`);
 
                 list = await commandHelper.startTimer(list, args[1], 'days');

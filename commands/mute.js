@@ -13,7 +13,7 @@ module.exports = {
 
                 let list = await commandHelper.updateList();
 
-                commandHelper.setReply(`${infractor.user.username} has been muted. ${commandHelper.getReason()}`);
+                commandHelper.setReply(`${infractor.user.username} has been muted.\n${commandHelper.getReason()}`);
                 commandHelper.setReason(`Muted! ${commandHelper.getReason()}`);
 
                 list = await commandHelper.startTimer(list, args[1], 'minutes');

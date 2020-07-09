@@ -68,8 +68,8 @@ async function unBan(infractor) {
 
 async function removeStrike() {
   const list = await getList();
-  if (!list[infractor.id] || !list[infractor.id].strikes) {
-    setReply('This user has no previous strikes.');
+  if (!list[infractor.id] || !list[infractor.id].strikes || !list[infractor.id].strikes.length) {
+    setReply('This user has no strikes.');
     return;
   }
   list[infractor.id].strikes.shift();
@@ -102,21 +102,21 @@ async function ensureRole(roleName) {
 }
 
 async function addRole(role) {
-  const list = getList();
+  const list = await getList();
   const roleName = role.name.toLowerCase();
   if (infractor.roles.cache.has(role.id)) {
     setReply(`${infractor.user.username} already has the ${roleName} role.`);
     return;
   }
   await infractor.roles.add(role).catch(err => { throw err; });
-  if (!list[infractor.id]) list[infractor.id] = { username: infractor.user.username };
+  if (!list[infractor.user.id]) list[infractor.user.id] = { username: infractor.user.username };
   list[infractor.id].roles.push(role.id);
   await saveList(list);
   setReply(`${infractor.user.username} now has the ${roleName} role.`);
 }
 
 async function removeRole(role) {
-  const list = getList();
+  const list = await getList();
   const roleName = role.name.toLowerCase();
   if (!infractor.roles.cache.has(role.id)) {
     setReply(`This user does not have the ${roleName} role.`);
@@ -124,9 +124,9 @@ async function removeRole(role) {
   }
   await infractor.roles.remove(role).catch(err => { throw err; });
 
-  const index = list[infractor.id].roles.indexOf(role.id);
+  const index = list[infractor.user.id].roles.indexOf(role.id);
   if (index > -1) {
-    list[infractor.id].roles.splice(index, 1);
+    list[infractor.user.id].roles.splice(index, 1);
   }
 
   await saveList(list);
@@ -153,7 +153,7 @@ async function updateList() {
 };
 
 async function saveList(members) {
-  const list = await getList();
+  const list = fs.readJsonSync(`./docs/guilds/guild_${guild.id}.json`);
   list.members = members;
   fs.writeJsonSync(`./docs/guilds/guild_${guild.id}.json`, list);
 }

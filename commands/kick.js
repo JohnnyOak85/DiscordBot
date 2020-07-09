@@ -12,7 +12,7 @@ module.exports = {
 
                 delete list[infractor.id].roles;
                 
-                commandHelper.setReply(`${infractor.user.username} has been kicked. ${commandHelper.getReason()}`);
+                commandHelper.setReply(`${infractor.user.username} has been kicked.\n${commandHelper.getReason()}`);
                 commandHelper.setReason(`Kicked! ${commandHelper.getReason()}`);
 
                 const list = await commandHelper.updateList();

@@ -15,16 +15,19 @@ module.exports = {
             });
 
             const infractor = await commandHelper.getInfractor();
-            let reply = 'I have no record of any warned users.';
+            let reply = 'I have no record of any users with strikes.';
 
-            if (!warnedList.length) return;
+            if (!warnedList.length) {
+                message.channel.send(reply);
+                return;
+            }
 
             if (!infractor) {
                 reply = '';
                 Object.values(warnedList).forEach(member => {
                     reply += `${member.username}: ${member.strikes.length}\n`;
                 })
-                commandHelper.setReply(reply);
+                message.channel.send(reply);
                 return;
             }
 
