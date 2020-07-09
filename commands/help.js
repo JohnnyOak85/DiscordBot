@@ -2,6 +2,7 @@ module.exports = {
     name: 'help',
     description: 'Displays the list of commands. It can also display information on a given command.',
     usage: '<command>',
+    moderation: false,
     execute(message, args, commandHelper) {
         const { PREFIX } = require('../docs/config.json');
         const { commands } = message.client;
@@ -9,7 +10,11 @@ module.exports = {
 
         if (!args.length) {
             data.push('List of commands:');
-            data.push(commands.map(command => ` * !${command.name}`).join('\n'));
+            data.push(commands.map(command => {
+                if (!message.member.hasPermission("MANAGE_MESSAGES") && command.moderation) return;
+                else return ` * !${command.name}`;
+            }).filter(x => x).join('\n'))
+
             data.push(`You can send \`${PREFIX}help [command name]\` to get info on a specific command!`);
             commandHelper.setReply(data);
         }

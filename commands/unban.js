@@ -2,6 +2,7 @@ module.exports = {
     name: 'unban',
     description: `Provide a username and that user will have access to the server again.`,
     usage: '<user>',
+    moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('BAN_MEMBERS')) {
@@ -11,7 +12,7 @@ module.exports = {
                 const infractor = bannedList.array().find(i => i.user.username.includes(args[0]));
                 if (infractor) {
                     commandHelper.setInfractor(infractor);
-                    commandHelper.unban(infractor);
+                    commandHelper.unBan(infractor);
                     commandHelper.setReply(`${infractor.username} is no longer banned.`);
                 }
             }

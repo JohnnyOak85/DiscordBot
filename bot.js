@@ -34,73 +34,37 @@ const logger = winston.createLogger({
 bot.on('ready', () => {
     // Log the time it went online
     const now = moment().format();
-    logger.log('info', `The bot went online at: ${now}`);
+    // logger.log('info', `The bot went online at: ${now}`);
 
-    bot.guilds.cache.forEach(guild => {
+    try {
+        taskHelper.promoteBot(bot.guilds.cache, bot.user.id);
+        taskHelper.buildGuildDoc(bot.guilds.cache);
+        taskHelper.ensureChannel(bot.guilds.cache);
+    } catch (error) {
+        taskHelper.logError(error, logger);
+    }
 
-        // start member record, if it's empty do nothing.
-        const path = `./docs/guilds/guild_${guild.id}.json`;
-        const guildList = fs.readJsonSync(path);
-
-        // guild.fetchBans().then(res => {
-        //     res.forEach(member => {
-        //         guildList.members[member.user.id] = {
-        //             username: member.user.username,
-        //             roles: [],
-        //             banned: {
-        //                 status: true,
-        //                 reason: member.reason,
-        //             }
-        //         }
-        //     })
-        //     fs.writeJsonSync(path, guildList);
-        // })
-        // const banList = await guild.fetchBans();
-        // console.log(banList)
-
-        // if (!fs.pathExistsSync(path)) fs.outputFileSync(path, "{}");
-
-        // const guildList = fs.readJsonSync(path);
-        // if (!guildList.name) {
-        //     guildList.name = guild.name;
-        // guildList.members = {};
-
-        // guild.members.cache.forEach(member => {
-        //     if (member._roles.length > 0) {
-        //         guildList.members[member.user.id] = {
-        //             username: member.user.username,
-        //             roles: member._roles
-        //         }
-        //     }
-        // })
-
-        // fs.writeJsonSync(path, guildList);
-        // }
-
-    })
-
-    // Ensure the bot has admin role
-    taskHelper.promoteBot(bot);
 
     // Start the automated tasks
     bot.setInterval(() => {
         try {
-            taskHelper.check(bot.guilds, 'Muted');
-            taskHelper.check(bot.guilds, 'Banned');
+            taskHelper.checkTimers(bot.guilds.cache);
         } catch (error) {
             taskHelper.logError(error, logger);
         }
-
     }, 5000);
 
     const day = 1000 * 60 * 60 * 24;
     bot.setInterval(() => {
-        taskHelper.prune(bot.guilds);
+        try {
+            taskHelper.pruneUsers(bot.guilds.cache);
+        } catch (error) {
+            taskHelper.logError(error, logger);
+        }
     }, day);
 })
 
-bot.on('error', error => logger.log('error', error.message));
-process.on('uncaughtException', error => logger.log('error', error.message));
+bot.on('error', error => taskHelper.logError(error, logger));
 
 // Login to Discord with the app's token
 bot.login(TOKEN);
@@ -112,6 +76,7 @@ bot.on('message', message => {
     if (message.author.bot || message.channel.type === 'dm') return;
 
     // Check message content against spam and profanity
+    //TODO record a strike
     try {
         if (!messageHelper.isSafe(message)) return;
     } catch (error) {
@@ -149,8 +114,45 @@ bot.on('guildMemberAdd', member => {
 
 bot.on('guildMemberUpdate', (oldMember, newMember) => {
     try {
-        taskHelper.checkUsername(newMember);
+        taskHelper.checkUsername(newMember, newMember.nickname);
+        taskHelper.checkRole(newMember);
     } catch (error) {
         taskHelper.logError(error, logger);
     }
 })
+
+
+// guildBanAdd
+/* Emitted whenever a member is banned from a guild.
+PARAMETER    TYPE          DESCRIPTION
+guild        Guild         The guild that the ban occurred in
+user         User          The user that was banned    */
+bot.on("guildBanAdd", function(guild, user){
+    console.log(`a member is banned from a guild`);
+});
+
+// guildBanRemove
+/* Emitted whenever a member is unbanned from a guild.
+PARAMETER    TYPE         DESCRIPTION
+guild        Guild        The guild that the unban occurred in
+user         User         The user that was unbanned    */
+bot.on("guildBanRemove", function(guild, user){
+    console.log(`a member is unbanned from a guild`);
+});
+
+// guildMemberRemove
+/* Emitted whenever a member leaves a guild, or is kicked.
+PARAMETER     TYPE               DESCRIPTION
+member        GuildMember        The member that has left/been kicked from the guild    */
+bot.on("guildMemberRemove", function(member){
+    console.log(`a member leaves a guild, or is kicked: ${member.tag}`);
+});
+
+// messageUpdate
+/* Emitted whenever a message is updated - e.g. embed or content change.
+PARAMETER     TYPE           DESCRIPTION
+oldMessage    Message        The message before the update
+newMessage    Message        The message after the update    */
+bot.on("messageUpdate", function(oldMessage, newMessage){
+    console.log(`a message is updated`);
+});

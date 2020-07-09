@@ -2,6 +2,7 @@ module.exports = {
     name: 'ban',
     description: 'Mention a user and that user will be banned from the server. Can be temporary if provided with a number between 1 and 100.',
     usage: '<user> <number of days> <reason>',
+    moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('BAN_MEMBERS')) {
@@ -10,7 +11,8 @@ module.exports = {
                 await infractor.ban(commandHelper.getReason()).catch(error => { throw error });
                 let list = await commandHelper.updateList();
                 list[infractor.id].banned = true;
-
+                delete list[infractor.id].roles;
+                
                 commandHelper.setReply(`${infractor.user.username} has been banned. ${commandHelper.getReason()}`);
                 commandHelper.setReason(`Banned! ${commandHelper.getReason()}`);
 

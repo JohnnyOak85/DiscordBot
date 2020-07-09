@@ -28,11 +28,11 @@ function start(message, args) {
  */
 function verifyUser(permission) {
   if (!user.hasPermission(permission)) {
-    reply = 'You do not have permission for this command!';
+    setReply('You do not have permission for this command!');
     return;
   }
   if (infractor && user.id === infractor.user.id) {
-    reply = 'You cannot moderate yourself!';
+    setReply('You cannot moderate yourself!');
     return;
   }
   return true;
@@ -42,11 +42,11 @@ function verifyUser(permission) {
 
 function getInfractor() {
   if (!infractor) {
-    reply = 'You need to mention a valid user!';
+    setReply('You need to mention a valid user!');
     return;
   }
   if (!infractor.manageable) {
-    reply = 'You cannot moderate this user.';
+    setReply('You cannot moderate this user.');
   }
   return infractor;
 }
@@ -55,14 +55,14 @@ function setInfractor(user) {
   infractor = user;
 }
 
-async function unban(infractor) {
+async function unBan(infractor) {
   const list = await getList();
   await guild.members.unban(infractor.user.id).catch(error => { throw error });
   if (!list[infractor.id]) list[infractor.id] = { username: infractor.user.username };
   if (list[infractor.id].banned) list[infractor.id].banned = false;
   if (!list[infractor.id].strikes) {
     list[infractor.id].strikes = [];
-    list[infractor.id].strikes.push('Banned!');
+    list[infractor.id].strikes.push('No reason provided.');
   }
 }
 
@@ -152,7 +152,9 @@ async function updateList() {
   return list;
 };
 
-async function saveList(list) {
+async function saveList(members) {
+  const list = await getList();
+  list.members = members;
   fs.writeJsonSync(`./docs/guilds/guild_${guild.id}.json`, list);
 }
 
@@ -207,12 +209,6 @@ async function startTimer(list, num, timeValue) {
   return list;
 }
 
-// Guild Group
-
-function getGuild() {
-  return guild;
-}
-
 module.exports = {
   start: start,
   verifyUser: verifyUser,
@@ -229,8 +225,8 @@ module.exports = {
   getReason: getReason,
   setReason: setReason,
   getList: getList,
-  getGuild: getGuild,
   fetchBans: fetchBans,
   updateList: updateList,
-  unban: unban
+  unBan: unBan,
+  saveList: saveList
 }

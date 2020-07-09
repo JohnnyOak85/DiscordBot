@@ -2,6 +2,7 @@ module.exports = {
     name: 'unmute',
     description: 'Mention a user and that user will no longer be muted.',
     usage: '<user>',
+    moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('MANAGE_MESSAGES')) {

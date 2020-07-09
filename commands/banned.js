@@ -2,6 +2,7 @@ module.exports = {
     name: 'banned',
     description: 'Lists all the users that have been banned.',
     usage: ' ',
+    moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('BAN_MEMBERS')) {

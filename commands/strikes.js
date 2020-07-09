@@ -2,13 +2,14 @@ module.exports = {
     name: 'strikes',
     description: "Lists all users with strikes. If provided with a user, it will list that user's strikes",
     usage: '<user>',
+    moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('MANAGE_MESSAGES')) {
             const memberList = await commandHelper.getList();
             const warnedList = [];
             Object.entries(memberList).forEach(([id, member]) => {
-                if (member.strikes && member.strikes.length > 0) {
+                if (member.strikes && member.strikes.length) {
                     warnedList.push(member);
                 }
             });
@@ -16,7 +17,7 @@ module.exports = {
             const infractor = await commandHelper.getInfractor();
             let reply = 'I have no record of any warned users.';
 
-            if (warnedList.length <= 0) return;
+            if (!warnedList.length) return;
 
             if (!infractor) {
                 reply = '';

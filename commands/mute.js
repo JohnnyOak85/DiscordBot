@@ -2,6 +2,7 @@ module.exports = {
     name: 'mute',
     description: `Mention a user and that user won't be able to send messages. Can be temporary if provided with a number between 1 and 100.`,
     usage: '<user> <number of minutes>',
+    moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
         if (commandHelper.verifyUser('MANAGE_MESSAGES')) {
@@ -11,7 +12,6 @@ module.exports = {
                 await commandHelper.addRole(role);
 
                 let list = await commandHelper.updateList();
-                list[infractor.id].muted = true;
 
                 commandHelper.setReply(`${infractor.user.username} has been muted. ${commandHelper.getReason()}`);
                 commandHelper.setReason(`Muted! ${commandHelper.getReason()}`);
