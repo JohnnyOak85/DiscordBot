@@ -48,10 +48,13 @@ async function buildGuildDoc(guilds) {
         const guildDoc = fs.readJsonSync(path);
         if (!guildDoc.name) {
             guildDoc.name = guild.name;
-            guildDoc.members = buildMemberList(guild)
+            buildMemberList(guild)
+                .then(members => {
+                    guildDoc.members = members;
+                    fs.writeJsonSync(path, guildDoc);
+                })
                 .catch(err => { throw err });
         }
-        fs.writeJsonSync(path, guildDoc);
     })
 }
 
@@ -79,6 +82,7 @@ async function buildMemberList(guild) {
         })
     })
         .catch(err => { throw err });
+
     return members;
 }
 
