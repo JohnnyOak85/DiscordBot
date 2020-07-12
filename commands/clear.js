@@ -5,10 +5,11 @@ module.exports = {
     moderation: true,
     execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-        if (commandHelper.verifyUser('MANAGE_MESSAGES')) {
-            let amount = commandHelper.getNumber(args[0]);
+        if (commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES')) {
+            const amount = commandHelper.getNumber(args[0]);
             if (!amount) {
-                message.channel.send('I need a number from 1 to 100.');
+                message.channel.send('I need a number from 1 to 100.')
+                    .catch(err => { throw err; });
                 return;
             }
             message.channel.bulkDelete(amount + 1, true)

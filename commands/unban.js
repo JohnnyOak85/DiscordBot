@@ -5,18 +5,12 @@ module.exports = {
     moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-        if (commandHelper.verifyUser('BAN_MEMBERS')) {
-            commandHelper.setReply('You need to mention a valid user!');
-            const bannedList = await commandHelper.fetchBans();
-            if (bannedList) {
-                const infractor = bannedList.array().find(i => i.user.username.includes(args[0]));
-                if (infractor) {
-                    commandHelper.setInfractor(infractor);
-                    commandHelper.unBan(infractor);
-                    commandHelper.setReply(`${infractor.username} is no longer banned.`);
-                }
-            }
+        if (commandHelper.verifyUser(message.member, 'BAN_MEMBERS')) {
+            commandHelper.unbanMember(args[0])
+                .catch(err => { throw err; });
+            await commandHelper.saveDoc();
         }
-        message.channel.send(commandHelper.getReply());
+        message.channel.send(commandHelper.getReply())
+            .catch(err => { throw err; });
     }
 }

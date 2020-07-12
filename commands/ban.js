@@ -5,21 +5,17 @@ module.exports = {
     moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-        if (commandHelper.verifyUser('BAN_MEMBERS')) {
-            const infractor = await commandHelper.getInfractor();
-            if (infractor) {
-                await infractor.ban(commandHelper.getReason()).catch(error => { throw error });
-                let list = await commandHelper.updateList();
-                list[infractor.id].banned = true;
-                delete list[infractor.id].roles;
-                
-                commandHelper.setReply(`${infractor.user.username} has been banned.\n${commandHelper.getReason()}`);
-                commandHelper.setReason(`Banned! ${commandHelper.getReason()}`);
-
+        if (commandHelper.verifyUser(message.member, 'BAN_MEMBERS')) {
+            if (commandHelper.checkMember()) {
+                await commandHelper.giveStrike()
+                    .catch(error => { throw error });
+                await commandHelper.banMember()
+                    .catch(error => { throw error });
                 list = await commandHelper.startTimer(list, args[1], 'days');
-                await commandHelper.saveList(list);
+                await commandHelper.saveDoc();
             };
         }
-        message.channel.send(commandHelper.getReply());
+        message.channel.send(commandHelper.getReply())
+            .catch(err => { throw err; });
     }
 }

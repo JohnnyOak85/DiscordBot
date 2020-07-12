@@ -5,12 +5,12 @@ module.exports = {
     moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-        if (commandHelper.verifyUser('MANAGE_MESSAGES')) {
-            const infractor = commandHelper.getInfractor();
-            if (infractor) {
+        if (commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES')) {
+            if (commandHelper.checkMember()) {
                 await commandHelper.removeStrike();
             }
         }
-        message.channel.send(commandHelper.getReply());
+        message.channel.send(commandHelper.getReply())
+            .catch(err => { throw err; });
     }
 }

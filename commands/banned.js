@@ -1,3 +1,5 @@
+const { ban } = require("../helpers/common-tasks");
+
 module.exports = {
     name: 'banned',
     description: 'Lists all the users that have been banned.',
@@ -5,18 +7,26 @@ module.exports = {
     moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-        if (commandHelper.verifyUser('BAN_MEMBERS')) {
-            const bannedList = await commandHelper.fetchBans();
-            if (bannedList) {
-                let message = '';
-                bannedList.array().forEach(i => {
-                    let reason = 'No reason provided';
-                    if (i.reason) reason = i.reason;
-                    message += `${i.user.username}: ${reason}\n`
-                })
-                commandHelper.setReply(message);
-            }
+        if (commandHelper.verifyUser(message.member, 'BAN_MEMBERS')) {
+            const list = await commandHelper.getBansList()
+                .catch(err => { throw err; });
+            const reply = await buildReply(list);
+            commandHelper.setReply(reply);
         }
-        message.channel.send(commandHelper.getReply());
+        message.channel.send(commandHelper.getReply())
+            .catch(err => { throw err; });
     }
+}
+
+async function buildReply(list) {
+    let reply = '';
+
+    if (!list || !list.length) return 'I have no record of any banned users.';
+
+    list.forEach(member => {
+        if (!member.reason) member.reason = 'No reason provided';
+        reply += `${i.user.username}: ${reason}\n`;
+    })
+
+    return reply;
 }

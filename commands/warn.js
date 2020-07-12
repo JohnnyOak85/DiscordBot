@@ -6,32 +6,14 @@ module.exports = {
     moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-        if (commandHelper.verifyUser('MANAGE_MESSAGES')) {
-            const infractor = await commandHelper.getInfractor();
-            if (infractor) {
-                const list = await commandHelper.updateList();
-
-                const warnNum = list[infractor.user.id].strikes.length;
-                if (warnNum === MAX_STRIKES) {
-                    await infractor.ban(commandHelper.getReason()).catch(error => { throw error });
-                    list[infractor.id].banned = true;
-                    delete list[infractor.id].roles;
-
-                    commandHelper.setReply(`${infractor.user.username} has been banned.\n${commandHelper.getReason()}`);
-                    commandHelper.setReason(`Banned! ${commandHelper.getReason()}`);
-                } else if (warnNum === (MAX_STRIKES / 2)) {
-                    const role = await commandHelper.ensureRole('muted').catch(err => { throw err; });
-                    await commandHelper.addRole(role);
-
-                    commandHelper.setReply(`${infractor.user.username} has been muted.\n${commandHelper.getReason()}`);
-                    commandHelper.setReason(`Muted! ${commandHelper.getReason()}`);
-                }
-
-                commandHelper.setReply(`${infractor.user.username} has been warned.\n${commandHelper.getReason()}`);
-                commandHelper.setReason(`Warned! ${commandHelper.getReason()}`);
-                await commandHelper.saveList(list);
+        if (commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES')) {
+            if (commandHelper.checkMember()) {
+                await commandHelper.giveStrike()
+                    .catch(err => { throw err; });
+                await commandHelper.saveDoc();
             };
         }
-        message.channel.send(commandHelper.getReply());
+        message.channel.send(commandHelper.getReply())
+            .catch(err => { throw err; });
     }
 }

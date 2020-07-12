@@ -95,12 +95,11 @@ bot.on('message', message => {
     }
 
     // Try to execute the command
-    try {
-        bot.commands.get(command).execute(message, args, commandHelper);
-    } catch (error) {
-        taskHelper.logError(error, logger);
-        message.reply('there was an error trying to execute that command!');
-    }
+    bot.commands.get(command).execute(message, args, commandHelper)
+        .catch(error => {
+            taskHelper.logError(error, logger);
+            message.reply('there was an error trying to execute that command!');
+        });
 });
 
 // Listen to a member join
@@ -127,7 +126,7 @@ bot.on('guildMemberUpdate', (oldMember, newMember) => {
 PARAMETER    TYPE          DESCRIPTION
 guild        Guild         The guild that the ban occurred in
 user         User          The user that was banned    */
-bot.on("guildBanAdd", function(guild, user){
+bot.on("guildBanAdd", function (guild, user) {
     console.log(`a member is banned from a guild`);
 });
 
@@ -136,7 +135,7 @@ bot.on("guildBanAdd", function(guild, user){
 PARAMETER    TYPE         DESCRIPTION
 guild        Guild        The guild that the unban occurred in
 user         User         The user that was unbanned    */
-bot.on("guildBanRemove", function(guild, user){
+bot.on("guildBanRemove", function (guild, user) {
     console.log(`a member is unbanned from a guild`);
 });
 
@@ -144,7 +143,7 @@ bot.on("guildBanRemove", function(guild, user){
 /* Emitted whenever a member leaves a guild, or is kicked.
 PARAMETER     TYPE               DESCRIPTION
 member        GuildMember        The member that has left/been kicked from the guild    */
-bot.on("guildMemberRemove", function(member){
+bot.on("guildMemberRemove", function (member) {
     console.log(`a member leaves a guild, or is kicked: ${member.tag}`);
 });
 
@@ -153,6 +152,6 @@ bot.on("guildMemberRemove", function(member){
 PARAMETER     TYPE           DESCRIPTION
 oldMessage    Message        The message before the update
 newMessage    Message        The message after the update    */
-bot.on("messageUpdate", function(oldMessage, newMessage){
+bot.on("messageUpdate", function (oldMessage, newMessage) {
     console.log(`a message is updated`);
 });

@@ -4,6 +4,7 @@ module.exports = {
     usage: ' ',
     execute(message, args, commandHelper) {
         const { RULES } = require('../docs/config.json');
-        message.channel.send(RULES);
+        message.channel.send(RULES)
+            .catch(err => { throw err; });
     }
 }

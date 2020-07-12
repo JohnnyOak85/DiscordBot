@@ -1,194 +1,184 @@
 const fs = module.require("fs-extra");
 const moment = require('moment');
-const { ROLES_LIST } = require(`../docs/config.json`);
+const helper = require('./common-tasks.js');
 
-let user;
-let infractor;
+let member;
 let guild;
-let reply;
-let reason;
+let reply = '';
+let reason = '';
+let memberList;
 
-/**
- * @description Set up the arguments.
- * @param {*} message
- * @param {string} args
- */
 function start(message, args) {
-  user = message.member;
-  infractor = message.mentions.members.first();
+  member = message.mentions.members.first();
   guild = message.guild;
   reason = args.slice(1).join(' ');
-  reply = '';
+  memberList = helper.getList(message.guild);
 }
 
-/**
- * @description Check if the user that issued the command has permissions.
- * @param {string} permission
- * @returns {boolean}
- */
-function verifyUser(permission) {
+function verifyUser(user, permission) {
   if (!user.hasPermission(permission)) {
-    setReply('You do not have permission for this command!');
+    reply = 'You do not have permission for this command!';
     return;
   }
-  if (infractor && user.id === infractor.user.id) {
-    setReply('You cannot moderate yourself!');
+  if (member && user.id === member.user.id) {
+    reply = 'You cannot moderate yourself!';
     return;
   }
   return true;
 }
 
-// Infractions Group
+// Member Tasks
 
-function getInfractor() {
-  if (!infractor) {
-    setReply('You need to mention a valid user!');
+function getMember() {
+  return member;
+}
+
+function checkMember() {
+  if (!member) {
+    reply = 'You need to mention a valid user!';
     return;
   }
-  if (!infractor.manageable) {
-    setReply('You cannot moderate this user.');
+  if (!member.manageable) {
+    reply = 'You cannot moderate this user.';
+    return;
   }
-  return infractor;
+  return true;
 }
 
-function setInfractor(user) {
-  infractor = user;
+function findMember() {
+  const list = fetchBans();
+  member = list.find(m => m.user.username.includes(username));
+
+  if (!member) {
+    reply = 'You need to mention a valid user!';
+  }
 }
 
-async function unBan(infractor) {
-  const list = await getList();
-  await guild.members.unban(infractor.user.id).catch(error => { throw error });
-  if (!list[infractor.id]) list[infractor.id] = { username: infractor.user.username };
-  if (list[infractor.id].banned) list[infractor.id].banned = false;
-  if (!list[infractor.id].strikes) {
-    list[infractor.id].strikes = [];
-    list[infractor.id].strikes.push('No reason provided.');
+// Role Tasks
+
+async function addRole(roleName) {
+  const role = await helper.ensureRole(guild, roleName)
+    .catch(err => { throw err; });
+
+  if (member.roles.cache.has(role.id)) {
+    if (memberList[member.id].action != 'warned') return;
+    reply = `${member.user.username} is already ${roleName}.`;
+    return;
   }
+
+  memberList[member.user.id] = await helper.giveRole(member, memberList, role)
+    .catch(err => { throw err; });
+
+  reply = `${member.user.username} is now ${roleName}.\n${reason}`;
+}
+
+async function removeRole(roleName) {
+  const role = await helper.ensureRole(guild, roleName)
+    .catch(err => { throw err; });
+
+  if (!member.roles.cache.has(role.id)) {
+    reply = `${member.user.username} is not ${roleName}.`;
+    return;
+  }
+
+  memberList[member.user.id] = await helper.removeRole(member, memberList, role)
+    .catch(err => { throw err; });
+
+  reply = `${member.user.username} is no longer ${roleName}`;
+}
+
+// Strike Tasks
+
+async function giveStrike() {
+  memberList[member.id] = await helper.giveStrike(member, memberList, reason)
+    .catch(err => { throw err; });
+
+  if (memberList[member.id].action != 'warned') {
+    reply = checkAction();
+    return;
+  }
+
+  reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
 }
 
 async function removeStrike() {
-  const list = await getList();
-  if (!list[infractor.id] || !list[infractor.id].strikes || !list[infractor.id].strikes.length) {
-    setReply('This user has no strikes.');
+  if (!memberList[member.id] || !memberList[member.id].strikes || !memberList[member.id].strikes.length) {
+    reply = `${member.user.username} has no strikes.`;
     return;
   }
-  list[infractor.id].strikes.shift();
-  setReply(`An infraction was removed from ${infractor.user.username}`);
-  await saveList(list);
+  memberList[member.id].strikes.shift();
+  reply = `An strike was removed from ${member.user.username}`;
 }
 
-// Roles Group
-
-async function ensureRole(roleName) {
-  const role = ROLES_LIST[roleName];
-
-  let guildRole = guild.roles.cache.find(mR => mR.name === role.name);
-
-  if (!guildRole) {
-    guildRole = await guild.roles.create({
-      data: {
-        name: role.name,
-        permissions: role.activePermissions
-      }
-    }).catch(err => { throw err; })
-
-    // Update channel permissions
-    guild.channels.cache.forEach(async (channel) => {
-      await channel.updateOverwrite(guildRole, role.inactivePermissions)
-        .catch(err => { throw err; })
-    });
-  }
-  return guildRole;
-}
-
-async function addRole(role) {
-  const list = await getList();
-  const roleName = role.name.toLowerCase();
-  if (infractor.roles.cache.has(role.id)) {
-    setReply(`${infractor.user.username} already has the ${roleName} role.`);
-    return;
-  }
-  await infractor.roles.add(role).catch(err => { throw err; });
-  if (!list[infractor.user.id]) list[infractor.user.id] = { username: infractor.user.username };
-  list[infractor.id].roles.push(role.id);
-  await saveList(list);
-  setReply(`${infractor.user.username} now has the ${roleName} role.`);
-}
-
-async function removeRole(role) {
-  const list = await getList();
-  const roleName = role.name.toLowerCase();
-  if (!infractor.roles.cache.has(role.id)) {
-    setReply(`This user does not have the ${roleName} role.`);
-    return;
-  }
-  await infractor.roles.remove(role).catch(err => { throw err; });
-
-  const index = list[infractor.user.id].roles.indexOf(role.id);
-  if (index > -1) {
-    list[infractor.user.id].roles.splice(index, 1);
-  }
-
-  await saveList(list);
-  setReply(`${infractor.user.username} is no longer ${roleName}`);
-}
-
-// Lists Group
-
-async function getList() {
-  const list = fs.readJsonSync(`./docs/guilds/guild_${guild.id}.json`);
-  return list.members;
-}
-
-async function updateList() {
-  const list = await getList();
-
-  if (!list[infractor.id]) list[infractor.id] = { username: infractor.user.username };
-  if (!list[infractor.id].strikes) list[infractor.id].strikes = [];
-
-  let reason = getReason();
-  if (reason === '' || reason === ' ') reason = 'No reason provided.'
-  list[infractor.id].strikes.push(reason);
+async function getStrikesList() {
+  const list = [];
+  Object.values(memberList).forEach(member => {
+    if (member.strikes && member.strikes.length) {
+      list.push(member);
+    }
+  });
   return list;
-};
-
-async function saveList(members) {
-  const list = fs.readJsonSync(`./docs/guilds/guild_${guild.id}.json`);
-  list.members = members;
-  fs.writeJsonSync(`./docs/guilds/guild_${guild.id}.json`, list);
 }
 
-async function fetchBans() {
+// Punish Tasks
+
+async function kickMember() {
+  if (memberList[member.id].action === 'banned') {
+    reply = checkAction();
+    return;
+  }
+
+  memberList[member.id] = await helper.kick(member, memberList, reason)
+    .catch(err => { throw err; });
+
+  reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
+}
+
+async function banMember() {
+  if (memberList[member.id].action != 'banned') {
+    memberList[member.id] = await helper.ban(member, memberList, reason)
+      .catch(err => { throw err; });
+  }
+
+  reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
+}
+
+async function unbanMember(username) {
+  findMember(username);
+  if (!member) return;
+
+  helper.unban(member, memberList, guild)
+    .catch(err => { throw err; });
+
+  reply = `${member.user.username} has been unbanned.`;
+}
+
+async function getBansList() {
+  const list = await guild.fetchBans()
+    .catch(err => { throw err; });
+
+  return list.array();
   return guild.fetchBans()
     .then(banned => {
-      if (!banned.array().length) {
-        setReply(`I have no record of any banned users.`)
-        return;
-      };
       return banned;
     })
 }
 
-// Message Group
-
-function setReply(message) {
-  reply = message;
-}
+// Message Tasks
 
 function getReply() {
   return reply;
 }
 
-function setReason(string) {
-  reason = string;
+function setReply(message) {
+  reply = message;
 }
 
-function getReason() {
-  if (!reason) reason = '';
-  return reason;
+function checkAction() {
+  reply = `${member.user.username} has been ${memberList[member.id].action} due to repeated strikes.\n${reason}`;
 }
 
-// Utilities Group
+// Utility Tasks
 
 function getNumber(num) {
   num = parseInt(num);
@@ -197,36 +187,40 @@ function getNumber(num) {
   return num;
 }
 
-async function startTimer(list, num, timeValue) {
-  const time = this.getNumber(num);
-  setReply(getReply().replace(num, ''));
+async function startTimer(num, timeValue) {
+  const time = getNumber(num);
+  reply = reply.replace(num, '');
 
   if (time) {
-    list[infractor.id].timer = moment().add(time, timeValue).format();
-    setReply(`${getReply()} for ${time} ${timeValue}`);
+    memberList[member.id].timer = moment().add(time, timeValue).format();
+    reply = `${reply} for ${time} ${timeValue}`;
   }
+}
 
-  return list;
+// Doc Tasks
+
+async function saveDoc() {
+  delete memberList[member.id].action;
+  await helper.saveDoc(guild.id, memberList);
 }
 
 module.exports = {
   start: start,
   verifyUser: verifyUser,
-  removeStrike: removeStrike,
-  ensureRole: ensureRole,
+  getMember: getMember,
+  checkMember: checkMember,
   addRole: addRole,
   removeRole: removeRole,
-  startTimer: startTimer,
+  giveStrike: giveStrike,
+  removeStrike: removeStrike,
+  getStrikesList: getStrikesList,
+  kickMember: kickMember,
+  banMember: banMember,
+  unbanMember: unbanMember,
+  getBansList: getBansList,
   setReply: setReply,
   getReply: getReply,
   getNumber: getNumber,
-  getInfractor: getInfractor,
-  setInfractor: setInfractor,
-  getReason: getReason,
-  setReason: setReason,
-  getList: getList,
-  fetchBans: fetchBans,
-  updateList: updateList,
-  unBan: unBan,
-  saveList: saveList
+  startTimer: startTimer,
+  saveDoc: saveDoc
 }

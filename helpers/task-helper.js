@@ -1,43 +1,24 @@
 const moment = require('moment');
 const fs = module.require('fs-extra');
 
+const helper = require('./common-tasks.js');
+
 const { BANNED_WORDS } = require('../docs/banned-words.json');
 const { BANNED_SITES } = require('../docs/banned-sites.json');
-const { ROLES_LIST } = require(`../docs/config.json`);
 const { CHANNELS_LIST } = require(`../docs/config.json`);
 
 // First run
 
 async function promoteBot(guilds, botId) {
     guilds.forEach(guild => {
-        ensureRole(guild, ROLES_LIST['bot'])
-            .then(role => {
-                const bot = guild.members.cache.find(u => u.user.id === botId);
-                if (bot.roles.cache.has(role.id)) return;
-                bot.roles.add(role)
-            })
-            .catch(err => { throw err; });
+        const bot = guild.members.cache.find(u => u.user.id === botId);
+        const role = await ensureRole(guild, 'bot');
+        const list = await getList(guild);
+
+        if (bot.roles.cache.has(role.id)) return;
+
+        await helper.giveRole(bot, list, role);
     })
-}
-
-async function ensureRole(guild, roleSchema) {
-    let role = guild.roles.cache.find(r => r.name === roleSchema.name);
-
-    if (!role) {
-        role = await guild.roles.create({
-            data: {
-                name: roleSchema.name,
-                permissions: roleSchema.activePermissions
-            }
-        })
-            .catch(err => { throw err; });
-
-        guild.channels.cache.forEach(async (channel) => {
-            await channel.updateOverwrite(role, roleSchema.inactivePermissions)
-                .catch(err => { throw err; })
-        });
-    }
-    return role;
 }
 
 async function buildGuildDoc(guilds) {
@@ -50,8 +31,7 @@ async function buildGuildDoc(guilds) {
             guildDoc.name = guild.name;
             buildMemberList(guild)
                 .then(members => {
-                    guildDoc.members = members;
-                    fs.writeJsonSync(path, guildDoc);
+                    await helper.saveDoc(guild.id, members);
                 })
                 .catch(err => { throw err });
         }
@@ -130,55 +110,47 @@ async function pruneUsers(guilds) {
 
 async function checkTimers(guilds) {
     guilds.forEach(guild => {
-        const path = `./docs/guilds/guild_${guild.id}.json`;
-        const guildDoc = fs.readJsonSync(path);
-        let list = guildDoc.members;
-
+        let list = helper.getList(guild.id);
         if (!Object.keys(list).length) return;
 
-        Object.entries(list).forEach(([id, member]) => {
-            if (!member.timer) return;
-            if (moment(member.timer).isAfter(moment().format())) return;
+        Object.keys(list).forEach((member) => {
+            if (!list[member].timer || moment(list[member].timer).isAfter(moment().format())) return;
 
-            guildDoc.members = unMute(guild, list, id)
+            list[member] = unMute(guild, list, member)
                 .catch(err => { throw err });
-            guildDoc.members = unBan(guild, list, id)
+            list = unBan(guild, list, member)
                 .catch(err => { throw err });
 
-            fs.writeJsonSync(path, guildDoc);
+            await helper.saveDoc(guild, list);
+
+            sendReply(guild, `${list[member].username} is no longer muted.`)
+                .catch(error => { throw error });
         });
     })
 }
 
-async function unMute(guild, list, id) {
-    const role = guild.roles.cache.find(r => r.name === 'Muted');
-    const guildMember = guild.members.cache.find(m => m.user.id === id);
+async function unMute(guild, list, memberId) {
+    const member = guild.members.cache.find(m => m.user.id === memberId);
+    const role = await helper.ensureRole(guild, 'muted');
 
-    if (role && guildMember.roles.cache.has(role.id)) {
-        await guildMember.roles.remove(role)
-            .catch(err => { throw err });
-
-        const index = list[id].roles.indexOf(role.id);
-        if (index > -1) {
-            list[id].roles.splice(index, 1);
-        }
-
-        sendReply(guild, `${list[id].username} is no longer muted.`)
-            .catch(error => { throw error });
-    }
-    return list;
+    if (!member.roles.cache.has(role.id)) return list[member];
+    
+    list[memberId] = await helper.removeRole(member, list, role);
+    return list[member];
 };
 
-async function unBan(guild, list, id) {
+async function unBan(guild, list, member) {
     guild.fetchBans().then(banned => {
         if (!banned.array().length) return;
-        if (!banned.array().some(m => m.user.id === id)) return;
+        if (!banned.array().some(m => m.user.id === member)) return;
 
-        guild.member.unban(id)
+        //TODO only need username and id here
+        //TODO is also used on command-helper.js
+        guild.member.unban(member)
             .catch(error => { throw error });
-        list[id].banned = false;
+        list[member].banned = false;
 
-        sendReply(guild, `${member.username} has been unbanned.`)
+        sendReply(guild, `${list[member].username} has been unbanned.`)
             .catch(error => { throw error });
     })
     return list;
@@ -195,7 +167,7 @@ function triage(member) {
 
     const channel = member.guild.channels.cache.find(c => c.name === 'rules');
 
-    sendReply(member.guild, `Welcome <@${member.user.id}>! Check the <#${channel.id}>.`)
+    helper.sendReply(member.guild, `Welcome <@${member.user.id}>! Check the <#${channel.id}>.`)
         .catch(error => { throw error });
 }
 
@@ -206,14 +178,13 @@ function isBot(member) {
 }
 
 async function isOldMember(member) {
-    const path = `./docs/guilds/guild_${member.guild.id}.json`;
-    const guildDoc = fs.readJsonSync(path);
+    const list = await helper.getList();
 
-    if (!guildDoc.members[member.user.id] || !guildDoc.members[member.user.id].roles) return
+    if (!list[member.user.id] || !list[member.user.id].roles) return
 
-    guildDoc.members[member.user.id].roles.forEach(role => {
+    list[member.user.id].roles.forEach(role => {
         const oldRole = member.guild.roles.cache.find(r => r.id === role);
-        member.roles.add(oldRole)
+        await member.roles.add(oldRole)
             .catch(err => { throw err; });
     })
 
@@ -227,30 +198,28 @@ async function checkUsername(member, nickname) {
     if (!member.manageable || !nickname) return;
     if (BANNED_WORDS.some(word => nickname.toLowerCase().includes(word)) ||
         BANNED_SITES.some(site => nickname.toLowerCase().includes(site))) {
-        await updateList(member, `Had banned nickname: ${nickname}`);
+        await helper.giveStrike(member, `Had banned nickname: ${nickname}`);
         member.setNickname('Princess Twinkletoes')
             .catch(error => { throw error });
     };
 }
 
 async function checkRole(member) {
-    const path = `./docs/guilds/guild_${member.guild.id}.json`;
-    const guildDoc = fs.readJsonSync(path);
+    const list = await helper.getList(member.guild.id);
 
-    if (!guildDoc.members[member.user.id] && member._roles.length) {
-        guildDoc.members[member.user.id] = {
+    if (!list[member.user.id] && member._roles.length) {
+        list[member.user.id] = {
             username: member.user.username,
             roles: member._roles
         }
-        fs.writeJsonSync(path, guildDoc);
+        await helper.saveDoc(member.guild.id, list);
         return;
     }
 
-    if (!guildDoc.members[member.user.id].roles || member._roles.length != guildDoc.members[member.user.id].roles.length) {
-        guildDoc.members[member.user.id].roles = member._roles;
-        fs.writeJsonSync(path, guildDoc);
+    if (!list[member.user.id].roles || member._roles.length != list[member.user.id].roles.length) {
+        list[member.user.id].roles = member._roles;
+        await helper.saveDoc(member.guild.id, list);
     }
-
 }
 
 // Lists

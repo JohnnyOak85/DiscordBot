@@ -5,20 +5,16 @@ module.exports = {
     moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);
-        if (commandHelper.verifyUser('KICK_MEMBERS')) {
-            const infractor = await commandHelper.getInfractor();
-            if (infractor) {
-                await infractor.kick(commandHelper.getReason()).catch(error => { throw error });
-
-                delete list[infractor.id].roles;
-                
-                commandHelper.setReply(`${infractor.user.username} has been kicked.\n${commandHelper.getReason()}`);
-                commandHelper.setReason(`Kicked! ${commandHelper.getReason()}`);
-
-                const list = await commandHelper.updateList();
-                await commandHelper.saveList(list);
+        if (commandHelper.verifyUser(message.member, 'KICK_MEMBERS')) {
+            if (commandHelper.checkMember()) {
+                await commandHelper.giveStrike()
+                    .catch(error => { throw error });
+                await commandHelper.kickMember()
+                    .catch(error => { throw error });
+                await commandHelper.saveDoc();
             };
         }
-        message.channel.send(commandHelper.getReply());
+        message.channel.send(commandHelper.getReply())
+            .catch(err => { throw err; });
     }
 }
