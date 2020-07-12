@@ -11,7 +11,7 @@ module.exports = {
                     .catch(error => { throw error });
                 await commandHelper.kickMember()
                     .catch(error => { throw error });
-                await commandHelper.saveDoc();
+                await commandHelper.saveList();
             };
         }
         message.channel.send(commandHelper.getReply())

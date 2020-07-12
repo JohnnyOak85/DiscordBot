@@ -1,6 +1,4 @@
-const fs = module.require("fs-extra");
-const moment = require('moment');
-const helper = require('./common-tasks.js');
+const helper = require('./task.helper.js');
 
 let member;
 let guild;
@@ -12,7 +10,7 @@ function start(message, args) {
   member = message.mentions.members.first();
   guild = message.guild;
   reason = args.slice(1).join(' ');
-  memberList = helper.getList(message.guild);
+  memberList = helper.getList(message.guild.id);
 }
 
 function verifyUser(user, permission) {
@@ -154,14 +152,7 @@ async function unbanMember(username) {
 }
 
 async function getBansList() {
-  const list = await guild.fetchBans()
-    .catch(err => { throw err; });
-
-  return list.array();
-  return guild.fetchBans()
-    .then(banned => {
-      return banned;
-    })
+  return await helper.listBans(guild);
 }
 
 // Message Tasks
@@ -178,7 +169,7 @@ function checkAction() {
   reply = `${member.user.username} has been ${memberList[member.id].action} due to repeated strikes.\n${reason}`;
 }
 
-// Utility Tasks
+// Math Tasks
 
 function getNumber(num) {
   num = parseInt(num);
@@ -187,21 +178,23 @@ function getNumber(num) {
   return num;
 }
 
-async function startTimer(num, timeValue) {
-  const time = getNumber(num);
+// Time Tasks
+
+async function startTimer(num, type) {
+  const amount = getNumber(num);
   reply = reply.replace(num, '');
 
-  if (time) {
-    memberList[member.id].timer = moment().add(time, timeValue).format();
-    reply = `${reply} for ${time} ${timeValue}`;
+  if (amount) {
+    memberList[member.id].timer = helper.addTime(amount, type);
+    reply = `${reply} for ${amount} ${type}`;
   }
 }
 
 // Doc Tasks
 
-async function saveDoc() {
+async function saveList() {
   delete memberList[member.id].action;
-  await helper.saveDoc(guild.id, memberList);
+  await helper.saveList(guild.id, memberList);
 }
 
 module.exports = {
@@ -222,5 +215,5 @@ module.exports = {
   getReply: getReply,
   getNumber: getNumber,
   startTimer: startTimer,
-  saveDoc: saveDoc
+  saveList: saveList
 }

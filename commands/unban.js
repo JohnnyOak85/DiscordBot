@@ -8,7 +8,7 @@ module.exports = {
         if (commandHelper.verifyUser(message.member, 'BAN_MEMBERS')) {
             commandHelper.unbanMember(args[0])
                 .catch(err => { throw err; });
-            await commandHelper.saveDoc();
+            await commandHelper.saveList();
         }
         message.channel.send(commandHelper.getReply())
             .catch(err => { throw err; });

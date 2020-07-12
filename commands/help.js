@@ -3,17 +3,16 @@ module.exports = {
     description: 'Displays the list of commands. It can also display information on a given command.',
     usage: '<command>',
     moderation: false,
-    execute(message, args, commandHelper) {
+    async execute(message, args, commandHelper) {
         const { commands } = message.client;
-
-        await buildReply(commands, args);
+        const reply = await buildReply(commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES'), commands, args);
         commandHelper.setReply(reply);
         message.channel.send(commandHelper.getReply())
             .catch(err => { throw err; });
     }
 }
 
-async function buildReply(commands, args) {
+async function buildReply(isMod, commands, args) {
     // TODO prefix needs to be dynamic and account for more than one.
     const { PREFIX } = require('../docs/config.json');
     const data = [];
@@ -21,7 +20,7 @@ async function buildReply(commands, args) {
     if (!args.length) {
         data.push('List of commands:');
         data.push(commands.map(command => {
-            if (!message.member.hasPermission("MANAGE_MESSAGES") && command.moderation) return;
+            if (!isMod && command.moderation) return;
             else return ` * !${command.name}`;
         }).filter(x => x).join('\n'))
 

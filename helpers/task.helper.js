@@ -1,4 +1,7 @@
-const { ROLES_LIST, MAX_STRIKES } = require(`../docs/config.json`);
+const fs = module.require('fs-extra');
+const moment = require('moment');
+
+const { CHANNELS_LIST, ROLES_LIST, MAX_STRIKES } = require(`../docs/config.json`);
 
 // Member Tasks
 
@@ -14,11 +17,25 @@ function ensureMember(list, member) {
   return list[member.id]
 }
 
+// Channel Tasks
+
+async function ensureChannel(guild, channelName) {
+  const channelSchema = CHANNELS_LIST[channelName];
+  let channel = guild.channels.cache.find(c => c.name === channelSchema.name);
+
+  if (!channel) {
+    channel = await guild.channels.create(channelSchema.name, {
+      type: channelSchema.type,
+    }).catch(err => { throw err; });
+  }
+
+  return channel;
+}
+
 // Role Tasks
 
 async function ensureRole(guild, roleName) {
   const roleSchema = ROLES_LIST[roleName];
-
   let role = guild.roles.cache.find(r => r.name === roleSchema.name);
 
   if (!role) {
@@ -47,7 +64,7 @@ async function giveRole(member, list, role) {
   if (!list[member.user.id]) {
     list[member.user.id] = {
       username: member.user.username,
-      roles =[]
+      roles: []
     };
   };
 
@@ -144,6 +161,15 @@ async function unban(member, list, guild) {
     .catch(error => { throw error });
 
   list[member.id].banned = false;
+
+  return list[member.id];
+}
+
+async function listBans(guild) {
+  const list = await guild.fetchBans()
+    .catch(err => { throw err; });
+
+  return list.array();
 }
 
 // Message Tasks
@@ -161,20 +187,57 @@ async function sendReply(guild, reply) {
     .catch(error => { throw error });
 }
 
+// Time Tasks
+
+async function getDate() {
+  return moment().format();
+}
+
+async function addTime(amount, type) {
+  return moment().add(amount, type).format();
+}
+
+function timerExpired(time) {
+  if (moment(time).isBefore(moment().format())) return true;
+}
+
 // Doc Tasks
+
+async function readDir(name) {
+  const dir = fs.readdirSync(`./${name}`);
+  return dir;
+}
+
+async function ensureDoc(guild) {
+  const path = `./docs/guilds/guild_${guild}.json`;
+
+  if (!fs.pathExistsSync(path)) {
+    fs.outputFileSync(path, "{}");
+  }
+
+  const doc = fs.readJsonSync(`./docs/guilds/guild_${guild}.json`);
+
+  return doc;
+}
+
+async function saveDoc(guild, doc) {
+  fs.writeJsonSync(`./docs/guilds/guild_${guild}.json`, doc);
+}
 
 async function getList(guild) {
   const doc = fs.readJsonSync(`./docs/guilds/guild_${guild}.json`);
   return doc.members;
 }
 
-async function saveDoc(guild, members) {
+async function saveList(guild, members) {
   const doc = fs.readJsonSync(`./docs/guilds/guild_${guild}.json`);
   doc.members = members;
   fs.writeJsonSync(`./docs/guilds/guild_${guild}.json`, doc);
 }
 
 module.exports = {
+  ensureMember: ensureMember,
+  ensureChannel: ensureChannel,
   ensureRole: ensureRole,
   giveRole: giveRole,
   removeRole: removeRole,
@@ -182,7 +245,14 @@ module.exports = {
   kick: kick,
   ban: ban,
   unban: unban,
+  listBans: listBans,
   sendReply: sendReply,
-  getList: getList,
+  getDate: getDate,
+  addTime: addTime,
+  timerExpired: timerExpired,
+  readDir: readDir,
+  ensureDoc: ensureDoc,
   saveDoc: saveDoc,
+  getList: getList,
+  saveList: saveList,
 }

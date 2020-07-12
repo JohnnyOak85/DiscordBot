@@ -12,7 +12,7 @@ module.exports = {
                 await commandHelper.banMember()
                     .catch(error => { throw error });
                 list = await commandHelper.startTimer(list, args[1], 'days');
-                await commandHelper.saveDoc();
+                await commandHelper.saveList();
             };
         }
         message.channel.send(commandHelper.getReply())

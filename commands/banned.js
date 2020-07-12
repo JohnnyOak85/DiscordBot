@@ -1,5 +1,3 @@
-const { ban } = require("../helpers/common-tasks");
-
 module.exports = {
     name: 'banned',
     description: 'Lists all the users that have been banned.',

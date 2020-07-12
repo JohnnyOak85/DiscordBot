@@ -13,7 +13,7 @@ module.exports = {
                 } catch { error => { throw error } };
 
                 await commandHelper.startTimer(args[1], 'minutes');
-                await commandHelper.saveDoc();
+                await commandHelper.saveList();
             };
         }
         message.channel.send(commandHelper.getReply())

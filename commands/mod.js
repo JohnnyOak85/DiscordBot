@@ -9,7 +9,7 @@ module.exports = {
             if (commandHelper.checkMember()) {
                 await commandHelper.addRole('moderator')
                     .catch(err => { throw err; });
-                await commandHelper.saveDoc();
+                await commandHelper.saveList();
             }
         }
         message.channel.send(commandHelper.getReply())
