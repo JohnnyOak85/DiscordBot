@@ -1,7 +1,15 @@
 const fs = module.require('fs-extra');
 const moment = require('moment');
+const winston = require('winston');
 
 const { CHANNELS_LIST, ROLES_LIST, MAX_STRIKES } = require(`../docs/config.json`);
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.printf(log => `[${log.level.toUpperCase()}] - ${log.message}`),
+  defaultMeta: { service: 'user-service' },
+  transports: [new winston.transports.File({ filename: 'logs/log.txt' })]
+});
 
 // Member Tasks
 
@@ -236,6 +244,7 @@ async function saveList(guild, members) {
 }
 
 module.exports = {
+  logger: logger,
   ensureMember: ensureMember,
   ensureChannel: ensureChannel,
   ensureRole: ensureRole,

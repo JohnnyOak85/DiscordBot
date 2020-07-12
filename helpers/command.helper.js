@@ -1,10 +1,14 @@
-const helper = require('./task.helper.js');
+let helper;
 
 let member;
 let guild;
 let reply = '';
 let reason = '';
 let memberList;
+
+function setHelper(taskHelper) {
+  helper = taskHelper;
+}
 
 function start(message, args) {
   member = message.mentions.members.first();
@@ -198,6 +202,7 @@ async function saveList() {
 }
 
 module.exports = {
+  setHelper: setHelper,
   start: start,
   verifyUser: verifyUser,
   getMember: getMember,

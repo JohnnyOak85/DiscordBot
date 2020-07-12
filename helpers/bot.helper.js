@@ -1,9 +1,9 @@
-const helper = require('./task.helper.js');
-const commandHelper = require('./command.helper.js');
-
 const { PREFIX, TOKEN, PERMISSIONS, RULES } = require(`../docs/config.json`);
 const { BANNED_WORDS } = require('../docs/banned-words.json');
 const { BANNED_SITES } = require('../docs/banned-sites.json');
+
+let helper;
+let commandHelper;
 
 let reply = '';
 let previousMessage = {};
@@ -12,6 +12,12 @@ let previousMessage = {};
 
 function getToken() {
     return TOKEN;
+}
+
+function setHelpers() {
+    helper = require('./task.helper.js');
+    commandHelper = require('./command.helper.js');
+    commandHelper.setHelper(helper);
 }
 
 async function buildCommands(commandList) {
@@ -375,20 +381,21 @@ async function executeCommand(message, commands) {
 
 // Logger Tasks
 
-async function logError(error, logger) {
+async function logError(error) {
     const now = await helper.getDate();
-    logger.log('error', `${error.message}\nFile: ${error.fileName}\nLine: ${error.lineNumber}\nTime: ${now}`);
+    helper.logger.log('error', `${error.message}\nFile: ${error.fileName}\nLine: ${error.lineNumber}\nTime: ${now}`);
     console.log(now);
     console.log(error);
 }
 
-async function logInfo(logger) {
+async function logInfo() {
     const now = await helper.getDate();
-    logger.log('info', `The bot went online at: ${now}`);
+    helper.logger.log('info', `The bot went online at: ${now}`);
 }
 
 module.exports = {
     getToken: getToken,
+    setHelpers: setHelpers,
     buildCommands: buildCommands,
     promote: promote,
     buildDoc: buildDoc,
