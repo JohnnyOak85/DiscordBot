@@ -1,7 +1,7 @@
 module.exports = {
     name: 'unban',
     description: `Provide a username and that user will have access to the server again.`,
-    usage: '<user>',
+    usage: '<username>',
     moderation: true,
     async execute(message, args, commandHelper) {
         commandHelper.start(message, args);

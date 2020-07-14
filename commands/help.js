@@ -13,7 +13,6 @@ module.exports = {
 }
 
 async function buildReply(isMod, commands, args) {
-    // TODO prefix needs to be dynamic and account for more than one.
     const { PREFIX } = require('../docs/config.json');
     const data = [];
 
