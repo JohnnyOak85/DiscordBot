@@ -31,8 +31,6 @@ function setHelpers() {
 }
 
 async function executeCommand(message, commands) {
-    
-
     if (message.channel.type === 'dm' || !message.content.startsWith(PREFIX)) return;
 
     const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
@@ -87,7 +85,9 @@ async function checkMember(member) {
         list[member.user.id] = await validateUsername(member, list, member.user.username);
     } catch { error => { throw error } }
 
-    helper.saveList(guild.id, list);
+    if (list[member.user.id]) {
+        helper.saveList(guild.id, list);
+    }
 
     const channel = member.guild.channels.cache.find(c => c.name === 'rules');
     member.guild.systemChannel.send(`Welcome <@${member.user.id}>! Check the ${channel.toString()}.`)
@@ -104,15 +104,16 @@ function isBot(member) {
 async function validateUsername(member, list, nickname) {
     if (!member.manageable || !nickname) return;
 
+    const censorNickname = 'Princess Twinkletoes';
+
     if (BANNED_WORDS.some(word => nickname.toLowerCase().includes(word)) ||
         BANNED_SITES.some(site => nickname.toLowerCase().includes(site))) {
-        list[member.user.id] = await helper.giveStrike(member, list, `Had illegal nickname: ${nickname}`);
-        nickname = 'Princess Twinkletoes';
-        member.setNickname(nickname)
+        member.setNickname(censorNickname)
             .catch(error => { throw error });
     };
 
-    list[member.user.id].nickname = nickname;
+    if (!member.nickname || !list[member.user.id]) return;
+    list[member.user.id] = helper.ensureMember(list, member);
 
     return list[member.user.id];
 }
@@ -138,26 +139,17 @@ async function isOldMember(member, list) {
 
 async function updateMember(member) {
     const list = await helper.getList(member.guild.id);
+
     list[member.user.id] = await validateUsername(member, list, member.nickname)
         .catch(error => { throw error });
-    list[member.user.id] = await checkRole(member, list);
-    helper.saveList(member.guild.id, list);
-}
 
-// Role Tasks
-
-async function checkRole(member, list) {
-    if (!list[member.user.id]) {
-        list[member.user.id] = {
-            username: member.user.username,
-            roles: []
-        }
+    if (member._roles.length) {
+        list[member.user.id] = helper.ensureMember(list, member);
     }
 
-    if (!member._roles.length) return list[member.user.id];
+    if (!list[member.user.id]) return;
 
-    list[member.user.id].roles = member._roles;
-    return list[member.user.id];
+    helper.saveList(member.guild.id, list);
 }
 
 // Punishment Tasks
@@ -215,12 +207,10 @@ async function pruneUsers(guilds) {
 async function checkMessage(message) {
     if (message.channel.type === 'dm' || message.member.hasPermission('MANAGE_MESSAGES')) return;
 
-    const list = helper.getList(message.guild.id);
-
     try {
-        checkBannedWords(message, list);
-        checkMentions(message, list);
-        checkMessageRepetition(message, list);
+        checkBannedWords(message);
+        checkMentions(message);
+        checkMessageRepetition(message);
         checkContentRepetition(message);
         checkUpperCase(message);
     } catch { error => { throw error } }
@@ -230,7 +220,7 @@ async function checkMessage(message) {
 
 }
 
-async function checkBannedWords(message, list) {
+async function checkBannedWords(message) {
     if (BANNED_WORDS.some(str => message.content.toLowerCase().includes(str)) ||
         BANNED_SITES.some(str => message.content.toLowerCase().includes(str))) {
         try {
@@ -239,7 +229,7 @@ async function checkBannedWords(message, list) {
     };
 }
 
-async function checkMentions(message, list) {
+async function checkMentions(message) {
     console.log('mention check', message.mentions.users.array())
     if (message.mentions.users.array().length >= 3) {
         purgeMessage(message, 'chill with the mention train!')
@@ -247,7 +237,7 @@ async function checkMentions(message, list) {
     }
 }
 
-async function checkMessageRepetition(message, list) {
+async function checkMessageRepetition(message) {
     if (!previousMessage.member || previousMessage.member != message.member.id || previousMessage.content != message.content) return;
 
     if (!previousMessage.counter) previousMessage.counter = 1;
@@ -260,8 +250,6 @@ async function checkMessageRepetition(message, list) {
 async function checkContentRepetition(message) {
     const words = message.content.split(' ');
     let counter = 0;
-
-    console.log('repetition check', words)
 
     words.forEach(word => {
         for (i = 0; i < words.length; i++) {

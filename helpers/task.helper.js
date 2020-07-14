@@ -22,6 +22,14 @@ function ensureMember(list, member) {
     list[member.id].strikes = [];
   };
 
+  if (member._roles) {
+    list[member.id].roles = member._roles;
+  }
+
+  if (member.nickname) {
+    list[member.id].nickname = member.nickname;
+  }
+
   return list[member.id]
 }
 
@@ -113,14 +121,13 @@ async function checkStrikes(member, list, reason) {
   if (amount === MAX_STRIKES) {
     list[member.id] = await ban(member, list, reason);
   } else if (amount >= (MAX_STRIKES / 2)) {
-    list[member.id] = await mute(member, list, reason);
+    list[member.id] = await mute(member, list);
   }
 
   return list[member.id];
 }
 
-async function mute(member, list, reason) {
-  reason = ensureReason(reason);
+async function mute(member, list) {
   list[member.id] = ensureMember(list, member);
 
   const role = await ensureRole(member.guild, 'muted')
@@ -149,6 +156,10 @@ async function kick(member, list, reason) {
 async function ban(member, list, reason) {
   reason = ensureReason(reason);
   list[member.id] = ensureMember(list, member);
+  
+  if (!list[member.id].strikes.includes(reason)) {
+    list[member.id].strikes.push(reason);
+  }
 
   await member.ban(reason)
     .catch(error => { throw error });
