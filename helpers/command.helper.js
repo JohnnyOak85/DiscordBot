@@ -17,6 +17,8 @@ function start(message, args) {
   memberList = helper.getList(message.guild.id);
 }
 
+// Member Tasks
+
 function verifyUser(user, permission) {
   if (!user.hasPermission(permission)) {
     reply = 'You do not have permission for this command!';
@@ -28,8 +30,6 @@ function verifyUser(user, permission) {
   }
   return true;
 }
-
-// Member Tasks
 
 function getMember() {
   return member;
@@ -89,7 +89,7 @@ async function removeRole(roleName) {
   reply = `${member.user.username} is no longer ${roleName}`;
 }
 
-// Strike Tasks
+// Punishment Tasks
 
 async function giveStrike() {
   memberList[member.id] = await helper.giveStrike(member, memberList, reason)
@@ -121,8 +121,6 @@ async function getStrikesList() {
   });
   return list;
 }
-
-// Punish Tasks
 
 async function kickMember() {
   if (memberList[member.id].action === 'banned') {

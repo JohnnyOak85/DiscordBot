@@ -1,24 +1,16 @@
 const Discord = require('discord.js');
-const winston = require('winston');
-
 const helper = require('./helpers/bot.helper');
+const { TOKEN } = require(`./docs/config.json`);
 
 // Initialize Discord Bot
 const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 
-helper.setHelpers();
-helper.buildCommands(bot.commands);
-bot.login(helper.getToken());
+bot.login(TOKEN);
 
 bot.on('ready', () => {
-    helper.logInfo();
-    
-
     try {
-        helper.promote(bot.guilds.cache, bot.user.id);
-        helper.buildDoc(bot.guilds.cache);
-        helper.buildCategory(bot.guilds.cache);
+        helper.start(bot)
     } catch (error) {
         helper.logError(error);
     }
@@ -32,7 +24,6 @@ bot.on('ready', () => {
     }, 5000);
 })
 
-// Listen to messages
 bot.on('message', message => {
     if (message.author.bot) return;
 
@@ -44,7 +35,10 @@ bot.on('message', message => {
     }
 });
 
-// Listen to a member join
+bot.on("messageUpdate", function (oldMessage, newMessage) {
+    helper.checkMessage(newMessage);
+});
+
 bot.on('guildMemberAdd', member => {
     try {
         helper.checkMember(member);
@@ -75,15 +69,6 @@ bot.on("guildBanRemove", (guild, member) => {
     } catch (error) {
         helper.logError(error);
     }
-});
-
-// messageUpdate
-/* Emitted whenever a message is updated - e.g. embed or content change.
-PARAMETER     TYPE           DESCRIPTION
-oldMessage    Message        The message before the update
-newMessage    Message        The message after the update    */
-bot.on("messageUpdate", function (oldMessage, newMessage) {
-    console.log(`a message is updated`);
 });
 
 bot.on('error', error => helper.logError(error));

@@ -1,128 +1,56 @@
-const { PREFIX, TOKEN, PERMISSIONS, RULES } = require(`../docs/config.json`);
+const { PREFIX } = require(`../docs/config.json`);
 const { BANNED_WORDS } = require('../docs/banned-words.json');
 const { BANNED_SITES } = require('../docs/banned-sites.json');
 
 let helper;
 let commandHelper;
+let loginHelper;
 
 let reply = '';
 let previousMessage = {};
 
-// First run
+function start(bot) {
+    setHelpers();
 
-function getToken() {
-    return TOKEN;
+    try {
+        loginHelper.buildCommands(bot.commands);
+        loginHelper.promote(bot.guilds.cache, bot.user.id);
+        loginHelper.buildDoc(bot.guilds.cache);
+        loginHelper.buildCategory(bot.guilds.cache);
+    } catch { error => { throw error } }
+
+    helper.logger.log('info', `The bot went online at: ${helper.getDate()}`);
 }
 
 function setHelpers() {
     helper = require('./task.helper.js');
     commandHelper = require('./command.helper.js');
+    loginHelper = require('./login.helper.js');
     commandHelper.setHelper(helper);
+    loginHelper.setHelper(helper);
 }
 
-async function buildCommands(commandList) {
-    const commands = await helper.readDir('commands');
-    commands.forEach(command => {
-        const file = require(`../commands/${command}`);
-        commandList.set(file.name, file);
-    })
-    // const commandFiles = fs.readdirSync('./commands');
-    // for (const file of commandFiles) {
-    //     const command = require(`./commands/${file}`);
-    //     bot.commands.set(command.name, command);
-    // }
+async function executeCommand(message, commands) {
+    
+
+    if (message.channel.type === 'dm' || !message.content.startsWith(PREFIX)) return;
+
+    const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
+    const command = args.shift().toLowerCase();
+
+    if (!commands.has(command)) {
+        message.reply('invalid command.');
+        return;
+    }
+
+    commands.get(command).execute(message, args, commandHelper)
+        .catch(error => {
+            message.reply('there was an error trying to execute that command!');
+            throw error
+        });
 }
 
-async function promote(guilds, id) {
-    guilds.forEach(guild => {
-        const bot = guild.members.cache.find(u => u.user.id === id);
-        helper.ensureRole(guild, 'bot')
-            .then(role => {
-                if (bot.roles.cache.has(role.id)) return;
-                bot.roles.add(role)
-            })
-            .catch(err => { throw err; });
-    })
-}
-
-async function buildDoc(guilds) {
-    guilds.forEach(guild => {
-        helper.ensureDoc(guild.id)
-            .then(doc => {
-                if (!doc.name || !doc.members) {
-                    doc.name = guild.name;
-                    buildMemberList(guild)
-                        .then(members => {
-                            doc.members = members;
-                            helper.saveDoc(guild.id, doc);
-                        })
-                }
-            })
-            .catch(err => { throw err });
-
-    })
-}
-
-async function buildMemberList(guild) {
-    const members = {};
-    guild.members.cache.forEach(member => {
-        if (member._roles.length) {
-            members[member.user.id] = {
-                username: member.user.username,
-                roles: member._roles
-            }
-        }
-    })
-
-    guild.fetchBans().then(res => {
-        res.forEach(member => {
-            if (member.reason === null) member.reason = 'No reason provided.';
-            members[member.user.id] = {
-                username: member.user.username,
-                banned: true,
-                strikes: [
-                    member.reason
-                ]
-            }
-        })
-    })
-        .catch(err => { throw err });
-
-    return members;
-}
-
-async function buildCategory(guilds) {
-    guilds.forEach(guild => {
-        if (guild.id != "698238439971094618") return;
-
-        helper.ensureChannel(guild, 'information')
-            .then(category => {
-                category.setPosition(1);
-                category.updateOverwrite(guild.roles.everyone, PERMISSIONS)
-                    .then(category => {
-                        helper.ensureChannel(guild, 'rules')
-                            .then(channel => {
-                                channel.setParent(category.id);
-                                channel.overwritePermissions(category.permissionOverwrites);
-                                channel.messages.fetch().then(message => {
-                                    const reply = buildReply();
-                                    if (message.content === reply) return;
-                                    channel.send(`${reply}`);
-                                })
-                            });
-                        helper.ensureChannel(guild, 'events')
-                            .then(channel => {
-                                channel.setParent(category.id);
-                                channel.overwritePermissions(category.permissionOverwrites);
-                                guild.setSystemChannel(channel)
-                            });
-                    });
-            })
-            .catch(err => { throw err; });
-    })
-}
-
-// Timed Tasks
+// Time Tasks
 
 async function checkTimers(guilds) {
     guilds.forEach(guild => {
@@ -145,47 +73,6 @@ async function checkTimers(guilds) {
             guild.systemChannel.send(reply)
                 .catch(error => { throw error });
         });
-    })
-}
-
-async function unban(list, id, guild) {
-    const banned = await helper.listBans(guild)
-        .catch(err => { throw err });
-    const member = banned.find(m => m.user.id === id);
-
-    if (member) {
-        list[id] = await helper.unban(member, list, guild)
-            .catch(err => { throw err });
-    }
-
-    reply = `${list[id].username} has been unbanned.`;
-
-    return list[id];
-}
-
-async function unmute(list, id, guild) {
-    const role = helper.ensureRole(guild, 'muted')
-        .catch(err => { throw err });
-    const member = guild.members.cache.find(m => m.user.id === memberId);
-
-    if (member.roles.cache.has(role.id)) {
-        list[id] = await helper.removeRole(member, list, role)
-            .catch(err => { throw err })
-    }
-
-    reply = `${list[id].username} has been unmuted.`;
-
-    return list[id];
-}
-
-async function pruneUsers(guilds) {
-    guilds.forEach(guild => {
-        guild.members.prune({ days: 30 })
-            .then(pruned => {
-                guild.systemChannel.send(`${pruned} users have been pruned due to inactivity!`)
-                    .catch(error => { throw error });
-            })
-            .catch(err => { throw err });
     })
 }
 
@@ -254,8 +141,10 @@ async function updateMember(member) {
     list[member.user.id] = await validateUsername(member, list, member.nickname)
         .catch(error => { throw error });
     list[member.user.id] = await checkRole(member, list);
-    helper.saveList(guild.id, list);
+    helper.saveList(member.guild.id, list);
 }
+
+// Role Tasks
 
 async function checkRole(member, list) {
     if (!list[member.user.id]) {
@@ -271,6 +160,38 @@ async function checkRole(member, list) {
     return list[member.user.id];
 }
 
+// Punishment Tasks
+
+async function unmute(list, id, guild) {
+    const role = helper.ensureRole(guild, 'muted')
+        .catch(err => { throw err });
+    const member = guild.members.cache.find(m => m.user.id === memberId);
+
+    if (member.roles.cache.has(role.id)) {
+        list[id] = await helper.removeRole(member, list, role)
+            .catch(err => { throw err })
+    }
+
+    reply = `${list[id].username} has been unmuted.`;
+
+    return list[id];
+}
+
+async function unban(list, id, guild) {
+    const banned = await helper.listBans(guild)
+        .catch(err => { throw err });
+    const member = banned.find(m => m.user.id === id);
+
+    if (member) {
+        list[id] = await helper.unban(member, list, guild)
+            .catch(err => { throw err });
+    }
+
+    reply = `${list[id].username} has been unbanned.`;
+
+    return list[id];
+}
+
 function registerBanStatus(guild, member, banStatus) {
     const list = helper.getList(guild.id);
     list[member.id] = helper.ensureMember(list, member);
@@ -278,15 +199,18 @@ function registerBanStatus(guild, member, banStatus) {
     helper.saveList(guild.id, list);
 }
 
-// Message Tasks
-
-function buildReply() {
-    reply = '```markdown\n';
-    RULES.forEach(rule => {
-        reply += `* ${rule}\n`;
+async function pruneUsers(guilds) {
+    guilds.forEach(guild => {
+        guild.members.prune({ days: 30 })
+            .then(pruned => {
+                guild.systemChannel.send(`${pruned} users have been pruned due to inactivity!`)
+                    .catch(error => { throw error });
+            })
+            .catch(err => { throw err });
     })
-    reply += '```';
 }
+
+// Message Tasks
 
 async function checkMessage(message) {
     if (message.channel.type === 'dm' || message.member.hasPermission('MANAGE_MESSAGES')) return;
@@ -296,8 +220,14 @@ async function checkMessage(message) {
     try {
         checkBannedWords(message, list);
         checkMentions(message, list);
-        checkRepetition(message, list);
+        checkMessageRepetition(message, list);
+        checkContentRepetition(message);
+        checkUpperCase(message);
     } catch { error => { throw error } }
+
+    previousMessage.member = message.member.id;
+    previousMessage.content = message.content;
+
 }
 
 async function checkBannedWords(message, list) {
@@ -305,78 +235,68 @@ async function checkBannedWords(message, list) {
         BANNED_SITES.some(str => message.content.toLowerCase().includes(str))) {
         try {
             purgeMessage(message, `wait, that's illegal!`);
-            reply = `${message.author.user.username} has been warned for posting a message with illegal content.`;
-            list[message.author.id] = await giveStrike(list, message.author, message.guild, 'Posted message with illegal content.');
-            helper.saveList(guild.id, list);
         } catch { error => { throw error } }
     };
 }
 
 async function checkMentions(message, list) {
+    console.log('mention check', message.mentions.users.array())
     if (message.mentions.users.array().length >= 3) {
         purgeMessage(message, 'chill with the mention train!')
             .catch(error => { throw error });
     }
-
-    if (message.mentions.users.array().length >= 6) {
-        reply = `${message.author.user.username} has been warned for trying to mention too many people.`;
-        list[message.author.id] = await giveStrike(list, message.author, message.guild, 'Posted message with too many mentions.')
-            .catch(error => { throw error });
-        helper.saveList(message.guild.id, list);
-    }
 }
 
-async function checkRepetition(message, list) {
+async function checkMessageRepetition(message, list) {
     if (!previousMessage.member || previousMessage.member != message.member.id || previousMessage.content != message.content) return;
 
-    previousMessage.member = message.member.id;
-    previousMessage.content = message.content;
     if (!previousMessage.counter) previousMessage.counter = 1;
 
     previousMessage.counter += 1;
+    purgeMessage(message, 'we heard you the first time!')
+        .catch(error => { throw error });
+}
+
+async function checkContentRepetition(message) {
+    const words = message.content.split(' ');
+    let counter = 0;
+
+    console.log('repetition check', words)
+
+    words.forEach(word => {
+        for (i = 0; i < words.length; i++) {
+            if (word.length < 3 || words[i] != word) continue;
+            counter++;
+            return
+        }
+    })
+
+    if (counter < 5) return;
+
     purgeMessage(message, 'stop repeating yourself!')
         .catch(error => { throw error });
+}
 
-    if (previousMessage.counter >= 3) {
-        reply = `${message.author.user.username} has been warned for repeating the same message too many times in a row.`;
-        list[message.author.id] = await giveStrike(list, message.author, message.guild, 'Posted same message repeatedly.')
+async function checkUpperCase(message) {
+    let content = message.content.replace(/[^\w]/g, '');
+    if (content.length < 60) return;
+    let counter = 0;
+    for (i = 0; i < content.length; i++) {
+        if (content.charAt(i) === content.charAt(i).toUpperCase()) {
+            counter += 1
+        }
+    }
+    if (counter >= 60) {
+        purgeMessage(message, 'stop shouting please!')
             .catch(error => { throw error });
-        helper.saveList(message.guild.id, list);
     }
 }
 
-function purgeMessage(message, reply) {
+async function purgeMessage(message, reply) {
     try {
         message.delete();
         message.reply(reply);
     } catch { error => { throw error } }
-}
-
-async function giveStrike(list, member, guild, reason) {
-    list[member.id] = helper.ensureMember(list, member);
-
-    try {
-        list[member.id] = await helper.giveStrike(message.author, list, reason);
-        guild.systemChannel.send(reply);
-    } catch { error => { throw error } }
-}
-
-async function executeCommand(message, commands) {
-    if (message.channel.type === 'dm' || !message.content.startsWith(PREFIX)) return;
-
-    const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
-    const command = args.shift().toLowerCase();
-
-    if (!commands.has(command)) {
-        message.reply('invalid command.');
-        return;
-    }
-
-    commands.get(command).execute(message, args, commandHelper)
-        .catch(error => {
-            message.reply('there was an error trying to execute that command!');
-            throw error
-        });
 }
 
 // Logger Tasks
@@ -388,18 +308,9 @@ async function logError(error) {
     console.log(error);
 }
 
-async function logInfo() {
-    const now = await helper.getDate();
-    helper.logger.log('info', `The bot went online at: ${now}`);
-}
-
 module.exports = {
-    getToken: getToken,
+    start: start,
     setHelpers: setHelpers,
-    buildCommands: buildCommands,
-    promote: promote,
-    buildDoc: buildDoc,
-    buildCategory: buildCategory,
     checkTimers: checkTimers,
     pruneUsers: pruneUsers,
     checkMember: checkMember,
@@ -408,5 +319,4 @@ module.exports = {
     checkMessage: checkMessage,
     executeCommand: executeCommand,
     logError: logError,
-    logInfo: logInfo,
 }

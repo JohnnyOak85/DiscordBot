@@ -93,7 +93,7 @@ async function removeRole(member, list, role) {
   return list[member.user.id];
 }
 
-// Strike Tasks
+// Punishment Tasks
 
 async function giveStrike(member, list, reason) {
   reason = ensureReason(reason);
@@ -118,8 +118,6 @@ async function checkStrikes(member, list, reason) {
 
   return list[member.id];
 }
-
-// Punish Tasks
 
 async function mute(member, list, reason) {
   reason = ensureReason(reason);
