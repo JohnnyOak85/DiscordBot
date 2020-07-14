@@ -1,4 +1,4 @@
-const { PREFIX } = require(`../docs/config.json`);
+const { PREFIX, CENSOR_NICKNAME } = require(`../docs/config.json`);
 const { BANNED_WORDS } = require('../docs/banned-words.json');
 const { BANNED_SITES } = require('../docs/banned-sites.json');
 
@@ -104,11 +104,9 @@ function isBot(member) {
 async function validateUsername(member, list, nickname) {
     if (!member.manageable || !nickname) return;
 
-    const censorNickname = 'Princess Twinkletoes';
-
     if (BANNED_WORDS.some(word => nickname.toLowerCase().includes(word)) ||
         BANNED_SITES.some(site => nickname.toLowerCase().includes(site))) {
-        member.setNickname(censorNickname)
+        member.setNickname(CENSOR_NICKNAME)
             .catch(error => { throw error });
     };
 
