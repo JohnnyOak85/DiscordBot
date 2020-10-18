@@ -1,3 +1,5 @@
+const { sendReply } = require("./task.helper");
+
 let helper;
 
 let member;
@@ -10,11 +12,15 @@ function setHelper(taskHelper) {
   helper = taskHelper;
 }
 
-function start(message, args) {
-  member = message.mentions.members.first();
-  guild = message.guild;
-  reason = args.slice(1).join(' ');
-  memberList = helper.getList(message.guild.id);
+async function start(message, args) {
+  try {
+    member = await message.mentions.members.first();
+    guild = message.guild;
+    reason = args.slice(1).join(' ');
+    memberList = await helper.getList(message.guild.id);
+  } catch (error) {
+    throw error
+  }
 }
 
 // Member Tasks
@@ -47,110 +53,121 @@ function checkMember() {
   return true;
 }
 
-function findMember() {
-  const list = fetchBans();
-  member = list.find(m => m.user.username.includes(username));
-
-  if (!member) {
-    reply = 'You need to mention a valid user!';
-  }
-}
-
 // Role Tasks
 
 async function addRole(roleName) {
-  const role = await helper.ensureRole(guild, roleName)
-    .catch(err => { throw err; });
+  try {
+    const role = await helper.ensureRole(guild, roleName);
 
-  if (member.roles.cache.has(role.id)) {
-    if (memberList[member.id].action != 'warned') return;
-    reply = `${member.user.username} is already ${roleName}.`;
-    return;
+    if (member.roles.cache.has(role.id)) {
+      if (memberList[member.id].action != 'warned') return;
+      reply = `${member.user.username} is already ${roleName}.`;
+      return;
+    }
+
+    memberList[member.user.id] = await helper.giveRole(member, memberList, role);
+    reply = `${member.user.username} is now ${roleName}.\n${reason}`;
+  } catch (error) {
+    throw error
   }
-
-  memberList[member.user.id] = await helper.giveRole(member, memberList, role)
-    .catch(err => { throw err; });
-
-  reply = `${member.user.username} is now ${roleName}.\n${reason}`;
 }
 
 async function removeRole(roleName) {
-  const role = await helper.ensureRole(guild, roleName)
-    .catch(err => { throw err; });
+  try {
+    const role = await helper.ensureRole(guild, roleName);
 
-  if (!member.roles.cache.has(role.id)) {
-    reply = `${member.user.username} is not ${roleName}.`;
-    return;
+    if (!member.roles.cache.has(role.id)) {
+      reply = `${member.user.username} is not ${roleName}.`;
+      return;
+    }
+
+    memberList[member.user.id] = await helper.removeRole(member, memberList, role);
+    reply = `${member.user.username} is no longer ${roleName}`;
+  } catch (error) {
+    throw error
   }
-
-  memberList[member.user.id] = await helper.removeRole(member, memberList, role)
-    .catch(err => { throw err; });
-
-  reply = `${member.user.username} is no longer ${roleName}`;
 }
 
 // Punishment Tasks
 
 async function giveStrike() {
-  memberList[member.id] = await helper.giveStrike(member, memberList, reason)
-    .catch(err => { throw err; });
+  try {
+    memberList[member.id] = await helper.giveStrike(member, memberList, reason)
 
-  if (memberList[member.id].action != 'warned') {
-    reply = checkAction();
-    return;
+    if (memberList[member.id].action != 'warned') {
+      checkAction();
+      return;
+    }
+
+    reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
+  } catch (error) {
+    throw error
   }
-
-  reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
 }
 
-async function removeStrike() {
+function removeStrike() {
   if (!memberList[member.id] || !memberList[member.id].strikes || !memberList[member.id].strikes.length) {
     reply = `${member.user.username} has no strikes.`;
     return;
   }
+
   memberList[member.id].strikes.shift();
-  reply = `An strike was removed from ${member.user.username}`;
+  reply = `A strike was removed from ${member.user.username}`;
 }
 
-async function getStrikesList() {
+function getStrikesList() {
   const list = [];
+
   Object.values(memberList).forEach(member => {
     if (member.strikes && member.strikes.length) {
       list.push(member);
     }
   });
+
   return list;
 }
 
 async function kickMember() {
-  if (memberList[member.id].action === 'banned') {
-    reply = checkAction();
-    return;
+  try {
+    if (memberList[member.id].action === 'banned') {
+      checkAction();
+      return;
+    }
+
+    memberList[member.id] = await helper.kick(member, memberList, reason)
+    reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
+  } catch (error) {
+    throw error
   }
-
-  memberList[member.id] = await helper.kick(member, memberList, reason)
-    .catch(err => { throw err; });
-
-  reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
 }
 
 async function banMember() {
-  if (memberList[member.id].action != 'banned') {
-    memberList[member.id] = await helper.ban(member, memberList, reason)
-      .catch(err => { throw err; });
-  }
+  try {
+    if (memberList[member.id].action != 'banned') {
+      memberList[member.id] = await helper.ban(member, memberList, reason)
+    }
 
-  reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
+    reply = `${member.user.username} has been ${memberList[member.id].action}.\n${reason}`;
+  } catch (error) {
+    throw error
+  }
 }
 
 async function unbanMember(username) {
-  findMember(username);
-  if (!member) return;
+  try {
+    const list = await helper.listBans(guild);
+    member = list.find(m => m.user.username.includes(username));
 
-  helper.unban(member, memberList, guild)
-    .catch(err => { throw err; });
+    if (!member) {
+      reply = 'You need to mention a valid user!';
+      return;
+    }
 
-  reply = `${member.user.username} has been unbanned.`;
+    await helper.unban(member.user, memberList, guild);
+    reply = `${member.user.username} has been unbanned.`;
+  } catch (error) {
+    throw error
+  }
 }
 
 async function getBansList() {
@@ -171,6 +188,14 @@ function checkAction() {
   reply = `${member.user.username} has been ${memberList[member.id].action} due to repeated strikes.\n${reason}`;
 }
 
+async function deleteMessages(channel, amount) {
+  try {
+    await channel.bulkDelete(amount + 1, true);
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Math Tasks
 
 function getNumber(num) {
@@ -182,7 +207,7 @@ function getNumber(num) {
 
 // Time Tasks
 
-async function startTimer(num, type) {
+function startTimer(num, type) {
   const amount = getNumber(num);
   reply = reply.replace(num, '');
 
@@ -195,8 +220,12 @@ async function startTimer(num, type) {
 // Doc Tasks
 
 async function saveList() {
-  delete memberList[member.id].action;
-  await helper.saveList(guild.id, memberList);
+  try {
+    delete memberList[member.id].action;
+    await helper.saveList(guild.id, memberList);
+  } catch (error) {
+    throw error
+  }
 }
 
 module.exports = {
@@ -216,6 +245,8 @@ module.exports = {
   getBansList: getBansList,
   setReply: setReply,
   getReply: getReply,
+  sendReply: sendReply,
+  deleteMessages: deleteMessages,
   getNumber: getNumber,
   startTimer: startTimer,
   saveList: saveList

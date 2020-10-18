@@ -4,17 +4,20 @@ module.exports = {
     usage: '<user> <reason>',
     moderation: true,
     async execute(message, args, commandHelper) {
-        commandHelper.start(message, args);
-        if (commandHelper.verifyUser(message.member, 'KICK_MEMBERS')) {
-            if (commandHelper.checkMember()) {
-                await commandHelper.giveStrike()
-                    .catch(error => { throw error });
-                await commandHelper.kickMember()
-                    .catch(error => { throw error });
-                await commandHelper.saveList();
-            };
+        try {
+            await commandHelper.start(message, args);
+
+            if (commandHelper.verifyUser(member, 'KICK_MEMBERS')) {
+                if (commandHelper.checkMember()) {
+                    await commandHelper.giveStrike()
+                    await commandHelper.kickMember()
+                    await commandHelper.saveList();
+                };
+            }
+
+            await commandHelper.sendReply(guild, commandHelper.getReply());
+        } catch (error) {
+            throw error
         }
-        message.channel.send(commandHelper.getReply())
-            .catch(err => { throw err; });
     }
 }

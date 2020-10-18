@@ -15,7 +15,7 @@ const logger = winston.createLogger({
 
 function ensureMember(list, member) {
   if (!list[member.id]) {
-    list[member.id] = { username: member.user.username };
+    list[member.id] = { username: member.user.username || member.username };
   };
 
   if (!list[member.id].strikes) {
@@ -36,157 +36,194 @@ function ensureMember(list, member) {
 // Channel Tasks
 
 async function ensureChannel(guild, channelName) {
-  const channelSchema = CHANNELS_LIST[channelName];
-  let channel = guild.channels.cache.find(c => c.name === channelSchema.name);
+  try {
+    const channelSchema = CHANNELS_LIST[channelName];
+    let channel = guild.channels.cache.find(c => c.name === channelSchema.name);
 
-  if (!channel) {
-    channel = await guild.channels.create(channelSchema.name, {
-      type: channelSchema.type,
-    }).catch(err => { throw err; });
+    if (!channel) {
+      channel = await guild.channels.create(channelSchema.name, {
+        type: channelSchema.type,
+      })
+    }
+
+    return channel;
+  } catch (error) {
+    throw error
   }
 
-  return channel;
 }
 
 // Role Tasks
 
 async function ensureRole(guild, roleName) {
-  const roleSchema = ROLES_LIST[roleName];
-  let role = guild.roles.cache.find(r => r.name === roleSchema.name);
+  try {
+    const roleSchema = ROLES_LIST[roleName];
+    let role = guild.roles.cache.find(r => r.name === roleSchema.name);
 
-  if (!role) {
-    role = await guild.roles.create({
-      data: {
-        name: roleSchema.name,
-        permissions: roleSchema.activePermissions
-      }
-    }).catch(err => { throw err; });
+    if (!role) {
+      role = await guild.roles.create({
+        data: {
+          name: roleSchema.name,
+          permissions: roleSchema.activePermissions
+        }
+      });
 
-    guild.channels.cache.forEach(async (channel) => {
-      await channel.updateOverwrite(role, roleSchema.inactivePermissions)
-        .catch(err => { throw err; })
-    });
+      guild.channels.cache.forEach(async (channel) => {
+        await channel.updateOverwrite(role, roleSchema.inactivePermissions);
+      });
+    }
+
+    return role;
+  } catch (error) {
+    throw error
   }
-
-  return role;
 }
 
 async function giveRole(member, list, role) {
-  if (member.roles.cache.has(role.id)) return list[member.user.id];
+  try {
+    if (member.roles.cache.has(role.id)) return list[member.user.id];
 
-  await member.roles.add(role)
-    .catch(err => { throw err; });
+    await member.roles.add(role);
 
-  if (!list[member.user.id]) {
-    list[member.user.id] = {
-      username: member.user.username,
-      roles: []
+    if (!list[member.user.id]) {
+      list[member.user.id] = {
+        username: member.user.username,
+        roles: []
+      };
     };
-  };
 
-  list[member.id].roles.push(role.id);
+    list[member.id].roles.push(role.id);
 
-  return list[member.user.id];
+    return list[member.user.id];
+  } catch (error) {
+    throw error
+  }
 }
 
 async function removeRole(member, list, role) {
-  await member.roles.remove(role)
-    .catch(err => { throw err });
+  try {
+    await member.roles.remove(role)
 
-  const index = list[member.user.id].roles.indexOf(role.id);
-  if (index > -1) {
-    list[member.user.id].roles.splice(index, 1);
+    const index = list[member.user.id].roles.indexOf(role.id);
+
+    if (index > -1) {
+      list[member.user.id].roles.splice(index, 1);
+    }
+
+    return list[member.user.id];
+  } catch (error) {
+    throw error
   }
-
-  return list[member.user.id];
 }
 
 // Punishment Tasks
 
 async function giveStrike(member, list, reason) {
-  reason = ensureReason(reason);
+  try {
+    reason = ensureReason(reason);
 
-  list[member.id] = await ensureMember(list, member);
-  list[member.id].strikes.push(reason);
-  list[member.id].action = 'warned';
-  list[member.id] = await checkStrikes(member, list, reason)
-    .catch(error => { throw error });
+    list[member.id] = ensureMember(list, member);
+    list[member.id].strikes.push(reason);
+    list[member.id].action = 'warned';
+    list[member.id] = await checkStrikes(member, list, reason)
 
-  return list[member.id];
+    return list[member.id];
+  } catch (error) {
+    throw error
+  }
 };
 
 async function checkStrikes(member, list, reason) {
-  const amount = list[member.user.id].strikes.length;
+  try {
+    const amount = list[member.user.id].strikes.length;
 
-  if (amount === MAX_STRIKES) {
-    list[member.id] = await ban(member, list, reason);
-  } else if (amount >= (MAX_STRIKES / 2)) {
-    list[member.id] = await mute(member, list);
+    if (amount === MAX_STRIKES) {
+      list[member.id] = await ban(member, list, reason);
+    } else if (amount >= (MAX_STRIKES / 2)) {
+      list[member.id] = await mute(member, list);
+    }
+
+    return list[member.id];
+  } catch (error) {
+    throw error
   }
-
-  return list[member.id];
 }
 
 async function mute(member, list) {
-  list[member.id] = ensureMember(list, member);
+  try {
+    list[member.id] = ensureMember(list, member);
 
-  const role = await ensureRole(member.guild, 'muted')
-    .catch(err => { throw err; });
+    const role = await ensureRole(member.guild, 'muted')
 
-  list[member.id] = await giveRole(member, list, role)
-    .catch(err => { throw err; });
+    list[member.id] = await giveRole(member, list, role)
+    list[member.id].action = 'muted';
 
-  list[member.id].action = 'muted';
-
-  return list[member.id];
+    return list[member.id];
+  } catch (error) {
+    throw error
+  }
 }
 
 async function kick(member, list, reason) {
-  reason = ensureReason(reason);
-  list[member.id] = ensureMember(list, member);
+  try {
+    reason = ensureReason(reason);
+    list[member.id] = ensureMember(list, member);
 
-  await member.kick(reason)
-    .catch(error => { throw error });
+    await member.kick(reason)
 
-  list[member.id].action = 'kicked';
+    list[member.id].action = 'kicked';
 
-  return list[member.id];
+    return list[member.id];
+  } catch (error) {
+    throw error
+  }
 }
 
 async function ban(member, list, reason) {
-  reason = ensureReason(reason);
-  list[member.id] = ensureMember(list, member);
-  
-  if (!list[member.id].strikes.includes(reason)) {
-    list[member.id].strikes.push(reason);
+  try {
+    reason = ensureReason(reason);
+    list[member.id] = ensureMember(list, member);
+
+    if (!list[member.id].strikes.includes(reason)) {
+      list[member.id].strikes.push(reason);
+    }
+
+    await member.ban(reason)
+
+    list[member.id].action = 'banned';
+    list[member.id].banned = true;
+    delete list[member.id].roles;
+
+    return list[member.id];
+  } catch (error) {
+    throw error
   }
-
-  await member.ban(reason)
-    .catch(error => { throw error });
-
-  list[member.id].action = 'banned';
-  list[member.id].banned = true;
-  delete list[member.id].roles;
-
-  return list[member.id];
 }
 
 async function unban(member, list, guild) {
-  list[member.id] = ensureMember(list, member);
+  try {
+    list[member.id] = ensureMember(list, member);
 
-  await guild.members.unban(member.id)
-    .catch(error => { throw error });
+    console.log(member);
+    // return
+    await guild.members.unban(member.id)
 
-  list[member.id].banned = false;
+    list[member.id].banned = false;
 
-  return list[member.id];
+    return list[member.id];
+  } catch (error) {
+    throw error
+  }
 }
 
 async function listBans(guild) {
-  const list = await guild.fetchBans()
-    .catch(err => { throw err; });
+  try {
+    const list = await guild.fetchBans()
 
-  return list.array();
+    return list.array();
+  } catch (error) {
+    throw error
+  }
 }
 
 // Message Tasks
@@ -200,17 +237,20 @@ function ensureReason(reason) {
 }
 
 async function sendReply(guild, reply) {
-  guild.systemChannel.send(reply)
-    .catch(error => { throw error });
+  try {
+    await guild.systemChannel.send(reply)
+  } catch (error) {
+    throw error
+  }
 }
 
 // Time Tasks
 
-async function getDate() {
-  return moment().format();
+function getDate() {
+  return moment().format('Do MMMM YYYY, h:mm:ss a');
 }
 
-async function addTime(amount, type) {
+function addTime(amount, type) {
   return moment().add(amount, type).format();
 }
 
@@ -221,35 +261,57 @@ function timerExpired(time) {
 // Doc Tasks
 
 async function readDir(name) {
-  const dir = fs.readdirSync(`./${name}`);
-  return dir;
+  try {
+    const dir = fs.readdirSync(`./${name}`);
+    return dir;
+  } catch (error) {
+    throw error
+  }
 }
 
 async function ensureDoc(guild) {
-  const path = `./docs/guilds/guild_${guild}.json`;
+  try {
+    const path = `./docs/guilds/guild_${guild}.json`;
 
-  if (!fs.pathExistsSync(path)) {
-    fs.outputFileSync(path, "{}");
+    if (!fs.pathExistsSync(path)) {
+      fs.outputFileSync(path, "{}");
+    }
+
+    const doc = fs.readJsonSync(path);
+
+    return doc;
+  } catch (error) {
+    throw error
   }
-
-  const doc = fs.readJsonSync(`./docs/guilds/guild_${guild}.json`);
-
-  return doc;
 }
 
 async function saveDoc(guild, doc) {
-  fs.writeJsonSync(`./docs/guilds/guild_${guild}.json`, doc);
+  try {
+    fs.writeJsonSync(`./docs/guilds/guild_${guild}.json`, doc);
+  } catch (error) {
+    throw error
+  }
 }
 
 async function getList(guild) {
-  const doc = fs.readJsonSync(`./docs/guilds/guild_${guild}.json`);
-  return doc.members;
+  try {
+    const doc = fs.readJsonSync(`./docs/guilds/guild_${guild}.json`);
+    return doc.members;
+  } catch (error) {
+    throw error
+  }
 }
 
 async function saveList(guild, members) {
-  const doc = fs.readJsonSync(`./docs/guilds/guild_${guild}.json`);
-  doc.members = members;
-  fs.writeJsonSync(`./docs/guilds/guild_${guild}.json`, doc);
+  try {
+    const path = `./docs/guilds/guild_${guild}.json`
+    const doc = fs.readJsonSync(path);
+
+    doc.members = members;
+    fs.writeJsonSync(path, doc);
+  } catch (error) {
+    throw error
+  }
 }
 
 module.exports = {

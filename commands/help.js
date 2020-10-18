@@ -4,15 +4,19 @@ module.exports = {
     usage: '<command>',
     moderation: false,
     async execute(message, args, commandHelper) {
-        const { commands } = message.client;
-        const reply = await buildReply(commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES'), commands, args);
-        commandHelper.setReply(reply);
-        message.channel.send(commandHelper.getReply())
-            .catch(err => { throw err; });
+        try {
+            const { commands } = message.client;
+            const reply = buildReply(commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES'), commands, args);
+            
+            commandHelper.setReply(reply);
+            await commandHelper.sendReply(message.guild, commandHelper.getReply());
+        } catch (error) {
+            throw error
+        }
     }
 }
 
-async function buildReply(isMod, commands, args) {
+function buildReply(isMod, commands, args) {
     const { PREFIX } = require('../docs/config.json');
     const data = [];
 
@@ -28,11 +32,14 @@ async function buildReply(isMod, commands, args) {
     }
 
     const command = commands.get(args[0].toLowerCase());
+
     if (!command) {
         return `That command doesn't exist`
     }
+
     data.push(`**Name:** ${command.name}`);
     data.push(`**Description:** ${command.description}`);
     data.push(`**Usage:** ${PREFIX}${command.name} ${command.usage}`);
+
     return data;
 }

@@ -2,30 +2,31 @@ const { PREFIX, CENSOR_NICKNAME } = require(`../docs/config.json`);
 const { BANNED_WORDS } = require('../docs/banned-words.json');
 const { BANNED_SITES } = require('../docs/banned-sites.json');
 
-let helper;
-let commandHelper;
-let loginHelper;
+const helper = require('./task.helper.js');
+const loginHelper = require('./login.helper.js');
+const commandHelper = require('./command.helper.js');
 
 let reply = '';
 let previousMessage = {};
 
-function start(bot) {
+async function start(bot) {
     setHelpers();
 
     try {
-        loginHelper.buildCommands(bot.commands);
-        loginHelper.promote(bot.guilds.cache, bot.user.id);
-        loginHelper.buildDoc(bot.guilds.cache);
-        loginHelper.buildCategory(bot.guilds.cache);
-    } catch { error => { throw error } }
+        await loginHelper.buildCommands(bot.commands);
+        await loginHelper.promote(bot.guilds.cache, bot.user.id);
+        await loginHelper.buildDoc(bot.guilds.cache);
+        await loginHelper.setGuild(bot.guilds.cache);
+    } catch (error) {
+        throw error;
+    };
 
-    helper.logger.log('info', `The bot went online at: ${helper.getDate()}`);
+    const startMessage = `The bot went online at: ${helper.getDate()}`;
+    console.log(startMessage);
+    helper.logger.log('info', startMessage);
 }
 
 function setHelpers() {
-    helper = require('./task.helper.js');
-    commandHelper = require('./command.helper.js');
-    loginHelper = require('./login.helper.js');
     commandHelper.setHelper(helper);
     loginHelper.setHelper(helper);
 }
@@ -33,19 +34,34 @@ function setHelpers() {
 async function executeCommand(message, commands) {
     if (message.channel.type === 'dm' || !message.content.startsWith(PREFIX)) return;
 
-    const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
-    const command = args.shift().toLowerCase();
+    try {
+        const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
+        const command = args.shift().toLowerCase();
 
-    if (!commands.has(command)) {
-        message.reply('invalid command.');
-        return;
+        if (!commands.has(command)) {
+            await message.reply('invalid command.');
+            return;
+        }
+
+        await commands.get(command).execute(message, args, commandHelper)
+    } catch (error) {
+        message.reply('there was an error trying to execute that command!');
+        throw error
     }
 
-    commands.get(command).execute(message, args, commandHelper)
-        .catch(error => {
-            message.reply('there was an error trying to execute that command!');
-            throw error
-        });
+    // const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
+    // const command = args.shift().toLowerCase();
+
+    // if (!commands.has(command)) {
+    //     message.reply('invalid command.');
+    //     return;
+    // }
+
+    // commands.get(command).execute(message, args, commandHelper)
+    //     .catch(error => {
+    //         message.reply('there was an error trying to execute that command!');
+    //         throw error
+    //     });
 }
 
 // Time Tasks
@@ -251,6 +267,7 @@ async function checkContentRepetition(message) {
 
     words.forEach(word => {
         for (i = 0; i < words.length; i++) {
+            console.log(word)
             if (word.length < 3 || words[i] != word) continue;
             counter++;
             return
@@ -259,8 +276,8 @@ async function checkContentRepetition(message) {
 
     if (counter < 5) return;
 
-    purgeMessage(message, 'stop repeating yourself!')
-        .catch(error => { throw error });
+    // purgeMessage(message, 'stop repeating yourself!')
+    //     .catch(error => { throw error });
 }
 
 async function checkUpperCase(message) {
@@ -288,7 +305,7 @@ async function purgeMessage(message, reply) {
 // Logger Tasks
 
 async function logError(error) {
-    const now = await helper.getDate();
+    const now = helper.getDate();
     helper.logger.log('error', `${error.message}\nFile: ${error.fileName}\nLine: ${error.lineNumber}\nTime: ${now}`);
     console.log(now);
     console.log(error);

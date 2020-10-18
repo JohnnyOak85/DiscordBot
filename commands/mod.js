@@ -4,15 +4,19 @@ module.exports = {
     usage: '<user>',
     moderation: true,
     async execute(message, args, commandHelper) {
-        commandHelper.start(message, args);
-        if (commandHelper.verifyUser(message.member, 'ADMINISTRATOR')) {
-            if (commandHelper.checkMember()) {
-                await commandHelper.addRole('moderator')
-                    .catch(err => { throw err; });
-                await commandHelper.saveList();
+        try {
+            await commandHelper.start(message, args);
+
+            if (commandHelper.verifyUser(message.member, 'ADMINISTRATOR')) {
+                if (commandHelper.checkMember()) {
+                    await commandHelper.addRole('moderator')
+                    await commandHelper.saveList();
+                }
             }
+
+            await commandHelper.sendReply(message.guild, commandHelper.getReply());
+        } catch (error) {
+            throw error
         }
-        message.channel.send(commandHelper.getReply())
-            .catch(err => { throw err; });
     }
 }

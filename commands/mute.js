@@ -4,19 +4,21 @@ module.exports = {
     usage: '<user> <number of minutes> <reason>',
     moderation: true,
     async execute(message, args, commandHelper) {
-        commandHelper.start(message, args);
-        if (commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES')) {
-            if (commandHelper.checkMember()) {
-                try {
+        try {
+            await commandHelper.start(message, args);
+
+            if (commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES')) {
+                if (commandHelper.checkMember()) {
                     await commandHelper.giveStrike();
                     await commandHelper.addRole('muted');
-                } catch { error => { throw error } };
+                    commandHelper.startTimer(args[1], 'minutes');
+                    await commandHelper.saveList();
+                };
+            }
 
-                await commandHelper.startTimer(args[1], 'minutes');
-                await commandHelper.saveList();
-            };
+            await commandHelper.sendReply(message.guild, commandHelper.getReply());
+        } catch (error) {
+            throw error
         }
-        message.channel.send(commandHelper.getReply())
-            .catch(err => { throw err; });
     }
 }
