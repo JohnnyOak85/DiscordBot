@@ -13,7 +13,7 @@ module.exports = {
                 commandHelper.setReply(buildReply(list, member));
             }
 
-            await commandHelper.sendReply(message.guild, commandHelper.getReply());
+            await commandHelper.sendReply(message.channel, commandHelper.getReply());
         } catch (error) {
             throw error
         }

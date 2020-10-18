@@ -13,7 +13,7 @@ module.exports = {
                 const amount = commandHelper.getNumber(args[0]);
 
                 if (!amount) {
-                    await commandHelper.sendReply(message.guild, 'I need a number from 1 to 100.');
+                    await commandHelper.sendReply(message.channel, 'I need a number from 1 to 100.');
                     return;
                 }
 

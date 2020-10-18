@@ -10,7 +10,7 @@ module.exports = {
                 const list = await commandHelper.getBansList()
                 commandHelper.setReply(buildReply(list));
             }
-            await commandHelper.sendReply(message.guild, commandHelper.getReply());
+            await commandHelper.sendReply(message.channel, commandHelper.getReply());
         } catch (error) {
             throw error
         }

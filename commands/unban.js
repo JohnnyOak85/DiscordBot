@@ -12,7 +12,7 @@ module.exports = {
                 await commandHelper.saveList();
             }
 
-            await commandHelper.sendReply(message.guild, commandHelper.getReply());
+            await commandHelper.sendReply(message.guild.systemChannel, commandHelper.getReply());
         } catch (error) {
             throw error
         }

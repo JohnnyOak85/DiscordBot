@@ -15,7 +15,7 @@ module.exports = {
                 };
             }
 
-            await commandHelper.sendReply(guild, commandHelper.getReply());
+            await commandHelper.sendReply(message.guild.systemChannel, commandHelper.getReply());
         } catch (error) {
             throw error
         }

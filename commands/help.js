@@ -9,7 +9,7 @@ module.exports = {
             const reply = buildReply(commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES'), commands, args);
             
             commandHelper.setReply(reply);
-            await commandHelper.sendReply(message.guild, commandHelper.getReply());
+            await commandHelper.sendReply(message.channel, commandHelper.getReply());
         } catch (error) {
             throw error
         }
