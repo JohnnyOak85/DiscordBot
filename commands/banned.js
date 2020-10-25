@@ -1,4 +1,4 @@
-const { start, verifyUser, listBans, setReply, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyUser, listBans, setReply, sendReply, getReply } = require('../helpers/command.helper');
 
 module.exports = {
     name: 'banned',
@@ -7,9 +7,8 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            await start(message, args);
             if (verifyUser(message.member, 'BAN_MEMBERS')) {
-                const list = await listBans()
+                const list = await listBans(message.guild)
                 setReply(buildReply(list));
             }
             await sendReply(message.channel, getReply());

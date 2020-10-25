@@ -1,4 +1,4 @@
-const { start, verifyUser, getMember, getStrikesList, setReply, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyUser, getMember, getStrikesList, setReply, sendReply, getReply } = require('../helpers/command.helper');
 
 module.exports = {
     name: 'strikes',
@@ -7,8 +7,6 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            await start(message, args);
-
             if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
                 const member = getMember();
                 const list = getStrikesList();

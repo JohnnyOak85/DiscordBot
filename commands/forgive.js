@@ -1,4 +1,4 @@
-const { start, verifyUser, checkMember, removeStrike, saveList, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyUser, checkMember, removeStrike, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
 
 module.exports = {
     name: 'forgive',
@@ -7,12 +7,10 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            await start(message, args);
-
             if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
                 if (checkMember()) {
                     removeStrike();
-                    await saveList();
+                    await saveMembers();
                 }
             }
 

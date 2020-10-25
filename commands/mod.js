@@ -1,4 +1,4 @@
-const { start, verifyUser, checkMember, addRole, saveList, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyUser, checkMember, addRole, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
 
 module.exports = {
     name: 'mod',
@@ -7,12 +7,10 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            await start(message, args);
-
             if (verifyUser(message.member, 'ADMINISTRATOR')) {
                 if (checkMember()) {
                     await addRole('moderator')
-                    await saveList();
+                    await saveMembers();
                 }
             }
 

@@ -1,4 +1,4 @@
-const { start, verifyUser, checkMember, giveStrike, addRole, startTimer, saveList, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyUser, checkMember, issueStrike, addRole, startTimer, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
 
 module.exports = {
     name: 'mute',
@@ -7,14 +7,12 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            await start(message, args);
-
             if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
                 if (checkMember()) {
-                    await giveStrike();
+                    await issueStrike();
                     await addRole('muted');
                     startTimer(args[1], 'minutes');
-                    await saveList();
+                    await saveMembers();
                 };
             }
 

@@ -1,4 +1,4 @@
-const { start, verifyUser, checkMember, giveStrike, banMember, startTimer, saveList, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyUser, checkMember, issueStrike, banMember, startTimer, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
 
 module.exports = {
     name: 'ban',
@@ -7,14 +7,12 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            await start(message, args);
-
             if (verifyUser(message.member, 'BAN_MEMBERS')) {
                 if (checkMember()) {
-                    await giveStrike()
+                    await issueStrike()
                     await banMember()
                     list = startTimer(list, args[1], 'days');
-                    await saveList();
+                    await saveMembers();
                 };
             }
 

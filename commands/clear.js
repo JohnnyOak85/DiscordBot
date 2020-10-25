@@ -1,4 +1,4 @@
-const { start, verifyUser, getNumber, sendReply, deleteMessages } = require("../helpers/command.helper");
+const { verifyUser, getNumber, sendReply, deleteMessages } = require("../helpers/command.helper");
 
 module.exports = {
     name: 'clear',
@@ -7,8 +7,6 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            await start(message, args);
-
             if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
                 const amount = getNumber(args[0]);
 
