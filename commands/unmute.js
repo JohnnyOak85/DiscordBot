@@ -1,20 +1,22 @@
+const { start, verifyUser, checkMember, removeRole, saveList, sendReply, getReply } = require('../helpers/command.helper');
+
 module.exports = {
     name: 'unmute',
     description: 'Mention a user and that user will no longer be muted.',
     usage: '<user>',
     moderation: true,
-    async execute(message, args, commandHelper) {
+    async execute(message, args) {
         try {
-            await commandHelper.start(message, args);
+            await start(message, args);
 
-            if (commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES')) {
-                if (commandHelper.checkMember()) {
-                    await commandHelper.removeRole('muted')
-                    await commandHelper.saveList();
+            if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
+                if (checkMember()) {
+                    await removeRole('muted')
+                    await saveList();
                 };
             }
 
-            await commandHelper.sendReply(message.guild.systemChannel, commandHelper.getReply());
+            await sendReply(message.guild.systemChannel, getReply());
         } catch (error) {
             throw error
         }

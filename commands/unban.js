@@ -1,18 +1,20 @@
+const { start, verifyUser, unbanMember, saveList, sendReply, getReply } = require('../helpers/command.helper');
+
 module.exports = {
     name: 'unban',
     description: `Provide a username and that user will have access to the server again.`,
     usage: '<username>',
     moderation: true,
-    async execute(message, args, commandHelper) {
+    async execute(message, args) {
         try {
-            await commandHelper.start(message, args);
+            await start(message, args);
 
-            if (commandHelper.verifyUser(message.member, 'BAN_MEMBERS')) {
-                await commandHelper.unbanMember(args[0]);
-                await commandHelper.saveList();
+            if (verifyUser(message.member, 'BAN_MEMBERS')) {
+                await unbanMember(args[0]);
+                await saveList();
             }
 
-            await commandHelper.sendReply(message.guild.systemChannel, commandHelper.getReply());
+            await sendReply(message.guild.systemChannel, getReply());
         } catch (error) {
             throw error
         }

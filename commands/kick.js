@@ -1,21 +1,23 @@
+const { start, verifyUser, checkMember, giveStrike, kickMember, saveList, sendReply, getReply } = require('../helpers/command.helper');
+
 module.exports = {
     name: 'kick',
     description: 'Mention a user and that user gets removed from the server.',
     usage: '<user> <reason>',
     moderation: true,
-    async execute(message, args, commandHelper) {
+    async execute(message, args) {
         try {
-            await commandHelper.start(message, args);
+            await start(message, args);
 
-            if (commandHelper.verifyUser(member, 'KICK_MEMBERS')) {
-                if (commandHelper.checkMember()) {
-                    await commandHelper.giveStrike()
-                    await commandHelper.kickMember()
-                    await commandHelper.saveList();
+            if (verifyUser(member, 'KICK_MEMBERS')) {
+                if (checkMember()) {
+                    await giveStrike()
+                    await kickMember()
+                    await saveList();
                 };
             }
 
-            await commandHelper.sendReply(message.guild.systemChannel, commandHelper.getReply());
+            await sendReply(message.guild.systemChannel, getReply());
         } catch (error) {
             throw error
         }

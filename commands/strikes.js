@@ -1,19 +1,21 @@
+const { start, verifyUser, getMember, getStrikesList, setReply, sendReply, getReply } = require('../helpers/command.helper');
+
 module.exports = {
     name: 'strikes',
     description: "Lists all users with strikes. If provided with a user, it will list that user's strikes",
     usage: '<user>',
     moderation: true,
-    async execute(message, args, commandHelper) {
+    async execute(message, args) {
         try {
-            await commandHelper.start(message, args);
+            await start(message, args);
 
-            if (commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES')) {
-                const member = commandHelper.getMember();
-                const list = commandHelper.getStrikesList();
-                commandHelper.setReply(buildReply(list, member));
+            if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
+                const member = getMember();
+                const list = getStrikesList();
+                setReply(buildReply(list, member));
             }
 
-            await commandHelper.sendReply(message.channel, commandHelper.getReply());
+            await sendReply(message.channel, getReply());
         } catch (error) {
             throw error
         }

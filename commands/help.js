@@ -1,15 +1,18 @@
+const { verifyUser, setReply, sendReply, getReply } = require('../helpers/command.helper');
+const { PREFIX } = require('../docs/config.json');
+
 module.exports = {
     name: 'help',
     description: 'Displays the list of commands. It can also display information on a given command.',
     usage: '<command>',
     moderation: false,
-    async execute(message, args, commandHelper) {
+    async execute(message, args) {
         try {
             const { commands } = message.client;
-            const reply = buildReply(commandHelper.verifyUser(message.member, 'MANAGE_MESSAGES'), commands, args);
-            
-            commandHelper.setReply(reply);
-            await commandHelper.sendReply(message.channel, commandHelper.getReply());
+            const reply = buildReply(verifyUser(message.member, 'MANAGE_MESSAGES'), commands, args);
+
+            setReply(reply);
+            await sendReply(message.channel, getReply());
         } catch (error) {
             throw error
         }
@@ -17,7 +20,6 @@ module.exports = {
 }
 
 function buildReply(isMod, commands, args) {
-    const { PREFIX } = require('../docs/config.json');
     const data = [];
 
     if (!args.length) {

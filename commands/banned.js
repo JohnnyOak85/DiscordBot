@@ -1,16 +1,18 @@
+const { start, verifyUser, listBans, setReply, sendReply, getReply } = require('../helpers/command.helper');
+
 module.exports = {
     name: 'banned',
     description: 'Lists all the users that have been banned.',
     usage: ' ',
     moderation: true,
-    async execute(message, args, commandHelper) {
+    async execute(message, args) {
         try {
-            await commandHelper.start(message, args);
-            if (commandHelper.verifyUser(message.member, 'BAN_MEMBERS')) {
-                const list = await commandHelper.getBansList()
-                commandHelper.setReply(buildReply(list));
+            await start(message, args);
+            if (verifyUser(message.member, 'BAN_MEMBERS')) {
+                const list = await listBans()
+                setReply(buildReply(list));
             }
-            await commandHelper.sendReply(message.channel, commandHelper.getReply());
+            await sendReply(message.channel, getReply());
         } catch (error) {
             throw error
         }
