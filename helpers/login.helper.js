@@ -1,6 +1,9 @@
+const { ensureChannel, ensureRole } = require("./guild.helper");
+const { readDir, ensureDoc } = require('./doc.helper');
+
 const { PERMISSIONS, RULES } = require(`../docs/config.json`);
 
-let helper;
+// Private
 
 async function buildMemberList(guildMembers) {
     try {
@@ -44,7 +47,7 @@ async function addBannedMembers(guild, members) {
 
 async function buildCategory(guild) {
     try {
-        const category = await helper.ensureChannel(guild, 'information');
+        const category = await ensureChannel(guild, 'information');
         await category.setPosition(0);
         await category.updateOverwrite(guild.roles.everyone, PERMISSIONS);
         return category;
@@ -55,7 +58,7 @@ async function buildCategory(guild) {
 
 async function buildRulesChannel(guild, category) {
     try {
-        const channel = await helper.ensureChannel(guild, 'rules');
+        const channel = await ensureChannel(guild, 'rules');
         await channel.setParent(category.id);
         await channel.overwritePermissions(category.permissionOverwrites);
         return channel;
@@ -66,7 +69,7 @@ async function buildRulesChannel(guild, category) {
 
 async function buildSystemChannel(guild, category) {
     try {
-        const channel = await helper.ensureChannel(guild, 'events')
+        const channel = await ensureChannel(guild, 'events')
         await channel.setParent(category.id);
         await channel.overwritePermissions(category.permissionOverwrites);
         await guild.setSystemChannel(channel)
@@ -105,13 +108,11 @@ function buildReply() {
     return reply;
 }
 
-function setHelper(taskHelper) {
-    helper = taskHelper;
-}
+// Public
 
 async function buildCommands(commandList) {
     try {
-        const commands = await helper.readDir('commands');
+        const commands = await readDir('commands');
 
         for (const command of commands) {
             const file = require(`../commands/${command}`);
@@ -126,7 +127,7 @@ async function promote(guilds, id) {
     try {
         for (const guild of guilds) {
             const bot = guild[1].members.cache.find(u => u.user.id === id);
-            const role = await helper.ensureRole(guild[1], 'bot');
+            const role = await ensureRole(guild[1], 'bot');
             if (bot.roles.cache.has(role.id)) return;
             await bot.roles.add(role);
         }
@@ -138,12 +139,12 @@ async function promote(guilds, id) {
 async function buildDoc(guilds) {
     try {
         for (const guild of guilds) {
-            const doc = await helper.ensureDoc(guild[1].id);
+            const doc = await ensureDoc(guild[1].id);
             if (!doc.name || !doc.members) {
                 doc.name = guild[1].name;
                 doc.members = await buildMemberList(guild[1].members.cache);
                 doc.members = await addBannedMembers(guild[1], doc.members);
-                await helper.saveDoc(guild[1].id, doc);
+                await docHelper.saveDoc(guild[1].id, doc);
             }
         }
     } catch (error) {
@@ -165,7 +166,6 @@ async function setGuild(guilds) {
 }
 
 module.exports = {
-    setHelper: setHelper,
     buildCommands: buildCommands,
     promote: promote,
     buildDoc: buildDoc,
