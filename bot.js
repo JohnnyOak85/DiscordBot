@@ -2,6 +2,9 @@ const { Client, Collection } = require('discord.js');
 const helper = require('./helpers/bot.helper');
 const { TOKEN } = require(`./docs/config.json`);
 
+const { checkTimers } = require('./helpers/timer.helper');
+const { checkMember, updateMember } = require('./helpers/member.helper');
+
 // Initialize Discord Bot
 const bot = new Client();
 bot.commands = new Collection();
@@ -13,7 +16,7 @@ bot.on('ready', () => {
         helper.start(bot)
 
         bot.setInterval(() => {
-            helper.checkTimers(bot.guilds.cache);
+            checkTimers(bot.guilds.cache);
             // helper.logError(error);
         }, 5000);
     } catch (error) {
@@ -36,7 +39,7 @@ bot.on("messageUpdate", async (oldMessage, newMessage) => {
 
 bot.on('guildMemberAdd', member => {
     try {
-        helper.checkMember(member);
+        checkMember(member);
     } catch (error) {
         helper.logError(error);
     }
@@ -44,7 +47,7 @@ bot.on('guildMemberAdd', member => {
 
 bot.on('guildMemberUpdate', (oldMember, newMember) => {
     try {
-        helper.updateMember(newMember);
+        updateMember(newMember);
     } catch (error) {
         helper.logError(error);
     }

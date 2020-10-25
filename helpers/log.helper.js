@@ -1,5 +1,5 @@
 const { createLogger, format, transports } = require('winston')
-const { getDate } = require('./time.helper')
+const { getDate } = require('./clock.helper')
 
 const logger = createLogger({
     level: 'info',

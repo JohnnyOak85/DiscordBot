@@ -1,6 +1,6 @@
 const { ensureRole, giveRole, removeRole, sendReply } = require("./guild.helper");
 const { giveStrike, kick, ban, unban, listBans } = require('./punishment.helper');
-const { addTime } = require('./time.helper');
+const { addTime } = require('./clock.helper');
 const { getList, saveList } = require('./doc.helper');
 
 

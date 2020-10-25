@@ -1,3 +1,6 @@
+const { getList, saveList } = require('./doc.helper');
+const { sendReply, ensureChannel } = require('./guild.helper');
+
 const { BANNED_WORDS } = require('../docs/banned-words.json');
 const { BANNED_SITES } = require('../docs/banned-sites.json');
 const { CENSOR_NICKNAME } = require(`../docs/config.json`);
@@ -73,13 +76,53 @@ async function validateUsername(member, list, nickname) {
     } catch (error) {
         throw error;
     }
+}
 
+async function checkMember(member) {
+    try {
+        const list = await getList(member.guild.id);
+
+        if (await isBot(member)) return;
+        if (isOldMember(member, list)) {
+            await sendReply(member.guild.systemChannel, `Welcome back <@${member.user.id}>!`);
+            return;
+        };
+
+        list[member.user.id] = await validateUsername(member, list, member.user.username);
+
+        if (list[member.user.id]) {
+            await saveList(guild.id, list);
+        }
+
+        const rules = await ensureChannel(member.guild, 'rules');
+
+        await sendReply(member.guild.systemChannel, `Welcome <@${member.user.id}>! Check the ${rules.toString()}.`);
+    } catch (error) {
+        throw error
+    }
+}
+
+async function updateMember(member) {
+    try {
+        const list = await getList(member.guild.id);
+
+        list[member.user.id] = await validateUsername(member, list, member.nickname)
+
+        if (member._roles.length) {
+            list[member.user.id] = ensureMember(list, member);
+        }
+
+        if (!list[member.user.id]) return;
+
+        await saveList(member.guild.id, list);
+    } catch (error) {
+        throw error;
+    }
 }
 
 module.exports = {
+    checkMember: checkMember,
+    updateMember: updateMember,
     ensureMember: ensureMember,
     findMember: findMember,
-    isBot: isBot,
-    isOldMember: isOldMember,
-    validateUsername: validateUsername
 }
