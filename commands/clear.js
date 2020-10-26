@@ -1,4 +1,4 @@
-const { verifyUser, getNumber, sendReply, deleteMessages } = require("../helpers/command.helper");
+const { verifyPermission } = require('../helpers/member.helper');
 
 module.exports = {
     name: 'clear',
@@ -7,15 +7,16 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
-                const amount = getNumber(args[0]);
+            if (await verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel)) {
+                const amount = parseInt(args[0]);
 
-                if (!amount) {
-                    await sendReply(message.channel, 'I need a number from 1 to 100.');
+                if (amount < 0 || amount > 100 || isNaN(amount)) {
+                    await message.channel.send('I need a number from 1 to 100.');
                     return;
                 }
 
-                await deleteMessages(message.channel, amount);
+                await message.channel.bulkDelete(amount + 1, true);
+                return;
             }
         } catch (error) {
             throw error

@@ -1,4 +1,5 @@
 const { CHANNELS_LIST, ROLES_LIST } = require(`../docs/config.json`);
+const { saveList } = require("./doc.helper");
 
 async function ensureChannel(guild, channelName) {
   try {
@@ -41,34 +42,57 @@ async function ensureRole(guild, roleName) {
   }
 }
 
-async function giveRole(member, list, role) {
+async function giveRole(member, guild, roleName, reason, minutes) {
   try {
-    if (member.roles.cache.has(role.id)) return list[member.user.id];
+    const list = getList(guild.id);
+    const role = ensureRole(guild, roleName);
+
+    if (reason === '') {
+      reason = 'No reason provided.';
+    };
+
+    reason = reason.replace(minutes, '');
+
+    minutes = parseInt(minutes);
+
+    if (minutes && minutes > 0 && minutes < 100 && !isNaN(minutes)) {
+      list[member.id].timer = addTime(amount, 'minutes');
+      reason = `${reason} for ${minutes} minutes`;
+    }
+
+    if (member.roles.cache.has(role.id)) return;
 
     await member.roles.add(role);
 
-    if (!list[member.user.id]) {
-      list[member.user.id] = {
-        username: member.user.username,
-        roles: []
-      };
-    };
+    list[member.user.id] = ensureMember(list, member);
+    list[member.id].strikes.push(reason);
 
-    if (list[member.id].roles.indexOf(role.id) <= -1) {
-      list[member.id].roles.push(role.id);
+    if (list[member.user.id].roles.indexOf(role.id) <= -1) {
+      list[member.user.id].roles.push(role.id);
     }
 
-    return list[member.user.id];
+    await saveList(guild.id, list);
+    await guild.systemChannel.send(`${member.user.username} is now ${roleName}.\n${reason}`);
+    return;
   } catch (error) {
     throw error
   }
 }
 
-async function removeRole(member, list, role) {
+async function removeRole(member, guild, roleName) {
   try {
-    if (!member.roles.cache.has(role.id)) return list[member.user.id];
+    const list = getList(guild.id);
+    const role = ensureRole(guild, roleName);
 
-    await member.roles.remove(role)
+    if (typeof member === 'string') {
+      member = guild.members.cache.find(m => m.user.id === member);
+    }
+
+    if (!member.roles.cache.has(role.id)) return;
+
+    await member.roles.remove(role);
+
+    list[member.user.id] = ensureMember(list, member);
 
     const index = list[member.user.id].roles.indexOf(role.id);
 
@@ -76,17 +100,11 @@ async function removeRole(member, list, role) {
       list[member.user.id].roles.splice(index, 1);
     }
 
-    return list[member.user.id];
+    await saveList(guild.id, list);
+    await guild.systemChannel.send(`${member.user.username} is no longer ${roleName}.`);
+    return;
   } catch (error) {
     throw error
-  }
-}
-
-async function sendReply(channel, reply) {
-  try {
-    await channel.send(reply);
-  } catch (error) {
-    throw error;
   }
 }
 
@@ -95,5 +113,4 @@ module.exports = {
   ensureRole: ensureRole,
   giveRole: giveRole,
   removeRole: removeRole,
-  sendReply: sendReply,
 }

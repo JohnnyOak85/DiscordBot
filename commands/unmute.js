@@ -1,4 +1,5 @@
-const { verifyUser, checkMember, unmute, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyPermission, verifyMember } = require('../helpers/member.helper');
+const { removeRole } = require('../helpers/guild.helper');
 
 module.exports = {
     name: 'unmute',
@@ -7,14 +8,10 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
-                if (checkMember()) {
-                    await unmute('muted')
-                    await saveMembers();
-                };
+            if (await verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel) && await verifyMember(message.member, message.mentions.members.first(), message.channel)) {
+                await removeRole(message.members.first(), message.guild, 'muted')
+                return;
             }
-
-            await sendReply(message.guild.systemChannel, getReply());
         } catch (error) {
             throw error
         }

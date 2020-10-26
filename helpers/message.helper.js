@@ -38,15 +38,6 @@ function isShouting(message) {
   if (counter >= 60) return true;
 }
 
-async function purgeMessage(message, reply) {
-  try {
-    await message.delete();
-    await message.reply(reply);
-  } catch (error) {
-    throw error;
-  }
-}
-
 async function messageRepeated(channel, userID, incomingMessage) {
   try {
     if (channel.type !== 'text') return;
@@ -62,10 +53,44 @@ async function messageRepeated(channel, userID, incomingMessage) {
   }
 }
 
+async function checkMessage(message) {
+  try {
+    if (message.author.bot || message.channel.type === 'dm' || message.member.hasPermission('MANAGE_MESSAGES')) return;
+
+    if (message.mentions.users.size >= 3) {
+      await message.delete();
+      await message.reply('chill with the mention train!');
+      return;
+    }
+
+    if (isBanned(message.content)) {
+      await message.delete();
+      await message.reply(`wait, that's illegal!`);
+      return;
+    }
+
+    if (isShouting(message.content.replace(/[^\w]/g, ""))) {
+      await message.delete();
+      await message.reply('stop shouting please!');
+      return;
+    }
+
+    if (textRepeated(message.content.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s{2,}/g, " "))) {
+      await message.delete();
+      await message.reply('stop repeating yourself!');
+      return;
+    }
+
+    if (await messageRepeated(message.channel, message.author.id, message.content)) {
+      await message.delete();
+      await message.reply('we heard you the first time!');
+      return;
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
-  isBanned: isBanned,
-  textRepeated: textRepeated,
-  isShouting: isShouting,
-  purgeMessage: purgeMessage,
-  messageRepeated: messageRepeated
+  checkMessage: checkMessage
 }

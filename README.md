@@ -36,7 +36,7 @@ Kick, ban, temporary ban, remove ban, mute, temporary mute, remove mute, issue a
 List banned users, list all users with strikes, list a user's strikes.
 
 * Others:  
-Clear lines, list commands, give information on one command, give the moderator role to a user, list all rules.
+Clear lines, list commands, give information on one command.
 
 **Automated Tasks**  
 

@@ -1,5 +1,4 @@
 const { verifyPermission } = require('../helpers/member.helper');
-const { sendReply } = require('../helpers/message.helper');
 const { getStrikes } = require('../helpers/warn.helper');
 
 module.exports = {
@@ -9,13 +8,17 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel)) {
+            if (await verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel)) {
                 const list = await getStrikes(message.guild);
-                const member = message.members.first()
+                let member;
                 let reply = '';
 
+                if (message.members) {
+                    member = message.members.first();
+                }
+
                 if (!list.length) {
-                    await sendReply('There is no record of any users with strikes.');
+                    await message.channel.send('There is no record of any users with strikes.');
                     return;
                 }
 
@@ -24,12 +27,12 @@ module.exports = {
                         reply += `${member.username}: ${member.strikes.length}\n`;
                     }
 
-                    await sendReply(message.channel, reply);
+                    await message.channel.send(reply);
                     return;
                 }
 
                 if (!list[member.id] || !list[member.id].strikes) {
-                    await sendReply(message.channel, `${member.user.username} has no previous strikes.`);
+                    await message.channel.send(`${member.user.username} has no previous strikes.`);
                     return;
                 }
 
@@ -40,7 +43,7 @@ module.exports = {
                     reply += `- ${strike}\n`;
                 });
 
-                await sendReply(message.channel, reply);
+                await message.channel.send(reply);
                 return;
             }
         } catch (error) {

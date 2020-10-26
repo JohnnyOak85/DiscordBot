@@ -1,6 +1,7 @@
 const moment = require('moment');
-const { getList, saveList } = require('./doc.helper');
-const { unmute, unban } = require('./punishment.helper');
+const { getList } = require('./doc.helper');
+const { removeRole } = require('./guild.helper');
+const { unban } = require('./ban.helper');
 
 function getDate() {
     return moment().format('Do MMMM YYYY, h:mm:ss a');
@@ -14,6 +15,7 @@ async function checkTimers(guilds) {
     for (const guild of guilds) {
         try {
             const list = await getList(guild[1].id);
+
             if (!Object.keys(list).length) return;
 
             for (const member of Object.keys(list)) {
@@ -22,10 +24,9 @@ async function checkTimers(guilds) {
                 if (list[member].banned) {
                     await unban(member, guild);
                 }
-
-                list[member] = await unmute(list, member, guild)
-
-                await saveList(guild.id, list);
+                else {
+                    await removeRole(member, guild, 'muted');
+                }
             };
         } catch (error) {
             throw error;

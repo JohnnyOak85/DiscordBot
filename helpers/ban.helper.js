@@ -1,6 +1,7 @@
-const { sendReply } = require('./guild.helper');
 const { ensureMember } = require('./member.helper');
 const { getList, saveList } = require('./doc.helper');
+
+const { DAYS_TO_PRUNE } = require(`../docs/config.json`);
 
 async function kick(member, guild, reason) {
     try {
@@ -13,8 +14,7 @@ async function kick(member, guild, reason) {
         list[member.id] = ensureMember(list, member);
 
         await member.kick(reason);
-        await sendReply(guild.systemChannel, `${member.user.username} has been kicked.\n${reason}`);
-
+        await guild.systemChannel.send(`${member.user.username} has been kicked.\n${reason}`)
         await saveList(guild.id, list);
     } catch (error) {
         throw error
@@ -23,7 +23,7 @@ async function kick(member, guild, reason) {
 
 async function ban(member, guild, reason, days) {
     try {
-        const list = getList(guild);
+        const list = getList(guild.id);
 
         if (reason === '') {
             reason = 'No reason provided.';
@@ -33,8 +33,8 @@ async function ban(member, guild, reason, days) {
 
         days = parseInt(days);
 
-        if (days && days >= 1 && days < 100 && !isNaN(days)) {
-            list[member.id].timer = addTime(amount, type);
+        if (days && days > 0 && days < 100 && !isNaN(days)) {
+            list[member.id].timer = addTime(amount, 'days');
             reason = `${reason} for ${days} days`;
         }
 
@@ -42,7 +42,7 @@ async function ban(member, guild, reason, days) {
         list[member.id].strikes.push(reason);
 
         await member.ban(reason);
-        await sendReply(guild.systemChannel, `${member.user.username} has been banned.\n${reason}`);
+        await guild.systemChannel.send(`${member.user.username} has been banned.\n${reason}`)
 
         list[member.id].banned = true;
         delete list[member.id].roles;
@@ -53,17 +53,18 @@ async function ban(member, guild, reason, days) {
     }
 }
 
-async function unban(memberRef, guild) {
+async function unban(memberRef, guild, channel) {
     try {
         const banned = await findBanned(memberRef, guild);
-        const list = await getList(guild);
+        const list = await getList(guild.id);
 
         if (banned) {
             await guild.members.unban(banned.user.id);
-            await sendReply(guild.systemChannel, `${banned.user.username} has been unbanned.`);
+            await guild.systemChannel.send(`${banned.user.username} has been unbanned.`)
         }
         else {
-            await sendReply(guild.systemChannel, `${memberRef} isn't banned.`);
+            if (channel) await channel.send(`${memberRef} isn't banned.`);
+            return;
         }
 
         list[banned.user.id] = ensureMember(list, banned.user);
@@ -100,10 +101,32 @@ async function listBans(guild) {
     }
 }
 
+async function registerBan(guild, member, banStatus) {
+    try {
+        const list = await getList(guild.id);
+
+        list[member.user.id] = ensureMember(list, member);
+        list[member.user.id].banned = banStatus;
+
+        await saveList(guild.id, list);
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function pruneUsers(guilds) {
+    for (const guild of guilds) {
+        const pruned = await guild[1].members.prune({ days: DAYS_TO_PRUNE });
+        await guild.systemChannel.send(`${pruned} users have been pruned due to inactivity!`)
+    }
+}
+
 module.exports = {
     kick: kick,
     ban: ban,
     unban: unban,
     findBanned: findBanned,
     listBans: listBans,
+    registerBan: registerBan,
+    pruneUsers: pruneUsers
 }

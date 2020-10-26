@@ -1,5 +1,5 @@
 const { getList, saveList } = require('./doc.helper');
-const { sendReply, ensureChannel } = require('./guild.helper');
+const { ensureChannel } = require('./guild.helper');
 
 const { BANNED_WORDS } = require('../docs/banned-words.json');
 const { BANNED_SITES } = require('../docs/banned-sites.json');
@@ -23,10 +23,6 @@ function ensureMember(list, member) {
     }
 
     return list[member.id]
-}
-
-async function findMember(guild, id) {
-    return guild.members.cache.find(member => member.user.id === id);
 }
 
 async function isBot(member) {
@@ -84,7 +80,7 @@ async function registerMember(member) {
 
         if (await isBot(member)) return;
         if (isOldMember(member, list)) {
-            await sendReply(member.guild.systemChannel, `Welcome back <@${member.user.id}>!`);
+            member.guild.systemChannel(`Welcome back <@${member.user.id}>!`)
             return;
         };
 
@@ -96,7 +92,7 @@ async function registerMember(member) {
 
         const rules = await ensureChannel(member.guild, 'rules');
 
-        await sendReply(member.guild.systemChannel, `Welcome <@${member.user.id}>! Check the ${rules.toString()}.`);
+        await member.guild.systemChannel(`Welcome <@${member.user.id}>! Check the ${rules.toString()}.`)
     } catch (error) {
         throw error
     }
@@ -120,15 +116,53 @@ async function updateMember(member) {
     }
 }
 
-function verifyMember(member, permission, channel) {
-    if (!member.hasPermission(permission)) {
-        sendReply(channel, 'You do not have permission for this command!');
+async function verifyMember(moderator, member, permission, channel) {
+    if (!moderator.hasPermission(permission)) {
+        await channel.send('You do not have permission for this command.');
         return;
     }
 
-    if (member && user.id === member.user.id) {
-        sendReply(channel, 'You cannot moderate yourself!');
+    if (!member) {
+        await channel.send('You need to mention a valid user.');
         return;
+    }
+
+    if (moderator.id === member || moderator.username === member) {
+        await channel.send('You cannot moderate yourself!');
+        return;
+    }
+
+    if (!member.manageable) {
+        await channel.send('You cannot moderate this user.');
+        return;
+    }
+
+    return true;
+}
+
+async function verifyPermission(moderator, permission, channel) {
+    if (!moderator.hasPermission(permission)) {
+        await channel.send('You do not have permission for this command.');
+        return false;
+    }
+
+    return true;
+}
+
+async function verifyMember(moderator, member, channel) {
+    if (!member) {
+        await channel.send('You need to mention a valid user.');
+        return false;
+    }
+
+    if (moderator.id === member || member.user && moderator.id === member.user.id || moderator.username === member || member.user && moderator.username === member.user.username) {
+        await channel.send('You cannot moderate yourself!');
+        return false;
+    }
+
+    if (typeof member !== 'string' && !member.manageable) {
+        await channel.send('You cannot moderate this user.');
+        return false;
     }
 
     return true;
@@ -138,6 +172,6 @@ module.exports = {
     registerMember: registerMember,
     updateMember: updateMember,
     ensureMember: ensureMember,
-    findMember: findMember,
-    verifyMember: verifyMember
+    verifyMember: verifyMember,
+    verifyPermission: verifyPermission
 }

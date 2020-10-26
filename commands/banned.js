@@ -1,6 +1,5 @@
 const { listBans } = require('../helpers/ban.helper');
 const { verifyPermission } = require('../helpers/member.helper');
-const { sendReply } = require('../helpers/message.helper');
 
 module.exports = {
     name: 'banned',
@@ -9,12 +8,12 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyPermission(message.member, 'BAN_MEMBERS', message.channel)) {
+            if (await verifyPermission(message.member, 'BAN_MEMBERS', message.channel)) {
                 const list = await listBans(message.guild);
                 let reply = '';
 
                 if (!list || !list.length) {
-                    await sendReply(message.channel, 'I have no record of any banned users.');
+                    await message.channel.send('I have no record of any banned users.');
                     return;
                 }
 
@@ -23,7 +22,7 @@ module.exports = {
                     reply += `${member.user.username}: ${reason}\n`;
                 }
 
-                await sendReply(message.channel, reply);
+                await message.channel.send(reply);
                 return;
             }
         } catch (error) {

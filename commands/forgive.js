@@ -8,7 +8,7 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel) && verifyMember(message.member, message.mentions.members.first(), message.channel)) {
+            if (await verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel) && await verifyMember(message.member, message.mentions.members.first(), message.channel)) {
                 await forgive(message.members.first(), message.guild, message.channel, args[0]);
                 return;
             }

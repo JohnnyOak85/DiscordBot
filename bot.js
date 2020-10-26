@@ -1,11 +1,13 @@
 const { Client, Collection } = require('discord.js');
-const helper = require('./helpers/bot.helper');
-const { TOKEN } = require(`./docs/config.json`);
+const { TOKEN, PREFIX } = require(`./docs/config.json`);
 
-const { start } = require('./helpers/bot.helper');
-const { checkTimers } = require('./helpers/time.helper');
-const { registerMember, updateMember } = require('./helpers/member.helper');
+const { buildCommands, promote, buildDoc, setGuild } = require('./helpers/login.helper');
 const { logError, logInfo } = require('./helpers/log.helper');
+const { checkTimers } = require('./helpers/time.helper');
+const { checkMessage } = require('./helpers/message.helper');
+const { registerMember, updateMember } = require('./helpers/member.helper');
+const { registerBan } = require('./helpers/ban.helper');
+const { getDate } = require('./helpers/time.helper');
 
 // Initialize Discord Bot
 const bot = new Client();
@@ -15,12 +17,14 @@ bot.login(TOKEN);
 
 bot.on('ready', async () => {
     try {
-        await start(bot)
+        await buildCommands(bot.commands);
+        await promote(bot.guilds.cache, bot.user.id);
+        await buildDoc(bot.guilds.cache);
+        await setGuild(bot.guilds.cache);
         logInfo(`The bot went online at: ${getDate()}`);
 
-        bot.setInterval(() => {
-            checkTimers(bot.guilds.cache);
-            // helper.logError(error);
+        bot.setInterval(async () => {
+            await checkTimers(bot.guilds.cache);
         }, 5000);
     } catch (error) {
         logError(error);
@@ -29,44 +33,62 @@ bot.on('ready', async () => {
 
 bot.on('message', async message => {
     try {
-        await helper.checkMessage(message);
-        helper.executeCommand(message, bot.commands);
+        if (message.channel.type === 'dm') return;
+
+        await checkMessage(message);
+
+        if (!message.content.startsWith(PREFIX)) return;
+
+        const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
+        const command = args.shift().toLowerCase();
+
+        if (!bot.commands.has(command)) {
+            await message.channel.send('Invalid command.');
+            return;
+        }
+
+        await bot.commands.get(command).execute(message, args)
     } catch (error) {
+        await message.channel.send('There was an error trying to execute that command!');
         logError(error);
     }
 });
 
 bot.on("messageUpdate", async (oldMessage, newMessage) => {
-    await helper.checkMessage(newMessage);
-});
-
-bot.on('guildMemberAdd', member => {
     try {
-        registerMember(member);
+        await checkMessage(newMessage);
     } catch (error) {
         logError(error);
     }
 });
 
-bot.on('guildMemberUpdate', (oldMember, newMember) => {
+bot.on('guildMemberAdd', async member => {
     try {
-        updateMember(newMember);
+        await registerMember(member);
+    } catch (error) {
+        logError(error);
+    }
+});
+
+bot.on('guildMemberUpdate', async (oldMember, newMember) => {
+    try {
+        await updateMember(newMember);
     } catch (error) {
         logError(error);
     }
 })
 
-bot.on("guildBanAdd", (guild, member) => {
+bot.on("guildBanAdd", async (guild, member) => {
     try {
-        helper.registerBanStatus(guild, member, true);
+        await registerBan(guild.id, member, true);
     } catch (error) {
         logError(error);
     }
 });
 
-bot.on("guildBanRemove", (guild, member) => {
+bot.on("guildBanRemove", async (guild, member) => {
     try {
-        helper.registerBanStatus(guild, member, false);
+        await registerBan(guild.id, member, false);
     } catch (error) {
         logError(error);
     }

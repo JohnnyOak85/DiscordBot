@@ -10,7 +10,7 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel) && verifyMember(message.member, message.mentions.members.first(), message.channel)) {
+            if (await verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel) && await verifyMember(message.member, message.mentions.members.first(), message.channel)) {
                 await warn(message.members.first(), message.guild, args.slice(1).join(' '));
                 return;
             }
