@@ -1,4 +1,6 @@
-const { verifyUser, listBans, setReply, sendReply, getReply } = require('../helpers/command.helper');
+const { listBans } = require('../helpers/punishment.helper');
+const { verifyPermission } = require('../helpers/member.helper');
+const { sendReply } = require('../helpers/message.helper')
 
 module.exports = {
     name: 'banned',
@@ -7,26 +9,21 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyUser(message.member, 'BAN_MEMBERS')) {
-                const list = await listBans(message.guild)
-                setReply(buildReply(list));
+            if (verifyPermission(message.member, 'BAN_MEMBERS', message.channel)) {
+                const list = await listBans(message.guild);
+                let reply = '';
+
+                if (!list || !list.length) await sendReply(message.channel, 'I have no record of any banned users.');
+
+                for (const member of list) {
+                    if (!member.reason) member.reason = 'No reason provided';
+                    reply += `${member.user.username}: ${reason}\n`;
+                }
+
+                await sendReply(message.channel, reply);
             }
-            await sendReply(message.channel, getReply());
         } catch (error) {
             throw error
         }
     }
-}
-
-function buildReply(list) {
-    let reply = '';
-
-    if (!list || !list.length) return 'I have no record of any banned users.';
-
-    list.forEach(member => {
-        if (!member.reason) member.reason = 'No reason provided';
-        reply += `${i.user.username}: ${reason}\n`;
-    })
-
-    return reply;
 }

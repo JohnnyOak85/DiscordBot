@@ -8,7 +8,7 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyMember(message.member, 'BAN_MEMBERS', message.channel)) {
+            if (verifyPermission(message.member, 'BAN_MEMBERS', message.channel) && verifyMember(message.member, args[0], message.channel)) {
                 await unban(args[0], message.guild);
             }
         } catch (error) {
