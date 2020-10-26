@@ -1,4 +1,5 @@
-const { verifyUser, unbanMember, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyMember } = require('../helpers/member.helper');
+const { unban } = require('../helpers/punishment.helper');
 
 module.exports = {
     name: 'unban',
@@ -7,12 +8,9 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyUser(message.member, 'BAN_MEMBERS')) {
-                await unbanMember(args[0]);
-                await saveMembers();
+            if (verifyMember(message.member, 'BAN_MEMBERS', message.channel)) {
+                await unban(args[0], message.guild);
             }
-
-            await sendReply(message.guild.systemChannel, getReply());
         } catch (error) {
             throw error
         }

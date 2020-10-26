@@ -1,7 +1,8 @@
-const { ensureRole, giveRole } = require('./guild.helper');
-const { ensureMember } = require('./member.helper');
+const { ensureRole, giveRole, removeRole, sendReply } = require('./guild.helper');
+const { ensureMember, findMember } = require('./member.helper');
 
 const { MAX_STRIKES } = require(`../docs/config.json`);
+const { getList, saveList } = require('./doc.helper');
 
 // Private
 
@@ -61,6 +62,22 @@ async function giveStrike(member, list, reason) {
     }
 };
 
+async function unmute(list, id, guild) {
+    try {
+        const role = ensureRole(guild, 'muted')
+        const member = findMember(guild, id);
+
+        if (member.roles.cache.has(role.id)) {
+            list[id] = await removeRole(member, list, role)
+            await sendReply(guild.systemChannel, `${list[id].username} has been unmuted.`);
+        }
+
+        return list[id];
+    } catch (error) {
+        throw error;
+    }
+}
+
 async function kick(member, list, reason) {
     try {
         reason = ensureReason(reason);
@@ -76,10 +93,16 @@ async function kick(member, list, reason) {
     }
 }
 
-async function findBanned(id, guild) {
+async function findBanned(memberRef, guild) {
     try {
         const list = await listBans(guild);
-        return list.find(member => member.user.id === id);
+
+        if (parseInt(memberRef) !== NaN) {
+            return list.find(member => member.user.id == memberRef);
+        }
+        else {
+            return list.find(member => member.user.username == memberRef);
+        }
     } catch (error) {
         throw error;
     }
@@ -106,17 +129,25 @@ async function ban(member, list, reason) {
     }
 }
 
-async function unban(member, list, guild) {
+async function unban(memberRef, guild) {
     try {
-        list[member.id] = ensureMember(list, member);
+        const banned = await findBanned(memberRef, guild);
+        const list = await getList(guild);
 
-        await guild.members.unban(member.id)
+        if (banned) {
+            await guild.members.unban(banned.user.id);
+            await sendReply(guild.systemChannel, `${banned.user.username} has been unbanned.`)
+        }
+        else {
+            await sendReply(guild.systemChannel, `${memberRef} isn't banned.`)
+        }
 
-        delete list[member.id].banned;
+        list[banned.user.id] = ensureMember(list, banned.user);
+        delete list[banned.user.id].banned;
 
-        return list[member.id];
+        await saveList(guild.id, list);
     } catch (error) {
-        throw error
+        throw error;
     }
 }
 
@@ -132,6 +163,7 @@ async function listBans(guild) {
 
 module.exports = {
     giveStrike: giveStrike,
+    unmute: unmute,
     kick: kick,
     findBanned: findBanned,
     ban: ban,

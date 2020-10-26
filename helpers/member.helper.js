@@ -78,7 +78,7 @@ async function validateUsername(member, list, nickname) {
     }
 }
 
-async function checkMember(member) {
+async function registerMember(member) {
     try {
         const list = await getList(member.guild.id);
 
@@ -120,9 +120,24 @@ async function updateMember(member) {
     }
 }
 
+function verifyMember(member, permission, channel) {
+    if (!member.hasPermission(permission)) {
+        sendReply(channel, 'You do not have permission for this command!');
+        return;
+    }
+
+    if (member && user.id === member.user.id) {
+        sendReply(channel, 'You cannot moderate yourself!');
+        return;
+    }
+
+    return true;
+}
+
 module.exports = {
-    checkMember: checkMember,
+    registerMember: registerMember,
     updateMember: updateMember,
     ensureMember: ensureMember,
     findMember: findMember,
+    verifyMember: verifyMember
 }

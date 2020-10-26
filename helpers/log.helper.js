@@ -1,5 +1,5 @@
 const { createLogger, format, transports } = require('winston')
-const { getDate } = require('./clock.helper')
+const { getDate } = require('./time.helper')
 
 const logger = createLogger({
     level: 'info',
@@ -8,14 +8,14 @@ const logger = createLogger({
     transports: [new transports.File({ filename: 'logs/log.txt' })]
 });
 
-async function logError(error) {
+function logError(error) {
     const now = getDate();
     logger.log('error', `${error.message}\nFile: ${error.fileName}\nLine: ${error.lineNumber}\nTime: ${now}`);
     console.log(now);
     console.log(error);
 }
 
-async function logInfo(message) {
+function logInfo(message) {
     console.log(message)
     logger.log('info', message);
 }

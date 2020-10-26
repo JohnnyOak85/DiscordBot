@@ -3,8 +3,8 @@ const { PREFIX, DAYS_TO_PRUNE } = require(`../docs/config.json`);
 const { setup } = require('./command.helper');
 const { buildCommands, promote, buildDoc, setGuild } = require('./login.helper');
 const { sendReply } = require('./guild.helper');
-const { getDate } = require('./clock.helper');
-const { logError, logInfo } = require('./log.helper');
+const { getDate } = require('./time.helper');
+const { logInfo } = require('./log.helper');
 const { getList, saveList } = require('./doc.helper');
 const { ensureMember } = require('./member.helper');
 const { isBanned, textRepeated, isShouting, purgeMessage } = require('./message.helper');
@@ -99,6 +99,5 @@ module.exports = {
     pruneUsers: pruneUsers,
     registerBanStatus: registerBanStatus,
     checkMessage: checkMessage,
-    executeCommand: executeCommand,
-    logError: logError,
+    executeCommand: executeCommand
 }

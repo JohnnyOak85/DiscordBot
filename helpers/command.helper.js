@@ -1,6 +1,6 @@
 const { ensureRole, giveRole, removeRole, sendReply } = require("./guild.helper");
-const { giveStrike, kick, ban, unban, listBans } = require('./punishment.helper');
-const { addTime } = require('./clock.helper');
+const { giveStrike, kick, ban, listBans } = require('./punishment.helper');
+const { addTime } = require('./time.helper');
 const { getList, saveList } = require('./doc.helper');
 
 
@@ -151,23 +151,6 @@ async function banMember() {
   }
 }
 
-async function unbanMember(username) {
-  try {
-    const list = await listBans(guild);
-    member = list.find(m => m.user.username.includes(username));
-
-    if (!member) {
-      reply = 'You need to mention a valid user!';
-      return;
-    }
-
-    await unban(member.user, memberList, guild);
-    reply = `${member.user.username} has been unbanned.`;
-  } catch (error) {
-    throw error
-  }
-}
-
 // Message Tasks
 
 function getReply() {
@@ -234,7 +217,6 @@ module.exports = {
   getStrikesList: getStrikesList,
   kickMember: kickMember,
   banMember: banMember,
-  unbanMember: unbanMember,
   listBans: listBans,
   setReply: setReply,
   getReply: getReply,
