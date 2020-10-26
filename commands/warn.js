@@ -1,4 +1,6 @@
-const { verifyUser, checkMember, issueStrike, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyPermission, verifyMember } = require('../helpers/member.helper');
+const { warn } = require('../helpers/warn.helper');
+
 const { MAX_STRIKES } = require('../docs/config.json');
 
 module.exports = {
@@ -8,14 +10,10 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
-                if (checkMember()) {
-                    await issueStrike()
-                    await saveMembers();
-                };
+            if (verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel) && verifyMember(message.member, message.mentions.members.first(), message.channel)) {
+                await warn(message.members.first(), message.guild, args.slice(1).join(' '));
+                return;
             }
-
-            await sendReply(message.guild.systemChannel, getReply());
         } catch (error) {
             throw error
         }

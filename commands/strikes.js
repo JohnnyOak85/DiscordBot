@@ -1,4 +1,6 @@
-const { verifyUser, getMember, getStrikesList, setReply, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyPermission } = require('../helpers/member.helper');
+const { sendReply } = require('../helpers/message.helper');
+const { getStrikes } = require('../helpers/warn.helper');
 
 module.exports = {
     name: 'strikes',
@@ -7,39 +9,42 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
-                const member = getMember();
-                const list = getStrikesList();
-                setReply(buildReply(list, member));
-            }
+            if (verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel)) {
+                const list = await getStrikes(message.guild);
+                const member = message.members.first()
+                let reply = '';
 
-            await sendReply(message.channel, getReply());
+                if (!list.length) {
+                    await sendReply('There is no record of any users with strikes.');
+                    return;
+                }
+
+                if (!member) {
+                    for (const member of Object.values(list)) {
+                        reply += `${member.username}: ${member.strikes.length}\n`;
+                    }
+
+                    await sendReply(message.channel, reply);
+                    return;
+                }
+
+                if (!list[member.id] || !list[member.id].strikes) {
+                    await sendReply(message.channel, `${member.user.username} has no previous strikes.`);
+                    return;
+                }
+
+                reply += `${list[member.id].username}\n`;
+
+                list[member.id].strikes.forEach(strike => {
+                    if (strike === '') strike = 'No reason provided';
+                    reply += `- ${strike}\n`;
+                });
+
+                await sendReply(message.channel, reply);
+                return;
+            }
         } catch (error) {
             throw error
         }
     }
-}
-
-function buildReply(list, member) {
-    let reply = '';
-
-    if (!list.length) return 'I have no record of any users with strikes.';
-
-    if (!member) {
-        Object.values(list).forEach(member => {
-            reply += `${member.username}: ${member.strikes.length}\n`;
-        })
-        return reply;
-    }
-
-    if (!list[member.id] || !list[member.id].strikes) return 'This user has no previous strikes.';
-
-    reply += `${list[member.id].username}\n`;
-
-    list[member.id].strikes.forEach(strike => {
-        if (strike === '') strike = 'No reason provided';
-        reply += `- ${strike}\n`;
-    });
-
-    return reply;
 }

@@ -1,4 +1,5 @@
-const { verifyUser, checkMember, removeStrike, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyPermission, verifyMember } = require('../helpers/member.helper');
+const { forgive } = require('../helpers/warn.helper');
 
 module.exports = {
     name: 'forgive',
@@ -7,14 +8,10 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyUser(message.member, 'MANAGE_MESSAGES')) {
-                if (checkMember()) {
-                    removeStrike();
-                    await saveMembers();
-                }
+            if (verifyPermission(message.member, 'MANAGE_MESSAGES', message.channel) && verifyMember(message.member, message.mentions.members.first(), message.channel)) {
+                await forgive(message.members.first(), message.guild, message.channel, args[0]);
+                return;
             }
-
-            await sendReply(message.guild.systemChannel, getReply());
         } catch (error) {
             throw error
         }

@@ -1,5 +1,5 @@
 const { verifyMember } = require('../helpers/member.helper');
-const { unban } = require('../helpers/punishment.helper');
+const { unban } = require('../helpers/ban.helper');
 
 module.exports = {
     name: 'unban',
@@ -10,6 +10,7 @@ module.exports = {
         try {
             if (verifyPermission(message.member, 'BAN_MEMBERS', message.channel) && verifyMember(message.member, args[0], message.channel)) {
                 await unban(args[0], message.guild);
+                return;
             }
         } catch (error) {
             throw error

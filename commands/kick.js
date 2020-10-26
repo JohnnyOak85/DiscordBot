@@ -1,4 +1,6 @@
-const { verifyUser, checkMember, issueStrike, kickMember, saveMembers, sendReply, getReply } = require('../helpers/command.helper');
+const { verifyPermission, verifyMember } = require('../helpers/member.helper');
+const { kick } = require('../helpers/ban.helper');
+
 
 module.exports = {
     name: 'kick',
@@ -7,15 +9,10 @@ module.exports = {
     moderation: true,
     async execute(message, args) {
         try {
-            if (verifyUser(member, 'KICK_MEMBERS')) {
-                if (checkMember()) {
-                    await issueStrike()
-                    await kickMember()
-                    await saveMembers();
-                };
+            if (verifyPermission(message.member, 'BAN_MEMBERS', message.channel) && verifyMember(message.member, message.mentions.members.first(), message.channel)) {
+                await kick(message.members.first(), message.guild, args.slice(1).join(' '));
+                return;
             }
-
-            await sendReply(message.guild.systemChannel, getReply());
         } catch (error) {
             throw error
         }

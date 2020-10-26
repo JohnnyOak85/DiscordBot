@@ -1,5 +1,5 @@
 const { verifyPermission, verifyMember } = require('../helpers/member.helper');
-const { ban } = require('../helpers/punishment.helper');
+const { ban } = require('../helpers/ban.helper');
 
 module.exports = {
     name: 'ban',
@@ -9,7 +9,8 @@ module.exports = {
     async execute(message, args) {
         try {
             if (verifyPermission(message.member, 'BAN_MEMBERS', message.channel) && verifyMember(message.member, message.mentions.members.first(), message.channel)) {
-                await ban(message.members.first(), message.guild, args.slice(1).join(' '));
+                await ban(message.members.first(), message.guild, args.slice(1).join(' '), args[0]);
+                return;
             }
         } catch (error) {
             throw error
