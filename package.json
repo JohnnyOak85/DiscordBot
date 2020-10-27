@@ -9,10 +9,10 @@
         "url": "http://johnnyoak85.github.io/"
     },
     "dependencies": {
-        "discord.js": "^12.1.1",
-        "fs-extra": "^9.0.0",
-        "moment": "^2.24.0",
-        "winston": "^3.2.1"
+        "discord.js": "^12.4.1",
+        "fs-extra": "^9.0.1",
+        "moment": "^2.29.1",
+        "winston": "^3.3.3"
     },
     "scripts": {
         "start": "node bot.js"
