@@ -1,0 +1,1 @@
+type EmojiMap = { [name: string]: string };
