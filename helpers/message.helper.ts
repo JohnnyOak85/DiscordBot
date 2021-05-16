@@ -54,7 +54,7 @@ const repeatedWords = (message: string): boolean | undefined => {
     for (const secondWord of words) {
       if (firstWord.toLowerCase() === secondWord.toLowerCase()) counter++;
 
-      if (words.length > 5 && counter > words.length / 2) return true;
+      if (words.length > 5 && counter >= words.length / 2) return true;
     }
   }
 };
@@ -94,8 +94,7 @@ const illegalMessage = async (message: Message): Promise<boolean | undefined> =>
     const messages = await message.channel.messages.fetch({ limit: 25 });
     const botMessages = messages.filter((message) => message.author.id === BOT_ID);
 
-    // if (message.author.bot || !message.member || message.member.hasPermission('MANAGE_MESSAGES')) return;
-    if (message.author.bot || !message.member) return;
+    if (message.author.bot || !message.member || message.member.hasPermission('MANAGE_MESSAGES')) return;
 
     const reply = await checkMessage(message);
 
@@ -105,14 +104,12 @@ const illegalMessage = async (message: Message): Promise<boolean | undefined> =>
       (botMessage) => botMessage.content.includes(reply) && botMessage.content.includes(message.author.id)
     );
 
-    // message.delete();
+    message.delete();
 
-    if (sameMessage) {
-      console.log(sameMessage.content);
-      return;
-    }
+    if (sameMessage) return;
 
     message.reply(reply);
+    
     return true;
   } catch (error) {
     throw error;
