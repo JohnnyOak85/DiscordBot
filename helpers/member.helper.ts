@@ -148,13 +148,14 @@ const registerMember = async (member: GuildMember): Promise<void> => {
 
       let message = `Welcome <@${member.user.id}>!`;
 
-      if (rulesChannel)
-        message += ` Please check the ${rulesChannel?.toString()} and have a good time!`;
+      if (rulesChannel) message += ` Please check the ${rulesChannel?.toString()} and have a good time!`;
 
       member.guild.systemChannel?.send(message);
     }
 
-    for (const role of user.roles) member.roles.add(role);
+    for (const role of user.roles) {
+      if (member.guild.roles.fetch(role)) member.roles.add(role);
+    }
 
     if (user.nickname) member.setNickname(user.nickname);
 
