@@ -146,10 +146,10 @@ const registerMember = async (member: GuildMember): Promise<void> => {
     if (!member.joinedAt || !user.joinedAt || !compareDate(member.joinedAt, user.joinedAt)) {
       const rulesChannel = await getChannel(member.guild.channels, 'rules', member.guild.systemChannel);
 
-      let message = `Welcome <@${member.user.id}!`;
+      let message = `Welcome <@${member.user.id}>!`;
 
       if (rulesChannel)
-        message += `Welcome <@${member.user.id}! Please check the ${rulesChannel?.toString()} and have a good time!`;
+        message += ` Please check the ${rulesChannel?.toString()} and have a good time!`;
 
       member.guild.systemChannel?.send(message);
     }
