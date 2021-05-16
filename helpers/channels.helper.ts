@@ -22,7 +22,6 @@ import { RULE_LIST } from '../config.json';
 // Resources
 import { getDoc } from './storage.helper';
 import { collectReactions } from './reaction.helper';
-import { colorEmojis } from '../resources/reaction-roles';
 
 /**
  * @description Sends a message with the rules list to the system channel.
@@ -64,6 +63,7 @@ const setColorRoles = async (channel: TextChannel | NewsChannel): Promise<void> 
     });
 
     const messages = await channel.messages.fetch();
+    const colorEmojis = await getDoc<EmojiMap>('configurations/emojis/colors');
 
     if (!messages.array().length) {
       const message = await channel.send(colorEmbed);
