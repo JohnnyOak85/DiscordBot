@@ -1,5 +1,5 @@
 // Dependencies
-import { ClientUser, Guild, GuildMember, Role, RoleManager, TextChannel } from 'discord.js';
+import { GuildMember, Role, RoleManager, TextChannel } from 'discord.js';
 
 // Helpers
 import { updatePermissions } from './channels.helper';
@@ -51,27 +51,6 @@ const getRole = async (
     if (!role) return await createRole(roleManager, roleName, channel);
 
     return role;
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
- * @description Ensures the bot has the correct role.
- * @param guildList
- * @param bot
- */
-const promote = async (guild: Guild, bot: ClientUser | null): Promise<void> => {
-  try {
-    const botUser = await guild.members.fetch(bot || '');
-    const role = await getRole(guild.roles, 'bot', guild.systemChannel);
-
-    if (role && !guild.roles.cache.has(role.id)) {
-      if (bot?.username) role.setName(bot?.username);
-
-      botUser.roles.add(role);
-      logInfo(`Bot has full moderator privileges.`);
-    }
   } catch (error) {
     throw error;
   }
@@ -175,4 +154,4 @@ const unmuteUser = async (member: GuildMember): Promise<string | undefined> => {
   }
 };
 
-export { getRole, giveRole, muteUser, promote, removeRole, unmuteUser };
+export { getRole, giveRole, muteUser, removeRole, unmuteUser };

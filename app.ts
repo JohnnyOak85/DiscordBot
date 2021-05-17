@@ -6,7 +6,6 @@ import { buildInfoCategory } from './helpers/channels.helper';
 import { getCommands } from './helpers/command.helper';
 import { checkMemberChanges, registerMember } from './helpers/member.helper';
 import { illegalMessage } from './helpers/message.helper';
-import { promote } from './helpers/roles.helper';
 import { buildDatabase } from './helpers/storage.helper';
 import { logError, logInfo, startTimers } from './helpers/utils.helper';
 
@@ -23,7 +22,6 @@ bot.on('ready', () => {
   logInfo(`The bot went online.`);
 
   for (const guild of bot.guilds.cache.array()) {
-    promote(guild, bot.user);
     buildDatabase(guild);
     buildInfoCategory(guild);
     startTimers(guild);
