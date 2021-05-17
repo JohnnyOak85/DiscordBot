@@ -3,9 +3,8 @@ import { Guild, MessageEmbed } from 'discord.js';
 import moment, { unitOfTime } from 'moment';
 import { scheduleJob } from 'node-schedule';
 import { createLogger, format, transports } from 'winston';
-import { Console } from 'winston/lib/winston/transports';
 import { unmuteUser } from './roles.helper';
-import { getDoc, getUserDoc, readDirectory } from './storage.helper';
+import { getUserDoc, readDirectory } from './storage.helper';
 
 const logger = createLogger({
   level: 'info',
@@ -109,36 +108,4 @@ const startTimers = async (guild: Guild): Promise<void> => {
   });
 };
 
-/**
- * @description Checks the a string against a list of illegal words.
- * @param message
- */
-const hasIllegalWord = async (message: string): Promise<boolean> => {
-  try {
-    const illegalWords = await getDoc<List>('configurations/illegal_words');
-
-    if (illegalWords.ILLEGAL_WORDS.some((word) => message.toLocaleLowerCase().includes(word))) return true;
-
-    return false;
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
- * @description Checks the a string against a list of illegal sites.
- * @param message
- */
-const hasIllegalWebsite = async (message: string): Promise<boolean> => {
-  try {
-    const illegalSites = await getDoc<List>('configurations/illegal_sites');
-
-    if (illegalSites.ILLEGAL_SITES.some((site) => message.toLocaleLowerCase().includes(site))) return true;
-
-    return false;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export { addTime, compareDate, getDate, getNumber, hasIllegalWebsite, hasIllegalWord, logError, logInfo, startTimers };
+export { addTime, compareDate, getDate, getNumber, logError, logInfo, startTimers };

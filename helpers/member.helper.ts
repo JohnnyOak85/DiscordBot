@@ -4,7 +4,7 @@ import { difference } from 'lodash';
 
 // Helpers
 import { getUserDoc, readDirectory, saveDoc } from './storage.helper';
-import { compareDate, getDate, hasIllegalWebsite, hasIllegalWord } from './utils.helper';
+import { compareDate, getDate } from './utils.helper';
 import { getChannel } from './channels.helper';
 
 import { CENSOR_NICKNAME } from '../config.json';
@@ -102,12 +102,9 @@ const addUserAnniversary = async (member: GuildMember, date: Date): Promise<stri
   }
 };
 
-const validateUsername = async (member: GuildMember, user: UserDoc): Promise<void> => {
+const validateUsername = (member: GuildMember, user: UserDoc): void => {
   try {
     if (!member.manageable || !member.nickname) return;
-
-    if ((await hasIllegalWord(member.nickname)) || (await hasIllegalWebsite(member.nickname)))
-      await member.setNickname(CENSOR_NICKNAME);
 
     user.nickname = member.nickname;
   } catch (error) {
@@ -127,7 +124,7 @@ const checkMemberChanges = async (oldMember: GuildMember | PartialGuildMember, n
 
     if (newRole.length) user.roles?.push(newRole[0].id);
 
-    await validateUsername(newMember, user);
+    validateUsername(newMember, user);
 
     saveDoc(`${newMember.guild.id}/${newMember.user.id}`, user);
   } catch (error) {
@@ -141,7 +138,7 @@ const registerMember = async (member: GuildMember): Promise<void> => {
 
     const user = await getUser(member);
 
-    await validateUsername(member, user);
+    validateUsername(member, user);
 
     if (!member.joinedAt || !user.joinedAt || !compareDate(member.joinedAt, user.joinedAt)) {
       const rulesChannel = await getChannel(member.guild.channels, 'rules', member.guild.systemChannel);

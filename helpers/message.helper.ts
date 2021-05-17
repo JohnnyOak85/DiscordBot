@@ -2,7 +2,6 @@
 import { Collection, Message } from 'discord.js';
 
 // Helpers
-import { hasIllegalWebsite } from './utils.helper';
 import { BOT_ID } from '../config.json';
 
 /**
@@ -74,8 +73,6 @@ const checkMessage = async (message: Message): Promise<string | undefined> => {
     if (repeatedWords(message.content.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').replace(/\s{2,}/g, ' ')))
       return 'is there an echo in here?';
 
-    if (await hasIllegalWebsite(message.content)) return `wait, that's illegal!`;
-
     const messages = await message.channel.messages.fetch({ limit: 25 });
     const authorMessages = messages.filter((oldMessage) => oldMessage.author.id === message.author.id);
 
@@ -109,7 +106,7 @@ const illegalMessage = async (message: Message): Promise<boolean | undefined> =>
     if (sameMessage) return;
 
     message.reply(reply);
-    
+
     return true;
   } catch (error) {
     throw error;
