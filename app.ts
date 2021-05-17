@@ -79,7 +79,6 @@ bot.on('guildMemberAdd', (member) => {
 
 bot.on('guildMemberUpdate', (oldMember, newMember) => {
   try {
-    console.log('guildMemberUpdate');
     checkMemberChanges(oldMember, newMember);
     return;
   } catch (error) {
