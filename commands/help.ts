@@ -22,7 +22,7 @@ module.exports = {
         reply.push('List of commands:');
 
         for (const command of commands.array()) {
-          if (!isVerified && command.moderation) return;
+          if (!isVerified && command.moderation) continue;
 
           reply.push(` * ${PREFIX}${command.name}`);
         }
