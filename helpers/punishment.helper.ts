@@ -5,7 +5,6 @@ import { GuildMember } from 'discord.js';
 import { getUser } from './member.helper';
 import { muteUser } from './roles.helper';
 import { getUserDoc, readDirectory, saveDoc } from './storage.helper';
-import { getNumber } from './utils.helper';
 
 // Configurations
 import { MAX_STRIKES } from '../config.json';
@@ -38,10 +37,9 @@ const kickUser = async (member: GuildMember, reason: string): Promise<string> =>
  * @param channel
  * @param reason
  */
-const banUser = async (member: GuildMember, reason: string, time?: string): Promise<string> => {
+const banUser = async (member: GuildMember, reason: string, days?: number): Promise<string> => {
   try {
     const user = await getUser(member);
-    const days = getNumber(time || '');
     const DMChannel = await member.createDM();
 
     member.ban({ days, reason });

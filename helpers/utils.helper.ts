@@ -41,6 +41,13 @@ const getNumber = (amount: string): number | undefined => {
   if (number && number > 0 && number < 100 && !isNaN(number)) return number;
 };
 
+const getReason = (reason: string, prefix?: string): string => {
+  if (!reason) reason = 'No reason provided';
+  if (prefix) reason = reason.replace(prefix, '');
+
+  return `Reason: ${reason}`;
+};
+
 /**
  * @description Logs an error entry.
  * @param error
@@ -108,4 +115,4 @@ const startTimers = async (guild: Guild): Promise<void> => {
   });
 };
 
-export { addTime, compareDate, getDate, getNumber, logError, logInfo, startTimers };
+export { addTime, compareDate, getDate, getNumber, getReason, logError, logInfo, startTimers };

@@ -46,7 +46,7 @@ const getRole = async (
 ): Promise<Role | void> => {
   try {
     if (!roleManager) return;
-    const role = roleManager.cache.find((guildRole) => guildRole.name === roleName);
+    const role = roleManager.cache.find((guildRole) => guildRole.name.toLowerCase() === roleName);
 
     if (!role) return await createRole(roleManager, roleName, channel);
 
@@ -102,11 +102,10 @@ const removeRole = async (member: GuildMember, roleName: string): Promise<void> 
  * @param reason
  * @param time
  */
-const muteUser = async (member: GuildMember, reason: string, time?: string): Promise<string | undefined> => {
+const muteUser = async (member: GuildMember, reason: string, minutes?: number): Promise<string | undefined> => {
   try {
     const user = await getUser(member);
     const role = await getRole(member.guild.roles, 'muted', member.guild.systemChannel);
-    const minutes = getNumber(time || '');
 
     if (!role) return;
 

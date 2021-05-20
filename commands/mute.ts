@@ -4,6 +4,7 @@ import { Message } from 'discord.js';
 // Helpers
 import { checkMember } from '../helpers/member.helper';
 import { muteUser } from '../helpers/roles.helper';
+import { getNumber, getReason } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'mute',
@@ -17,10 +18,8 @@ module.exports = {
         return;
       }
 
-      const amount = parseInt(args[0]);
-      let reason = args.slice(1).join(' ');
-
-      if (!reason) reason = 'No reason provided.';
+      const amount = getNumber(args[1]);
+      const reason = getReason(args.slice(1).join(' '), amount?.toString());
 
       for await (const member of message.mentions.members?.array() || []) {
         try {
@@ -31,7 +30,7 @@ module.exports = {
             return;
           }
 
-          const reply = await muteUser(member, reason, amount.toString());
+          const reply = await muteUser(member, reason, amount);
 
           if (!reply) return;
 

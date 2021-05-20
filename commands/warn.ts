@@ -4,6 +4,7 @@ import { Message } from 'discord.js';
 // Helpers
 import { checkMember } from '../helpers/member.helper';
 import { warnUser } from '../helpers/punishment.helper';
+import { getReason } from '../helpers/utils.helper';
 
 // Configurations
 import { MAX_STRIKES } from '../config.json';
@@ -22,9 +23,7 @@ module.exports = {
         return;
       }
 
-      let reason = args.slice(1).join(' ');
-
-      if (!reason) reason = 'No reason provided.';
+      const reason = getReason(args.slice(1).join(' '));
 
       for await (const member of message.mentions.members?.array() || []) {
         try {
