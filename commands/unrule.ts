@@ -23,6 +23,7 @@ module.exports = {
         return;
       }
 
+      // TODO Fix this.
       if (!channel) {
         message.guild?.systemChannel?.send(`I don't seem to have a rules channel!`);
         return;

@@ -21,6 +21,7 @@ module.exports = {
 
       const channel = message.guild?.systemChannel;
 
+      // TODO Fix this.
       if (!channel) message.guild?.systemChannel?.send(`I don't seem to have a rules channel!`);
 
       RULE_LIST.push(args[0]);

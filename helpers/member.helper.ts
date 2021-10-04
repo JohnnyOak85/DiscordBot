@@ -151,7 +151,7 @@ const registerMember = async (member: GuildMember): Promise<void> => {
     }
 
     for (const role of user.roles) {
-      if (member.guild.roles.fetch(role)) member.roles.add(role);
+      if (await member.guild.roles.fetch(role)) member.roles.add(role);
     }
 
     if (user.nickname) member.setNickname(user.nickname);
