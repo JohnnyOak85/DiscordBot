@@ -16,7 +16,7 @@ module.exports = {
   } warnings and banned after ${MAX_STRIKES}.`,
   usage: '<user> <reason>',
   moderation: true,
-  execute: async (message: Message, args: string[]): Promise<void> => {
+  execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {
         message.channel.send('You do not have permission for this command.');

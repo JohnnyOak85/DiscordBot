@@ -1,26 +1,21 @@
 // Dependencies
-import { Collection } from 'discord.js';
+import { Collection, Message } from 'discord.js';
 import { readdirSync } from 'fs-extra';
+
+interface Command {
+  description: string;
+  execute: (message: Message, args?: string[]) => void;
+  moderation: boolean;
+  name: string;
+  usage: string;
+}
 
 const commands = new Collection<string, Command>();
 
 /**
- * @description Returns the command list.
- */
-const getCommands = (): Collection<string, Command> => {
-  try {
-    if (!commands.array().length) setCommands();
-
-    return commands;
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
  * @description Builds the command list.
  */
-const setCommands = (): void => {
+const setCommands = () => {
   try {
     const commandList = readdirSync(`${__dirname}/../commands`);
 
@@ -33,4 +28,15 @@ const setCommands = (): void => {
   }
 };
 
-export { getCommands };
+/**
+ * @description Returns the command list.
+ */
+export const getCommands = () => {
+  try {
+    if (!commands.array().length) setCommands();
+
+    return commands;
+  } catch (error) {
+    throw error;
+  }
+};

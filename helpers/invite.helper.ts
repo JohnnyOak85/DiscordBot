@@ -1,12 +1,12 @@
 // Dependencies
-import { Guild, GuildChannelManager, Invite } from 'discord.js';
+import { Guild, GuildChannelManager } from 'discord.js';
 
 /**
  * @description Creates a new permanent invite for the given channel, otherwise it finds the one for general.
  * @param channelManager
  * @param channelName
  */
-const createInvite = async (channelManager: GuildChannelManager, channelName: string): Promise<Invite | undefined> => {
+const createInvite = async (channelManager: GuildChannelManager, channelName: string) => {
   try {
     let channel = channelManager.cache.find((guildChannel) => guildChannel.name === channelName);
     if (!channel) channel = channelManager.cache.find((guildChannel) => guildChannel.name === 'general-chat');
@@ -21,7 +21,7 @@ const createInvite = async (channelManager: GuildChannelManager, channelName: st
  * @description Returns a permanent invite for the given channel, otherwise it will default to the general channel..
  * @param inviteList
  */
-const getInvite = async (guild: Guild | null, channelName: string): Promise<Invite | undefined> => {
+export const getInvite = async (guild: Guild, channelName: string) => {
   try {
     if (!guild) return;
 
@@ -39,5 +39,3 @@ const getInvite = async (guild: Guild | null, channelName: string): Promise<Invi
     throw error;
   }
 };
-
-export { getInvite };

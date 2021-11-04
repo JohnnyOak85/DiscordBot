@@ -10,7 +10,7 @@ module.exports = {
   description: "Lists all users with strikes. If provided with a user, it will list that user's strikes",
   usage: '<user>',
   moderation: true,
-  execute: async (message: Message): Promise<void> => {
+  execute: async (message: Message) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {
         message.channel.send('You do not have permission for this command.');

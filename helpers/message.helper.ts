@@ -1,14 +1,14 @@
 // Dependencies
 import { Collection, Message } from 'discord.js';
 
-// Helpers
+// Configurations
 import { BOT_ID } from '../config.json';
 
 /**
  * @description Checks if a message has too many uppercase letters.
  * @param message
  */
-const isShouting = (message: string): boolean | undefined => {
+const isShouting = (message: string) => {
   let counter = 0;
 
   if (message.length < 60) return;
@@ -26,7 +26,7 @@ const isShouting = (message: string): boolean | undefined => {
  * @param author
  * @param newMessage
  */
-const repeatedMessage = async (messages: Collection<string, Message>, newMessage: Message): Promise<boolean | undefined> => {
+const repeatedMessage = async (messages: Collection<string, Message>, newMessage: Message) => {
   try {
     const lastMessage = messages.array()[1];
 
@@ -42,7 +42,7 @@ const repeatedMessage = async (messages: Collection<string, Message>, newMessage
  * @description Check if the message is composed of repeated words.
  * @param message
  */
-const repeatedWords = (message: string): boolean | undefined => {
+const repeatedWords = (message: string) => {
   const words = message.split(' ');
 
   for (const firstWord of words) {
@@ -62,7 +62,7 @@ const repeatedWords = (message: string): boolean | undefined => {
  * @description Checks to see if the messaged doesn't contain anything not permitted.
  * @param message
  */
-const checkMessage = async (message: Message): Promise<string | undefined> => {
+const checkMessage = async (message: Message) => {
   try {
     if (message.channel.type === 'dm' || message.channel.type === 'news') return;
 
@@ -86,10 +86,10 @@ const checkMessage = async (message: Message): Promise<string | undefined> => {
  * @description Processes the message to be checked.
  * @param message
  */
-const illegalMessage = async (message: Message): Promise<boolean | undefined> => {
+export const illegalMessage = async (message: Message) => {
   try {
     const messages = await message.channel.messages.fetch({ limit: 25 });
-    const botMessages = messages.filter((message) => message.author.id === BOT_ID);
+    const botMessages = messages.filter((filteredMessage) => filteredMessage.author.id === BOT_ID);
 
     if (message.author.bot || !message.member || message.member.hasPermission('MANAGE_MESSAGES')) return;
 
@@ -112,5 +112,3 @@ const illegalMessage = async (message: Message): Promise<boolean | undefined> =>
     throw error;
   }
 };
-
-export { illegalMessage };

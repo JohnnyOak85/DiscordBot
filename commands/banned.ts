@@ -6,7 +6,7 @@ module.exports = {
   description: 'Lists all the users that have been banned.',
   usage: ' ',
   moderation: true,
-  execute: async (message: Message): Promise<void> => {
+  execute: async (message: Message) => {
     try {
       if (!message.member?.hasPermission('BAN_MEMBERS')) {
         message.channel.send('You do not have permission for this command.');

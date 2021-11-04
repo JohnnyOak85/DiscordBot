@@ -13,7 +13,7 @@ import { DATABASE_DIR } from '../config.json';
  * @description Constructs all the user docs from a guild.
  * @param guild
  */
-const buildDatabase = async (guild: Guild): Promise<void> => {
+export const buildDatabase = async (guild: Guild) => {
   try {
     const members = await guild.members.fetch();
     const banned = await guild.fetchBans();
@@ -40,7 +40,7 @@ const buildDatabase = async (guild: Guild): Promise<void> => {
  * @description Returns the list of files inside a directory.
  * @param path
  */
-const readDirectory = async (path: string): Promise<string[]> => {
+export const readDirectory = async (path: string) => {
   try {
     return readdirSync(`${DATABASE_DIR}/${path}`);
   } catch (error) {
@@ -52,7 +52,7 @@ const readDirectory = async (path: string): Promise<string[]> => {
  * @description Ensures a file exists and returns it.
  * @param path
  */
-const getUserDoc = async (path: string): Promise<UserDoc> => {
+export const getUserDoc = async (path: string) => {
   try {
     if (!pathExistsSync(`${DATABASE_DIR}/${path}.json`))
       saveDoc(path, {
@@ -76,7 +76,7 @@ const getUserDoc = async (path: string): Promise<UserDoc> => {
  * @description Returns a file from the database.
  * @param path
  */
-const getDoc = async <T>(path: string): Promise<T> => {
+export const getDoc = async <T>(path: string): Promise<T> => {
   try {
     return readJsonSync(`${DATABASE_DIR}/${path}.json`);
   } catch (error) {
@@ -89,7 +89,7 @@ const getDoc = async <T>(path: string): Promise<T> => {
  * @param path
  * @param file
  */
-const saveDoc = async (path: string, file: UserDoc): Promise<void> => {
+export const saveDoc = async (path: string, file: UserDoc) => {
   try {
     writeJsonSync(`${DATABASE_DIR}/${path}.json`, file);
     logInfo('Updated file.');
@@ -97,5 +97,3 @@ const saveDoc = async (path: string, file: UserDoc): Promise<void> => {
     throw error;
   }
 };
-
-export { buildDatabase, getDoc, getUserDoc, readDirectory, saveDoc };

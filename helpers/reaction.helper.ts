@@ -8,13 +8,13 @@ import { giveRole, removeRole } from './roles.helper';
  * @description Returns an emoji id based on trigger expressions.
  * @param message
  */
-const getReaction = (message: string): string | undefined => {
+export const getReaction = (message: string) => {
   if (message.includes('this guy')) return '748203492480516138';
   if (message.includes('that guy')) return '767354452646035496';
   if (message.includes('gross')) return '835068013018349629';
   if (message.includes('oof')) return '767355833319030795';
   if (message.includes('ninja')) return '674906124167675904';
-  if (message.includes('sun')) return '670297733038604322';
+  if (message.includes(' sun')) return '670297733038604322';
   if (message.includes('sosig') || message.includes('sausage')) return '835068012968935445';
   if (message.includes('derp') || message.includes('derpy')) return '672740902048890880';
 };
@@ -23,7 +23,7 @@ const getReaction = (message: string): string | undefined => {
  * @description Listens to all reactions to a given message.
  * @param message
  */
-const collectReactions = async (message: Message, emojiList: EmojiMap): Promise<void> => {
+export const collectReactions = async (message: Message, emojiList: EmojiMap) => {
   try {
     for (const emoji of Object.keys(emojiList)) {
       if (!message.reactions.cache.array().length) message.react(emoji);
@@ -61,5 +61,3 @@ const collectReactions = async (message: Message, emojiList: EmojiMap): Promise<
     throw error;
   }
 };
-
-export { getReaction, collectReactions };

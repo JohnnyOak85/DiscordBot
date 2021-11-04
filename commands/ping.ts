@@ -5,7 +5,7 @@ module.exports = {
   description: 'Check if the bot is on',
   usage: '<command>',
   moderation: false,
-  execute: async (message: Message): Promise<void> => {
+  execute: async (message: Message) => {
     try {
       message.reply('Pong!');
     } catch (error) {

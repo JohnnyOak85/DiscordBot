@@ -12,7 +12,7 @@ module.exports = {
   description: 'Adds a new rule to the rules list.',
   usage: '<rule>',
   moderation: true,
-  execute: async (message: Message, args: string[]): Promise<void> => {
+  execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('ADMINISTRATOR')) {
         message.channel.send('You do not have permission for this command.');
@@ -21,8 +21,7 @@ module.exports = {
 
       const channel = message.guild?.systemChannel;
 
-      // TODO Fix this.
-      if (!channel) message.guild?.systemChannel?.send(`I don't seem to have a rules channel!`);
+      if (!channel) return;
 
       RULE_LIST.push(args[0]);
 

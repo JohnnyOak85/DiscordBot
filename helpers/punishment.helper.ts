@@ -15,7 +15,7 @@ import { MAX_STRIKES } from '../config.json';
  * @param channel
  * @param reason
  */
-const kickUser = async (member: GuildMember, reason: string): Promise<string> => {
+export const kickUser = async (member: GuildMember, reason: string) => {
   try {
     const user = await getUser(member);
 
@@ -37,7 +37,7 @@ const kickUser = async (member: GuildMember, reason: string): Promise<string> =>
  * @param channel
  * @param reason
  */
-const banUser = async (member: GuildMember, reason: string, days?: number): Promise<string> => {
+export const banUser = async (member: GuildMember, reason: string, days?: number) => {
   try {
     const user = await getUser(member);
     const DMChannel = await member.createDM();
@@ -64,7 +64,7 @@ const banUser = async (member: GuildMember, reason: string, days?: number): Prom
  * @param member
  * @param reason
  */
-const warnUser = async (member: GuildMember, reason: string): Promise<string> => {
+export const warnUser = async (member: GuildMember, reason: string) => {
   try {
     const user = await getUser(member);
 
@@ -88,10 +88,10 @@ const warnUser = async (member: GuildMember, reason: string): Promise<string> =>
  * @param member
  * @param amount
  */
-const forgiveUser = async (member: GuildMember, amount: string): Promise<string | undefined> => {
+export const forgiveUser = async (member: GuildMember, amount: string) => {
   try {
     const user = await getUser(member);
-    const amountNumber = parseInt(amount);
+    const amountNumber = parseInt(amount, 10);
 
     if (!user.strikes.length) return `${member.user.username} has no strikes.`;
 
@@ -113,7 +113,7 @@ const forgiveUser = async (member: GuildMember, amount: string): Promise<string 
  * @description Returns the list of users with warnings.
  * @param guildId
  */
-const listWarnings = async (guildId: string): Promise<string> => {
+export const listWarnings = async (guildId: string) => {
   try {
     const userList = await readDirectory(guildId); // TODO Preface it with the guild id/name.
     const warningsList = [];
@@ -135,7 +135,7 @@ const listWarnings = async (guildId: string): Promise<string> => {
  * @description Returns the list of a user's warnings.
  * @param member
  */
-const getUserWarnings = async (member: GuildMember): Promise<string> => {
+export const getUserWarnings = async (member: GuildMember) => {
   try {
     const user = await getUser(member);
 
@@ -152,12 +152,3 @@ const getUserWarnings = async (member: GuildMember): Promise<string> => {
     throw error;
   }
 };
-
-// async function pruneUsers(guilds) {
-//   for (const guild of guilds) {
-//       const pruned = await guild[1].members.prune({ days: DAYS_TO_PRUNE });
-//       await guild.systemChannel.send(`${pruned} users have been pruned due to inactivity!`)
-//   }
-// }
-
-export { banUser, forgiveUser, getUser, getUserWarnings, kickUser, listWarnings, warnUser };

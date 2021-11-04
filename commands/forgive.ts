@@ -10,7 +10,7 @@ module.exports = {
   description: 'Mention a user and that user will get a strike removed.',
   usage: '<user>',
   moderation: true,
-  execute: async (message: Message, args: string[]): Promise<void> => {
+  execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {
         message.channel.send('You do not have permission for this command.');

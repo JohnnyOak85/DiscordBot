@@ -1,21 +1,21 @@
 // Dependencies
-import { GuildMember, Role, RoleManager, TextChannel } from 'discord.js';
+import { GuildMember, RoleManager, TextChannel } from 'discord.js';
 
 // Helpers
 import { updatePermissions } from './channels.helper';
 import { getUser } from './member.helper';
 import { getDoc, saveDoc } from './storage.helper';
-import { addTime, getNumber, logInfo } from './utils.helper';
+import { addTime, logInfo } from './utils.helper';
 
-// Models
-import { RoleSchema } from '../models/role.model';
+// Interfaces
+import { RoleSchema } from '../interface/role.interface';
 
 /**
  * @description Creates a new role in the guild.
  * @param roleManager
  * @param roleName
  */
-const createRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel | null | undefined): Promise<Role> => {
+const createRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel) => {
   try {
     const roleSchema = await getDoc<RoleSchema>(`configurations/roles/${roleName}`);
     const role = await roleManager.create({
@@ -39,11 +39,7 @@ const createRole = async (roleManager: RoleManager, roleName: string, channel: T
  * @param roleManager
  * @param roleName
  */
-const getRole = async (
-  roleManager: RoleManager | undefined,
-  roleName: string,
-  channel: TextChannel | null | undefined
-): Promise<Role | void> => {
+export const getRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel) => {
   try {
     if (!roleManager) return;
     const role = roleManager.cache.find((guildRole) => guildRole.name.toLowerCase() === roleName);
@@ -60,8 +56,10 @@ const getRole = async (
  * @description Gives a new role to a user.
  * @param member
  */
-const giveRole = async (member: GuildMember, roleName: string): Promise<void> => {
+export const giveRole = async (member: GuildMember, roleName: string) => {
   try {
+    if (!member.guild.systemChannel) return;
+
     const user = await getUser(member);
     const role = await getRole(member.guild.roles, roleName, member.guild.systemChannel);
 
@@ -79,8 +77,10 @@ const giveRole = async (member: GuildMember, roleName: string): Promise<void> =>
  * @description Removes a role from a user.
  * @param member
  */
-const removeRole = async (member: GuildMember, roleName: string): Promise<void> => {
+export const removeRole = async (member: GuildMember, roleName: string) => {
   try {
+    if (!member.guild.systemChannel) return;
+
     const user = await getUser(member);
     const role = await getRole(member.guild.roles, roleName, member.guild.systemChannel);
 
@@ -102,8 +102,10 @@ const removeRole = async (member: GuildMember, roleName: string): Promise<void> 
  * @param reason
  * @param time
  */
-const muteUser = async (member: GuildMember, reason: string, minutes?: number): Promise<string | undefined> => {
+export const muteUser = async (member: GuildMember, reason: string, minutes?: number) => {
   try {
+    if (!member.guild.systemChannel) return;
+
     const user = await getUser(member);
     const role = await getRole(member.guild.roles, 'muted', member.guild.systemChannel);
 
@@ -134,8 +136,10 @@ const muteUser = async (member: GuildMember, reason: string, minutes?: number): 
  * @description Removes the mute role from the user, allowing them to once again send messages to the guild.
  * @param member
  */
-const unmuteUser = async (member: GuildMember): Promise<string | undefined> => {
+export const unmuteUser = async (member: GuildMember) => {
   try {
+    if (!member.guild.systemChannel) return;
+
     const user = await getUser(member);
     const role = await getRole(member.guild.roles, 'muted', member.guild.systemChannel);
 
@@ -152,5 +156,3 @@ const unmuteUser = async (member: GuildMember): Promise<string | undefined> => {
     throw error;
   }
 };
-
-export { getRole, giveRole, muteUser, removeRole, unmuteUser };

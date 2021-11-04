@@ -11,7 +11,7 @@ module.exports = {
   description: 'Mention a user and that user gets removed from the guild.',
   usage: '<user> <reason>',
   moderation: true,
-  execute: async (message: Message, args: string[]): Promise<void> => {
+  execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('BAN_MEMBERS')) {
         message.channel.send('You do not have permission for this command.');

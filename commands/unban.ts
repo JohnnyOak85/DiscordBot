@@ -10,7 +10,7 @@ module.exports = {
   description: 'Provide a username and that user will have access to the server again.',
   usage: '<username>',
   moderation: true,
-  execute: async (message: Message, args: string[]): Promise<void> => {
+  execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('BAN_MEMBERS')) {
         message.channel.send('You do not have permission for this command.');
@@ -53,6 +53,8 @@ module.exports = {
 
           message.guild?.members.unban(banned?.user);
           message.guild?.systemChannel?.send(`${banned.user.username} is no longer banned.`);
+
+          if (!message.guild) return;
 
           const DMChannel = await banned.user.createDM();
           const invite = getInvite(message.guild, 'general-chat');

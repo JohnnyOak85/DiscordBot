@@ -8,10 +8,10 @@ import { checkMemberChanges, registerMember } from './helpers/member.helper';
 import { illegalMessage } from './helpers/message.helper';
 import { buildDatabase } from './helpers/storage.helper';
 import { logError, logInfo, startTimers } from './helpers/utils.helper';
+import { getReaction } from './helpers/reaction.helper';
 
 // Configurations
 import { PREFIX, TOKEN } from './config.json';
-import { getReaction } from './helpers/reaction.helper';
 
 const bot = new Client();
 const commands = getCommands();
@@ -53,7 +53,7 @@ bot.on('message', async (message) => {
     await command.execute(message, args);
   } catch (error) {
     message.channel.send('There was an error trying to execute that command!');
-    logError(error);
+    logError(error as Error);
   }
 });
 
@@ -63,7 +63,7 @@ bot.on('messageUpdate', async (oldMessage, newMessage) => {
 
     illegalMessage(newMessage);
   } catch (error) {
-    logError(error);
+    logError(error as Error);
   }
 });
 
@@ -71,7 +71,7 @@ bot.on('guildMemberAdd', (member) => {
   try {
     registerMember(member);
   } catch (error) {
-    logError(error);
+    logError(error as Error);
   }
 });
 
@@ -80,8 +80,10 @@ bot.on('guildMemberUpdate', (oldMember, newMember) => {
     checkMemberChanges(oldMember, newMember);
     return;
   } catch (error) {
-    logError(error);
+    logError(error as Error);
   }
 });
 
-bot.on('error', (error) => logError(error));
+bot.on('error', (error) => {
+  logError(error);
+});

@@ -12,7 +12,7 @@ module.exports = {
   description: 'Displays the list of commands. It can also display information on a given command.',
   usage: '<command>',
   moderation: false,
-  execute: async (message: Message, args: string[]): Promise<void> => {
+  execute: async (message: Message, args: string[]) => {
     try {
       const commands = getCommands();
       const isVerified = message.member?.hasPermission('MANAGE_MESSAGES');
@@ -31,19 +31,20 @@ module.exports = {
         reply.push(`You can send \`${PREFIX}help [command name]\` to get info on a specific command!`);
 
         await message.channel.send(reply);
+
         return;
       }
 
-      const command = commands.get(args[0].toLowerCase());
+      const taggedCommand = commands.get(args[0].toLowerCase());
 
-      if (!command) {
+      if (!taggedCommand) {
         message.channel.send('That command does not exist.');
         return;
       }
 
-      reply.push(`**Name:** ${command.name}`);
-      reply.push(`**Description:** ${command.description}`);
-      reply.push(`**Usage:** ${PREFIX}${command.name} ${command.usage}`);
+      reply.push(`**Name:** ${taggedCommand.name}`);
+      reply.push(`**Description:** ${taggedCommand.description}`);
+      reply.push(`**Usage:** ${PREFIX}${taggedCommand.name} ${taggedCommand.usage}`);
 
       message.channel.send(reply);
 

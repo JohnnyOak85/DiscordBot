@@ -13,7 +13,7 @@ module.exports = {
   description: `Removes a rule from the rules list by it's position.`,
   usage: '<position>',
   moderation: true,
-  execute: async (message: Message, args: string[]): Promise<void> => {
+  execute: async (message: Message, args: string[]) => {
     try {
       const channel = message.guild?.systemChannel;
       const index = getNumber(args[0]);
@@ -23,11 +23,7 @@ module.exports = {
         return;
       }
 
-      // TODO Fix this.
-      if (!channel) {
-        message.guild?.systemChannel?.send(`I don't seem to have a rules channel!`);
-        return;
-      }
+      if (!channel) return;
 
       if (!index) {
         message.channel.send('Please input a number.');

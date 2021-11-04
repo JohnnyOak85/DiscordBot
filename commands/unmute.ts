@@ -10,7 +10,7 @@ module.exports = {
   description: 'Mention a user and that user will no longer be muted.',
   usage: '<user>',
   moderation: true,
-  execute: async (message: Message): Promise<void> => {
+  execute: async (message: Message) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {
         message.channel.send('You do not have permission for this command.');

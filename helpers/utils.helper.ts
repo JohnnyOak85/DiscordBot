@@ -3,6 +3,8 @@ import { Guild, MessageEmbed } from 'discord.js';
 import moment, { unitOfTime } from 'moment';
 import { scheduleJob } from 'node-schedule';
 import { createLogger, format, transports } from 'winston';
+
+// Helpers
 import { unmuteUser } from './roles.helper';
 import { getUserDoc, readDirectory } from './storage.helper';
 
@@ -18,30 +20,30 @@ const logger = createLogger({
  * @param type
  * @param amount
  */
-const addTime = (type: unitOfTime.DurationConstructor, amount: number): string => moment().add(amount, type).format();
+export const addTime = (type: unitOfTime.DurationConstructor, amount: number) => moment().add(amount, type).format();
 
 /**
  * @description Returns the current date.
  */
-const getDate = (date = new Date(), format = 'Do MMMM YYYY, h:mm:ss a'): string => moment(date).format(format);
+export const getDate = (date = new Date(), timeFormat = 'Do MMMM YYYY, h:mm:ss a') => moment(date).format(timeFormat);
 
 /**
  * @description Compare two dates.
  * @param date
  */
-const compareDate = (firstDate: Date, secondDate: Date): boolean => moment(firstDate).isAfter(secondDate);
+export const compareDate = (firstDate: Date, secondDate: Date): boolean => moment(firstDate).isAfter(secondDate);
 
 /**
  * @description Transforms the given number string into a number.
  * @param amount
  */
-const getNumber = (amount: string): number | undefined => {
-  const number = parseInt(amount);
+export const getNumber = (amount: string) => {
+  const numberAmount = parseInt(amount, 10);
 
-  if (number && number > 0 && number < 100 && !isNaN(number)) return number;
+  if (numberAmount && numberAmount > 0 && numberAmount < 100 && !isNaN(numberAmount)) return numberAmount;
 };
 
-const getReason = (reason: string, prefix?: string): string => {
+export const getReason = (reason: string, prefix?: string) => {
   if (!reason) reason = 'No reason provided';
   if (prefix) reason = reason.replace(prefix, '');
 
@@ -52,7 +54,7 @@ const getReason = (reason: string, prefix?: string): string => {
  * @description Logs an error entry.
  * @param error
  */
-const logError = (error: Error): void => {
+export const logError = (error: Error) => {
   console.log(error);
   logger.log('error', `${error.message}\n${error}\nTime: ${getDate()}`);
 };
@@ -61,14 +63,14 @@ const logError = (error: Error): void => {
  * @description Logs an information entry.
  * @param message
  */
-const logInfo = (message: string): void => {
+export const logInfo = (message: string) => {
   logger.log('info', `${message}\nTime: ${getDate()}`);
 };
 
 /**
  * @description Starts timers for repeated tasks.
  */
-const startTimers = async (guild: Guild): Promise<void> => {
+export const startTimers = async (guild: Guild) => {
   // Once per day at midnight check anniversaries.
   scheduleJob('1 0 * * *', async () => {
     const userDocs = await readDirectory(guild.id);
@@ -114,5 +116,3 @@ const startTimers = async (guild: Guild): Promise<void> => {
     }
   });
 };
-
-export { addTime, compareDate, getDate, getNumber, getReason, logError, logInfo, startTimers };

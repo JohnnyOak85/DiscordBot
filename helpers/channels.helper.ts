@@ -1,61 +1,22 @@
 // Dependencies
-import {
-  Guild,
-  GuildChannel,
-  GuildChannelManager,
-  MessageEmbed,
-  NewsChannel,
-  PermissionOverwriteOption,
-  Role,
-  TextChannel
-} from 'discord.js';
+import { Guild, GuildChannelManager, MessageEmbed, NewsChannel, PermissionOverwriteOption, Role, TextChannel } from 'discord.js';
 
 // Helpers
 import { logInfo } from './utils.helper';
-
-// Models
-import { ChannelSchema } from '../models/channel.model';
-
-// Configurations
-import { RULE_LIST } from '../config.json';
-
-// Resources
 import { getDoc } from './storage.helper';
 import { collectReactions } from './reaction.helper';
 
-/**
- * @description Sends a message with the rules list to the system channel.
- * @param channel
- */
-const setRules = async (channel: TextChannel | NewsChannel | null | undefined, rules: string[]): Promise<void> => {
-  try {
-    if (!channel?.isText()) return;
+// Interfaces
+import { ChannelSchema } from '../interface/channel.interface';
 
-    let reply = '```markdown\n';
-
-    for (const rule of rules) {
-      reply += `* ${rule}\n`;
-    }
-
-    reply += '```';
-
-    const messages = await channel.messages.fetch();
-
-    for await (const message of messages.array()) {
-      if (message.content !== reply) message.delete();
-    }
-
-    if (!messages.array().length) channel.send(reply);
-  } catch (error) {
-    throw error;
-  }
-};
+// Configurations
+import { RULE_LIST } from '../config.json';
 
 /**
  * Sets up an embed with color emotes to give color roles to users.
  * @param channel
  */
-const setColorRoles = async (channel: TextChannel | NewsChannel): Promise<void> => {
+const setColorRoles = async (channel: TextChannel | NewsChannel) => {
   try {
     const colorEmbed = new MessageEmbed({
       color: 'DEFAULT',
@@ -94,8 +55,10 @@ const setColorRoles = async (channel: TextChannel | NewsChannel): Promise<void> 
  * @param category
  * @param system
  */
-const buildInfoChannel = async (guild: Guild, channelName: string): Promise<GuildChannel | void> => {
+const buildInfoChannel = async (guild: Guild, channelName: string) => {
   try {
+    if (!guild.systemChannel) return;
+
     const channel = await getChannel(guild.channels, channelName, guild.systemChannel);
     const category = await getChannel(guild.channels, 'information', guild.systemChannel);
 
@@ -110,10 +73,56 @@ const buildInfoChannel = async (guild: Guild, channelName: string): Promise<Guil
 };
 
 /**
+ * @description Sends a message with the rules list to the system channel.
+ * @param channel
+ */
+export const setRules = async (channel: TextChannel | NewsChannel, rules: string[]) => {
+  try {
+    let reply = '```markdown\n';
+
+    for (const rule of rules) {
+      reply += `* ${rule}\n`;
+    }
+
+    reply += '```';
+
+    const messages = await channel.messages.fetch();
+
+    for await (const message of messages.array()) {
+      if (message.content !== reply) message.delete();
+    }
+
+    if (!messages.array().length) channel.send(reply);
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * @description Creates a new channel on the guild.
+ * @param channelManager
+ * @param channelName
+ * @param systemChannel
+ */
+const createChannel = async (channelManager: GuildChannelManager, channelName: string, systemChannel: TextChannel) => {
+  try {
+    const channelSchema = await getDoc<ChannelSchema>(`configurations/channels/${channelName}`);
+    const channel = await channelManager.create(channelSchema.name, channelSchema.options);
+
+    systemChannel.send(`Created new channel <#${channel?.id}>!`);
+    logInfo(`Created channel ${channelSchema.name} on ${channelManager?.guild.name}.`);
+
+    return channel;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
  * @description Creates the information category.
  * @param guild
  */
-const buildInfoCategory = async (guild: Guild): Promise<void> => {
+export const buildInfoCategory = async (guild: Guild) => {
   try {
     const rulesChannel = await buildInfoChannel(guild, 'rules');
     if (rulesChannel && rulesChannel.isText()) setRules(rulesChannel, RULE_LIST);
@@ -129,45 +138,13 @@ const buildInfoCategory = async (guild: Guild): Promise<void> => {
 };
 
 /**
- * @description Creates a new channel on the guild.
- * @param channelManager
- * @param channelName
- * @param systemChannel
- */
-const createChannel = async (
-  channelManager: GuildChannelManager | undefined,
-  channelName: string,
-  systemChannel: TextChannel | null | undefined
-): Promise<GuildChannel | undefined> => {
-  try {
-    if (!channelManager) return;
-
-    const channelSchema = await getDoc<ChannelSchema>(`configurations/channels/${channelName}`);
-    const channel = await channelManager.create(channelSchema.name, channelSchema.options);
-
-    systemChannel?.send(`Created new channel <#${channel?.id}>!`);
-    logInfo(`Created channel ${channelSchema.name} on ${channelManager?.guild.name}.`);
-
-    return channel;
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
  * @description Retrieves a new channel from the guild.
  * @param channelManager
  * @param channelName
  * @param systemChannel
  */
-const getChannel = async (
-  channelManager: GuildChannelManager | undefined,
-  channelName: string,
-  systemChannel: TextChannel | null | undefined
-): Promise<GuildChannel | void> => {
+export const getChannel = async (channelManager: GuildChannelManager, channelName: string, systemChannel: TextChannel) => {
   try {
-    if (!channelManager) return;
-
     const channel = channelManager.cache.find((guildChannel) => guildChannel.name === channelName);
 
     if (!channel) return await createChannel(channelManager, channelName, systemChannel);
@@ -184,10 +161,12 @@ const getChannel = async (
  * @param role
  * @param permissions
  */
-const updatePermissions = async (channelManager: GuildChannelManager, role: Role, permissions: PermissionOverwriteOption) => {
-  for (const channel of channelManager?.cache.array()) {
+export const updatePermissions = async (
+  channelManager: GuildChannelManager,
+  role: Role,
+  permissions: PermissionOverwriteOption
+) => {
+  for (const channel of channelManager.cache.array()) {
     channel.updateOverwrite(role, permissions);
   }
 };
-
-export { buildInfoCategory, getChannel, setRules, updatePermissions };
