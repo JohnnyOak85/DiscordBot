@@ -6,11 +6,18 @@ import { logInfo } from './utils.helper';
 import { getDoc } from './storage.helper';
 import { collectReactions } from './reaction.helper';
 
-// Interfaces
-import { ChannelSchema } from '../interface/channel.interface';
-
 // Configurations
 import { RULE_LIST } from '../config.json';
+
+interface ChannelSchema {
+  name: string;
+  options: {
+    parent?: string;
+    permissions: PermissionOverwriteOption;
+    position: number;
+    type: 'category' | 'text' | 'voice';
+  };
+}
 
 /**
  * Sets up an embed with color emotes to give color roles to users.

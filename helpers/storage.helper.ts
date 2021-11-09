@@ -66,7 +66,7 @@ export const getUserDoc = async (path: string) => {
         username: ''
       });
 
-    return readJsonSync(`${DATABASE_DIR}/${path}.json`);
+    return getDoc<UserDoc>(path);
   } catch (error) {
     throw error;
   }

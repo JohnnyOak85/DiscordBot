@@ -1,5 +1,5 @@
 // Dependencies
-import { GuildMember, RoleManager, TextChannel } from 'discord.js';
+import { GuildMember, PermissionOverwriteOption, PermissionResolvable, RoleManager, TextChannel } from 'discord.js';
 
 // Helpers
 import { updatePermissions } from './channels.helper';
@@ -7,8 +7,11 @@ import { getUser } from './member.helper';
 import { getDoc, saveDoc } from './storage.helper';
 import { addTime, logInfo } from './utils.helper';
 
-// Interfaces
-import { RoleSchema } from '../interface/role.interface';
+interface RoleSchema {
+  activePermissions: PermissionResolvable;
+  inactivePermissions: PermissionOverwriteOption;
+  name: string;
+}
 
 /**
  * @description Creates a new role in the guild.

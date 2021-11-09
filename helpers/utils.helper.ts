@@ -82,22 +82,16 @@ export const startTimers = async (guild: Guild) => {
 
       const guildUser = guild.members.cache.get(user._id);
 
-      const anniversaryEmbed = new MessageEmbed({
-        color: 'RANDOM',
-        fields: [
-          {
-            name: `It's ${guildUser?.nickname}'s anniversary!`,
-            value: 'Everyone party!'
-          }
-        ],
-        title: 'HAPPY ANNIVERSARY!',
-        thumbnail: {
-          url: guildUser?.user.avatarURL() || ''
-        },
-        url: 'https://www.youtube.com/watch?v=8zgz2xBrvVQ'
-      });
+      if (!guildUser || !guild.systemChannel) return;
 
-      guild.systemChannel?.send(anniversaryEmbed);
+      const embed = new MessageEmbed()
+        .setColor('RANDOM')
+        .setTitle('HAPPY ANNIVERSARY!')
+        .setThumbnail(guildUser.user.avatarURL() || '')
+        .setURL('https://www.youtube.com/watch?v=8zgz2xBrvVQ')
+        .addField(`It's ${guildUser.nickname}'s anniversary!`, 'Everyone party!');
+
+      guild.systemChannel.send(embed);
     }
   });
 
