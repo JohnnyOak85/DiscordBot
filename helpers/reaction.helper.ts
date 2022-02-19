@@ -9,7 +9,9 @@ async function cleanString(str: string) {
   const chars = await getDoc<string[]>(`configurations/chars`);
 
   for (const char of chars) {
-    str = str.replace(char, '');
+    const regex = new RegExp(`\\${char}`, 'g');
+
+    str = str.replace(regex, ' ');
   }
 
   return str;
