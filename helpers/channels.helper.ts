@@ -1,10 +1,9 @@
-import { Guild, GuildChannelManager, MessageEmbed, NewsChannel, PermissionOverwriteOption, Role, TextChannel } from 'discord.js';
+import { Guild, GuildChannelManager, PermissionOverwriteOption, Role, TextChannel } from 'discord.js';
 
 import { logInfo } from './utils.helper';
 import { getDoc } from './storage.helper';
-import { collectReactions } from './reaction.helper';
-
-import { RULE_LIST } from '../config.json';
+import { setRulesChannel } from './channels/rules.helper';
+import { setRolesChannel } from './channels/roles.helper';
 
 interface ChannelSchema {
   name: string;
@@ -17,46 +16,9 @@ interface ChannelSchema {
 }
 
 /**
- * @description Sets up an embed with color emotes to give color roles to users.
- */
-const setColorRoles = async (channel: TextChannel | NewsChannel) => {
-  try {
-    const colorEmbed = new MessageEmbed({
-      color: 'DEFAULT',
-      title: 'React to pick your color.'
-    });
-
-    const messages = await channel.messages.fetch();
-    const colorEmojis = await getDoc<EmojiMap>('configurations/emojis/colors');
-
-    if (!messages.array().length) {
-      const message = await channel.send(colorEmbed);
-
-      collectReactions(message, colorEmojis);
-
-      return;
-    }
-
-    const previous = messages.array().find((message) => message.embeds.filter((embed) => embed.title === colorEmbed.title));
-
-    if (!previous) {
-      const message = await channel.send(colorEmbed);
-
-      collectReactions(message, colorEmojis);
-    }
-
-    for await (const message of messages.array()) {
-      collectReactions(message, colorEmojis);
-    }
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
  * @description Creates a new channel in the information category.
  */
-const buildInfoChannel = async (guild: Guild, channelName: string) => {
+export const buildInfoChannel = async (guild: Guild, channelName: string) => {
   try {
     if (!guild.systemChannel) return;
 
@@ -68,35 +30,6 @@ const buildInfoChannel = async (guild: Guild, channelName: string) => {
     await channel.setParent(category.id);
 
     return channel;
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
- * @description Sends a message with the rules list to the system channel.
- */
-export const setRules = async (channel: TextChannel | NewsChannel, rules: string[]) => {
-  try {
-    let reply = '```markdown\n';
-
-    for (const rule of rules) {
-      reply += `* ${rule}\n`;
-    }
-
-    reply += '```';
-
-    const messages = await channel.messages.fetch();
-
-    for await (const message of messages.array()) {
-      if (message.content !== reply) {
-        message.delete();
-      }
-    }
-
-    if (!messages.array().length) {
-      channel.send(reply);
-    }
   } catch (error) {
     throw error;
   }
@@ -119,28 +52,26 @@ const createChannel = async (channelManager: GuildChannelManager, channelName: s
   }
 };
 
-/**
- * @description Creates the information category.
- */
-export const buildInfoCategory = async (guild: Guild) => {
+const setEventsChannel = async (guild: Guild) => {
   try {
-    const rulesChannel = await buildInfoChannel(guild, 'rules');
-
-    if (rulesChannel && rulesChannel.isText()) {
-      setRules(rulesChannel, RULE_LIST);
-    }
-
     const eventsChannel = await buildInfoChannel(guild, 'events');
 
     if (eventsChannel) {
       guild.setSystemChannel(eventsChannel);
     }
+  } catch (error) {
+    throw error;
+  }
+};
 
-    const rolesChannel = await buildInfoChannel(guild, 'roles');
-
-    if (rolesChannel && rolesChannel.isText()) {
-      setColorRoles(rolesChannel);
-    }
+/**
+ * @description Creates the information category.
+ */
+export const buildInfoCategory = async (guild: Guild) => {
+  try {
+    setRulesChannel(guild);
+    setEventsChannel(guild);
+    setRolesChannel(guild);
   } catch (error) {
     throw error;
   }

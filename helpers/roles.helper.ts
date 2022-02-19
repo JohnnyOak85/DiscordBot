@@ -39,7 +39,7 @@ const createRole = async (roleManager: RoleManager, roleName: string, channel: T
 export const getRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel) => {
   try {
     if (!roleManager) return;
-    const role = roleManager.cache.find((guildRole) => guildRole.name.toLowerCase() === roleName);
+    const role = roleManager.cache.find((guildRole) => guildRole.name.toLowerCase() === roleName.toLowerCase());
 
     if (!role) {
       return await createRole(roleManager, roleName, channel);

@@ -1,9 +1,19 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed, MessageManager, NewsChannel, TextChannel } from 'discord.js';
 
 import { giveRole, removeRole } from './roles.helper';
 import { getDoc } from './storage.helper';
 
 import { Dictionary } from '../interfaces/dictionary.interface';
+
+const getMessages = async (manager: MessageManager) => {
+  try {
+    const messages = await manager.fetch();
+
+    return messages.array();
+  } catch (error) {
+    throw error;
+  }
+};
 
 async function cleanString(str: string) {
   const chars = await getDoc<string[]>(`configurations/chars`);
@@ -92,4 +102,28 @@ export const collectReactions = async (message: Message, emojiList: EmojiMap) =>
   } catch (error) {
     throw error;
   }
+};
+
+export const setReactionMessage = async (embed: MessageEmbed, mapName: string, channel: TextChannel | NewsChannel) => {
+  const messages = await getMessages(channel.messages);
+  const map = await getDoc<Dictionary<string>>(`configurations/emojis/${mapName}`);
+  const previousMessage = messages.find((oldMessage) => {
+    const embeds = oldMessage.embeds.filter((oldEmbed) => oldEmbed.title === embed.title);
+
+    if (embeds.length) return oldMessage;
+  });
+  let message;
+  let print = false;
+
+  if (mapName === 'roles') {
+    print = true;
+  }
+
+  if (!messages.length || !previousMessage?.embeds.length) {
+    message = await channel.send(embed);
+  } else {
+    message = previousMessage;
+  }
+
+  collectReactions(message, map);
 };
