@@ -1,10 +1,48 @@
-import { Guild } from 'discord.js';
+import { Emoji, Guild, GuildEmoji, GuildMember, Role, User } from 'discord.js';
 import { ensureDirSync, pathExistsSync, readdirSync, readJsonSync, writeJsonSync } from 'fs-extra';
 
 import { buildBannedUser, getUser } from './member.helper';
 import { logInfo } from './utils.helper';
 
 import { DATABASE_DIR } from '../config.json';
+import { Dictionary } from '../interfaces/dictionary.interface';
+
+interface BannedUser {
+  user: User;
+  reason: string;
+}
+
+function recordBannedUsers(users: BannedUser[], guild: string) {
+  for (const ban of users) {
+    const user = buildBannedUser(ban.user, ban.reason);
+    const path = `${guild}/${user._id}`;
+
+    if (user._id && pathExistsSync(`${path}.json`)) {
+      saveDoc(path, user);
+    }
+  }
+}
+
+async function recordUsers(users: GuildMember[], guild: string) {
+  for (const member of users) {
+    const user = await getUser(member);
+    const path = `${guild}/${user._id}`;
+
+    if (pathExistsSync(`${path}.json`)) {
+      saveDoc(path, user);
+    }
+  }
+}
+
+async function recordMap(list: (GuildEmoji | Role)[], mapName: string) {
+  const map: Dictionary<string> = {};
+
+  for (const item of list) {
+    map[item.id] = item.name;
+  }
+
+  saveDoc(`configurations/${mapName}`, map);
+}
 
 /**
  * @description Constructs all the user docs from a guild.
@@ -15,24 +53,10 @@ export const buildDatabase = async (guild: Guild) => {
     const banned = await guild.fetchBans();
 
     ensureDirSync(`${DATABASE_DIR}/${guild.id}`);
-
-    for (const ban of banned.array()) {
-      const user = buildBannedUser(ban.user, ban.reason);
-      const path = `${guild.id}/${user._id}`;
-
-      if (user._id && pathExistsSync(`${path}.json`)) {
-        saveDoc(path, user);
-      }
-    }
-
-    for (const member of members.array()) {
-      const user = await getUser(member);
-      const path = `${guild.id}/${user._id}`;
-
-      if (pathExistsSync(`${path}.json`)) {
-        saveDoc(path, user);
-      }
-    }
+    recordBannedUsers(banned.array(), guild.id);
+    recordUsers(members.array(), guild.id);
+    recordMap(guild.emojis.cache.array(), 'emojis');
+    recordMap(guild.roles.cache.array(), 'roles');
 
     logInfo(`Built database for ${guild.name}.`);
   } catch (error) {
@@ -72,6 +96,25 @@ export const getUserDoc = async (path: string) => {
 export const getDoc = async <T>(path: string): Promise<T> => {
   try {
     return readJsonSync(`${DATABASE_DIR}/${path}.json`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const recordItem = async (item: Role | Emoji, map: string, record = true) => {
+  try {
+    if (!item.id) return;
+
+    const path = `configurations/${map}`;
+    const doc = await getDoc<Dictionary<string>>(path);
+
+    if (record) {
+      doc[item.id] = item.name;
+    } else {
+      delete doc[item.id];
+    }
+
+    saveDoc(path, doc);
   } catch (error) {
     throw error;
   }

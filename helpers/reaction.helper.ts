@@ -5,9 +5,9 @@ import { getDoc } from './storage.helper';
 
 import { Dictionary } from '../interfaces/dictionary.interface';
 
-const chars = ['(', ')', '{', '}', '[', ']', '<', '>'];
+async function cleanString(str: string) {
+  const chars = await getDoc<string[]>(`configurations/chars`);
 
-function cleanString(str: string) {
   for (const char of chars) {
     str = str.replace(char, '');
   }
@@ -18,8 +18,8 @@ function cleanString(str: string) {
 /**
  * @description Returns an reply based on trigger expressions.
  */
-export const getReply = async (message: string, file: string) => {
-  message = cleanString(message);
+const getReply = async (message: string, file: string) => {
+  message = await cleanString(message);
 
   const map = await getDoc<Dictionary<string>>(`configurations/${file}`);
   const words = message.split(' ');
@@ -32,6 +32,18 @@ export const getReply = async (message: string, file: string) => {
     } else if (map[specialIndex]) {
       return map[specialIndex];
     }
+  }
+};
+
+export const react = async (message: Message) => {
+  try {
+    const reply = await getReply(message.content.toLowerCase(), 'replies');
+    const reaction = await getReply(message.content.toLowerCase(), 'reactions');
+
+    if (reply) message.channel.send(reply);
+    if (reaction) message.react(reaction);
+  } catch (error) {
+    throw error;
   }
 };
 

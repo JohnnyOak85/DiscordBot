@@ -1,17 +1,16 @@
 import { Client } from 'discord.js';
 
 import { buildInfoCategory } from './helpers/channels.helper';
-import { getCommands } from './helpers/command.helper';
+import { getArgs, getCommand } from './helpers/command.helper';
 import { checkMemberChanges, registerMember } from './helpers/member.helper';
 import { illegalMessage } from './helpers/message.helper';
-import { buildDatabase } from './helpers/storage.helper';
+import { buildDatabase, recordItem } from './helpers/storage.helper';
 import { logError, logInfo, startTimers } from './helpers/utils.helper';
-import { getReply } from './helpers/reaction.helper';
+import { react } from './helpers/reaction.helper';
 
-import { PREFIX, TOKEN } from './config.json';
+import { TOKEN } from './config.json';
 
 const bot = new Client();
-const commands = getCommands();
 
 bot.login(TOKEN);
 
@@ -31,21 +30,14 @@ bot.on('message', async (message) => {
   try {
     if (message.channel.type === 'dm' || message.author.bot) return;
 
-    const reply = await getReply(message.content.toLowerCase(), 'replies');
-    const reaction = await getReply(message.content.toLowerCase(), 'reactions');
-
-    if (reply) message.channel.send(reply);
-    if (reaction) message.react(reaction);
+    react(message);
 
     if (await illegalMessage(message)) return;
 
-    if (!message.content.startsWith(PREFIX) || message.content[1] === PREFIX || message.content.length === 1) return;
-
-    const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
-    const command = commands.get(args.shift()?.toLowerCase() || '');
+    const args = getArgs(message.content);
+    const command = getCommand(message.content, args.shift()?.toLowerCase() || '');
 
     if (!command) {
-      message.channel.send('Invalid command.');
       return;
     }
 
@@ -59,6 +51,8 @@ bot.on('message', async (message) => {
 bot.on('messageUpdate', async (oldMessage, newMessage) => {
   try {
     if (newMessage.partial) return;
+
+    react(newMessage);
 
     illegalMessage(newMessage);
   } catch (error) {
@@ -77,10 +71,33 @@ bot.on('guildMemberAdd', (member) => {
 bot.on('guildMemberUpdate', (oldMember, newMember) => {
   try {
     checkMemberChanges(oldMember, newMember);
-    return;
   } catch (error) {
     logError(error as Error);
   }
+});
+
+bot.on('emojiCreate', (emoji) => {
+  recordItem(emoji, 'emojis');
+});
+
+bot.on('emojiDelete', (emoji) => {
+  recordItem(emoji, 'emojis', false);
+});
+
+bot.on('emojiUpdate', (emoji) => {
+  recordItem(emoji, 'emojis');
+});
+
+bot.on('roleCreate', (role) => {
+  recordItem(role, 'roles');
+});
+
+bot.on('roleDelete', (role) => {
+  recordItem(role, 'roles', false);
+});
+
+bot.on('roleUpdate', (role) => {
+  recordItem(role, 'roles');
 });
 
 bot.on('error', (error) => {

@@ -1,6 +1,8 @@
 import { Collection, Message } from 'discord.js';
 import { readdirSync } from 'fs-extra';
 
+import { PREFIX } from '../config.json';
+
 interface Command {
   description: string;
   execute: (message: Message, args?: string[]) => void;
@@ -27,16 +29,17 @@ const setCommands = () => {
   }
 };
 
-/**
- * @description Returns the command list.
- */
-export const getCommands = () => {
+export const getArgs = (message: string) => message.slice(PREFIX.length).trim().split(/ +/g);
+
+export const getCommand = (message: string, name: string) => {
   try {
     if (!commands.array().length) {
       setCommands();
     }
 
-    return commands;
+    if (!message.startsWith(PREFIX) || message[1] === PREFIX || message.length === 1) return;
+
+    return commands.get(name);
   } catch (error) {
     throw error;
   }
