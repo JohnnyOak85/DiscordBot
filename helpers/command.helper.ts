@@ -29,6 +29,18 @@ const setCommands = () => {
   }
 };
 
+export const getCommands = () => {
+  try {
+    if (!commands.array().length) {
+      setCommands();
+    }
+
+    return commands;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getArgs = (message: string) => message.slice(PREFIX.length).trim().split(/ +/g);
 
 export const getCommand = (message: string, name: string) => {
