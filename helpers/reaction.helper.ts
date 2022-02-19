@@ -5,10 +5,22 @@ import { getDoc } from './storage.helper';
 
 import { Dictionary } from '../interfaces/dictionary.interface';
 
+const chars = ['(', ')', '{', '}', '[', ']', '<', '>'];
+
+function cleanString(str: string) {
+  for (const char of chars) {
+    str = str.replace(char, '');
+  }
+
+  return str;
+}
+
 /**
  * @description Returns an reply based on trigger expressions.
  */
 export const getReply = async (message: string, file: string) => {
+  message = cleanString(message);
+
   const map = await getDoc<Dictionary<string>>(`configurations/${file}`);
   const words = message.split(' ');
 

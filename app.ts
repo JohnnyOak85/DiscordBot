@@ -29,7 +29,7 @@ bot.on('ready', () => {
 
 bot.on('message', async (message) => {
   try {
-    if (message.channel.type === 'dm') return;
+    if (message.channel.type === 'dm' || message.author.bot) return;
 
     const reply = await getReply(message.content.toLowerCase(), 'replies');
     const reaction = await getReply(message.content.toLowerCase(), 'reactions');
