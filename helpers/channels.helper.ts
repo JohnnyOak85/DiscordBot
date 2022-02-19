@@ -1,12 +1,9 @@
-// Dependencies
 import { Guild, GuildChannelManager, MessageEmbed, NewsChannel, PermissionOverwriteOption, Role, TextChannel } from 'discord.js';
 
-// Helpers
 import { logInfo } from './utils.helper';
 import { getDoc } from './storage.helper';
 import { collectReactions } from './reaction.helper';
 
-// Configurations
 import { RULE_LIST } from '../config.json';
 
 interface ChannelSchema {
@@ -20,14 +17,13 @@ interface ChannelSchema {
 }
 
 /**
- * Sets up an embed with color emotes to give color roles to users.
- * @param channel
+ * @description Sets up an embed with color emotes to give color roles to users.
  */
 const setColorRoles = async (channel: TextChannel | NewsChannel) => {
   try {
     const colorEmbed = new MessageEmbed({
       color: 'DEFAULT',
-      title: 'React to pick your color role.'
+      title: 'React to pick your color.'
     });
 
     const messages = await channel.messages.fetch();
@@ -49,7 +45,9 @@ const setColorRoles = async (channel: TextChannel | NewsChannel) => {
       collectReactions(message, colorEmojis);
     }
 
-    for await (const message of messages.array()) collectReactions(message, colorEmojis);
+    for await (const message of messages.array()) {
+      collectReactions(message, colorEmojis);
+    }
   } catch (error) {
     throw error;
   }
@@ -57,10 +55,6 @@ const setColorRoles = async (channel: TextChannel | NewsChannel) => {
 
 /**
  * @description Creates a new channel in the information category.
- * @param guild
- * @param channelName
- * @param category
- * @param system
  */
 const buildInfoChannel = async (guild: Guild, channelName: string) => {
   try {
@@ -81,7 +75,6 @@ const buildInfoChannel = async (guild: Guild, channelName: string) => {
 
 /**
  * @description Sends a message with the rules list to the system channel.
- * @param channel
  */
 export const setRules = async (channel: TextChannel | NewsChannel, rules: string[]) => {
   try {
@@ -96,10 +89,14 @@ export const setRules = async (channel: TextChannel | NewsChannel, rules: string
     const messages = await channel.messages.fetch();
 
     for await (const message of messages.array()) {
-      if (message.content !== reply) message.delete();
+      if (message.content !== reply) {
+        message.delete();
+      }
     }
 
-    if (!messages.array().length) channel.send(reply);
+    if (!messages.array().length) {
+      channel.send(reply);
+    }
   } catch (error) {
     throw error;
   }
@@ -107,9 +104,6 @@ export const setRules = async (channel: TextChannel | NewsChannel, rules: string
 
 /**
  * @description Creates a new channel on the guild.
- * @param channelManager
- * @param channelName
- * @param systemChannel
  */
 const createChannel = async (channelManager: GuildChannelManager, channelName: string, systemChannel: TextChannel) => {
   try {
@@ -127,18 +121,26 @@ const createChannel = async (channelManager: GuildChannelManager, channelName: s
 
 /**
  * @description Creates the information category.
- * @param guild
  */
 export const buildInfoCategory = async (guild: Guild) => {
   try {
     const rulesChannel = await buildInfoChannel(guild, 'rules');
-    if (rulesChannel && rulesChannel.isText()) setRules(rulesChannel, RULE_LIST);
+
+    if (rulesChannel && rulesChannel.isText()) {
+      setRules(rulesChannel, RULE_LIST);
+    }
 
     const eventsChannel = await buildInfoChannel(guild, 'events');
-    if (eventsChannel) guild.setSystemChannel(eventsChannel);
+
+    if (eventsChannel) {
+      guild.setSystemChannel(eventsChannel);
+    }
 
     const rolesChannel = await buildInfoChannel(guild, 'roles');
-    if (rolesChannel && rolesChannel.isText()) setColorRoles(rolesChannel);
+
+    if (rolesChannel && rolesChannel.isText()) {
+      setColorRoles(rolesChannel);
+    }
   } catch (error) {
     throw error;
   }
@@ -146,15 +148,14 @@ export const buildInfoCategory = async (guild: Guild) => {
 
 /**
  * @description Retrieves a new channel from the guild.
- * @param channelManager
- * @param channelName
- * @param systemChannel
  */
 export const getChannel = async (channelManager: GuildChannelManager, channelName: string, systemChannel: TextChannel) => {
   try {
     const channel = channelManager.cache.find((guildChannel) => guildChannel.name === channelName);
 
-    if (!channel) return await createChannel(channelManager, channelName, systemChannel);
+    if (!channel) {
+      return await createChannel(channelManager, channelName, systemChannel);
+    }
 
     return channel;
   } catch (error) {
@@ -164,9 +165,6 @@ export const getChannel = async (channelManager: GuildChannelManager, channelNam
 
 /**
  * @description Updates permissions of a channel by given role.
- * @param channelManager
- * @param role
- * @param permissions
  */
 export const updatePermissions = async (
   channelManager: GuildChannelManager,

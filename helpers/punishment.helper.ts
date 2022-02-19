@@ -1,19 +1,13 @@
-// Dependencies
 import { GuildMember } from 'discord.js';
 
-// Helpers
 import { getUser } from './member.helper';
 import { muteUser } from './roles.helper';
 import { getUserDoc, readDirectory, saveDoc } from './storage.helper';
 
-// Configurations
 import { MAX_STRIKES } from '../config.json';
 
 /**
  * @description Momentarily removes a user from the guild.
- * @param member
- * @param channel
- * @param reason
  */
 export const kickUser = async (member: GuildMember, reason: string) => {
   try {
@@ -21,7 +15,11 @@ export const kickUser = async (member: GuildMember, reason: string) => {
 
     member.kick(reason);
 
-    if (!user.strikes.includes(reason)) user.strikes.push(reason);
+    user.strikes = user.strikes || [];
+
+    if (!user.strikes.includes(reason)) {
+      user.strikes.push(reason);
+    }
 
     saveDoc(`${member.guild.id}/${member.user.username}`, user);
 
@@ -33,9 +31,6 @@ export const kickUser = async (member: GuildMember, reason: string) => {
 
 /**
  * @description Removes a user from the guild.
- * @param member
- * @param channel
- * @param reason
  */
 export const banUser = async (member: GuildMember, reason: string, days?: number) => {
   try {
@@ -44,8 +39,15 @@ export const banUser = async (member: GuildMember, reason: string, days?: number
 
     member.ban({ days, reason });
 
-    if (days) reason = `${reason} for ${days} days.`;
-    if (!user.strikes.includes(reason)) user.strikes.push(reason);
+    if (days) {
+      reason = `${reason} for ${days} days.`;
+    }
+
+    user.strikes = user.strikes || [];
+
+    if (!user.strikes.includes(reason)) {
+      user.strikes.push(reason);
+    }
 
     user.roles = [];
 
@@ -61,19 +63,24 @@ export const banUser = async (member: GuildMember, reason: string, days?: number
 
 /**
  * @description Adds a warning to the user's warning list.
- * @param member
- * @param reason
  */
 export const warnUser = async (member: GuildMember, reason: string) => {
   try {
     const user = await getUser(member);
 
-    if (!user.strikes.includes(reason)) user.strikes.push(reason);
+    user.strikes = user.strikes || [];
 
-    if (user.strikes.length === MAX_STRIKES) return await banUser(member, `Warned ${MAX_STRIKES} times, out!`);
+    if (!user.strikes.includes(reason)) {
+      user.strikes.push(reason);
+    }
 
-    if (user.strikes.length && user.strikes.length >= MAX_STRIKES / 2)
+    if (user.strikes.length === MAX_STRIKES) {
+      return await banUser(member, `Warned ${MAX_STRIKES} times, out!`);
+    }
+
+    if (user.strikes.length && user.strikes.length >= MAX_STRIKES / 2) {
       return (await muteUser(member, `Warned ${MAX_STRIKES / 2} times, better watch it!`)) || '';
+    }
 
     saveDoc(`${member.guild.id}/${member.user.username}`, user);
 
@@ -85,15 +92,16 @@ export const warnUser = async (member: GuildMember, reason: string) => {
 
 /**
  * @description Removes one or more warnings from the user's warning list.
- * @param member
- * @param amount
  */
 export const forgiveUser = async (member: GuildMember, amount: string) => {
   try {
     const user = await getUser(member);
     const amountNumber = parseInt(amount, 10);
+    user.strikes = user.strikes || [];
 
-    if (!user.strikes.length) return `${member.user.username} has no strikes.`;
+    if (!user.strikes.length) {
+      return `${member.user.username} has no strikes.`;
+    }
 
     if (!amountNumber || amountNumber < 1 || (amountNumber >= MAX_STRIKES && isNaN(amountNumber))) {
       user.strikes.shift();
@@ -111,19 +119,24 @@ export const forgiveUser = async (member: GuildMember, amount: string) => {
 
 /**
  * @description Returns the list of users with warnings.
- * @param guildId
  */
 export const listWarnings = async (guildId: string) => {
   try {
     const userList = await readDirectory(guildId); // TODO Preface it with the guild id/name.
     const warningsList = [];
 
-    for await (const username of userList) {
+    for await (let username of userList) {
+      username = username.replace('.json', '');
       const userDoc = await getUserDoc(`${guildId}/${username}`);
-      if (userDoc.strikes.length) warningsList.push(`${username} - ${userDoc.strikes.length}`);
+
+      if (userDoc.strikes?.length) {
+        warningsList.push(`${username} - ${userDoc.strikes.length}`);
+      }
     }
 
-    if (!warningsList.length) return 'I have no record of any warned users.';
+    if (!warningsList.length) {
+      return 'I have no record of any warned users.';
+    }
 
     return warningsList.join('/n');
   } catch (error) {
@@ -133,13 +146,14 @@ export const listWarnings = async (guildId: string) => {
 
 /**
  * @description Returns the list of a user's warnings.
- * @param member
  */
 export const getUserWarnings = async (member: GuildMember) => {
   try {
     const user = await getUser(member);
 
-    if (!user.strikes?.length) return `${member.user.username} has no strikes.`;
+    if (!user.strikes?.length) {
+      return `${member.user.username} has no strikes.`;
+    }
 
     let reply = `${member.user.username}\n`;
 

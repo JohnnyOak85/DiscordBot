@@ -1,12 +1,9 @@
-// Dependencies
 import { Collection, Message } from 'discord.js';
 
-// Configurations
 import { BOT_ID } from '../config.json';
 
 /**
  * @description Checks if a message has too many uppercase letters.
- * @param message
  */
 const isShouting = (message: string) => {
   let counter = 0;
@@ -17,14 +14,13 @@ const isShouting = (message: string) => {
     if (char === char.toUpperCase()) counter++;
   }
 
-  if (counter >= 60) return true;
+  if (counter >= 60) {
+    return true;
+  }
 };
 
 /**
  * @description Check if the message has been sent before by the same author in a short span.
- * @param channel
- * @param author
- * @param newMessage
  */
 const repeatedMessage = async (messages: Collection<string, Message>, newMessage: Message) => {
   try {
@@ -40,7 +36,6 @@ const repeatedMessage = async (messages: Collection<string, Message>, newMessage
 
 /**
  * @description Check if the message is composed of repeated words.
- * @param message
  */
 const repeatedWords = (message: string) => {
   const words = message.split(' ');
@@ -51,32 +46,42 @@ const repeatedWords = (message: string) => {
     if (firstWord.length < 3) continue;
 
     for (const secondWord of words) {
-      if (firstWord.toLowerCase() === secondWord.toLowerCase()) counter++;
+      if (firstWord.toLowerCase() === secondWord.toLowerCase()) {
+        counter++;
+      }
 
-      if (words.length > 5 && counter >= words.length / 2) return true;
+      if (words.length > 5 && counter >= words.length / 2) {
+        return true;
+      }
     }
   }
 };
 
 /**
  * @description Checks to see if the messaged doesn't contain anything not permitted.
- * @param message
  */
 const checkMessage = async (message: Message) => {
   try {
     if (message.channel.type === 'dm' || message.channel.type === 'news') return;
 
-    if (message.mentions.users.size >= 3) return 'chill with the mention train!';
+    if (message.mentions.users.size >= 3) {
+      return 'chill with the mention train!';
+    }
 
-    if (isShouting(message.content.replace(/[^\w]/g, ''))) return 'stop shouting please!';
+    if (isShouting(message.content.replace(/[^\w]/g, ''))) {
+      return 'stop shouting please!';
+    }
 
-    if (repeatedWords(message.content.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').replace(/\s{2,}/g, ' ')))
+    if (repeatedWords(message.content.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').replace(/\s{2,}/g, ' '))) {
       return 'is there an echo in here?';
+    }
 
     const messages = await message.channel.messages.fetch({ limit: 25 });
     const authorMessages = messages.filter((oldMessage) => oldMessage.author.id === message.author.id);
 
-    if (await repeatedMessage(authorMessages, message)) return 'we heard you the first time!';
+    if (await repeatedMessage(authorMessages, message)) {
+      return 'we heard you the first time!';
+    }
   } catch (error) {
     throw error;
   }
@@ -84,7 +89,6 @@ const checkMessage = async (message: Message) => {
 
 /**
  * @description Processes the message to be checked.
- * @param message
  */
 export const illegalMessage = async (message: Message) => {
   try {

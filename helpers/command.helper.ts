@@ -1,4 +1,3 @@
-// Dependencies
 import { Collection, Message } from 'discord.js';
 import { readdirSync } from 'fs-extra';
 
@@ -33,7 +32,9 @@ const setCommands = () => {
  */
 export const getCommands = () => {
   try {
-    if (!commands.array().length) setCommands();
+    if (!commands.array().length) {
+      setCommands();
+    }
 
     return commands;
   } catch (error) {

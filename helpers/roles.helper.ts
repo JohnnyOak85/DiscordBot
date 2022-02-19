@@ -1,7 +1,5 @@
-// Dependencies
 import { GuildMember, PermissionOverwriteOption, PermissionResolvable, RoleManager, TextChannel } from 'discord.js';
 
-// Helpers
 import { updatePermissions } from './channels.helper';
 import { getUser } from './member.helper';
 import { getDoc, saveDoc } from './storage.helper';
@@ -15,8 +13,6 @@ interface RoleSchema {
 
 /**
  * @description Creates a new role in the guild.
- * @param roleManager
- * @param roleName
  */
 const createRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel) => {
   try {
@@ -39,15 +35,15 @@ const createRole = async (roleManager: RoleManager, roleName: string, channel: T
 
 /**
  * @description Retrieves a role entity.
- * @param roleManager
- * @param roleName
  */
 export const getRole = async (roleManager: RoleManager, roleName: string, channel: TextChannel) => {
   try {
     if (!roleManager) return;
     const role = roleManager.cache.find((guildRole) => guildRole.name.toLowerCase() === roleName);
 
-    if (!role) return await createRole(roleManager, roleName, channel);
+    if (!role) {
+      return await createRole(roleManager, roleName, channel);
+    }
 
     return role;
   } catch (error) {
@@ -57,7 +53,6 @@ export const getRole = async (roleManager: RoleManager, roleName: string, channe
 
 /**
  * @description Gives a new role to a user.
- * @param member
  */
 export const giveRole = async (member: GuildMember, roleName: string) => {
   try {
@@ -67,8 +62,15 @@ export const giveRole = async (member: GuildMember, roleName: string) => {
     const role = await getRole(member.guild.roles, roleName, member.guild.systemChannel);
 
     if (!role) return;
-    if (!member.roles.cache.has(role.id)) await member.roles.add(role);
-    if (!user.roles.includes(role.id)) user.roles.push(role.id);
+
+    if (!member.roles.cache.has(role.id)) {
+      await member.roles.add(role);
+    }
+
+    user.roles = user.roles || [];
+    if (!user.roles.includes(role.id)) {
+      user.roles.push(role.id);
+    }
 
     saveDoc(`${member.guild.id}/${member.user.id}`, user);
   } catch (error) {
@@ -78,7 +80,6 @@ export const giveRole = async (member: GuildMember, roleName: string) => {
 
 /**
  * @description Removes a role from a user.
- * @param member
  */
 export const removeRole = async (member: GuildMember, roleName: string) => {
   try {
@@ -89,9 +90,15 @@ export const removeRole = async (member: GuildMember, roleName: string) => {
 
     if (!role) return;
 
-    if (member.roles.cache.has(role.id)) await member.roles.remove(role);
+    if (member.roles.cache.has(role.id)) {
+      await member.roles.remove(role);
+    }
 
-    if (user.roles.includes(role.id)) user.roles.splice(user.roles.indexOf(role.id), 1);
+    user.roles = user.roles || [];
+
+    if (user.roles.includes(role.id)) {
+      user.roles.splice(user.roles.indexOf(role.id), 1);
+    }
 
     saveDoc(`${member.guild.id}/${member.user.id}`, user);
   } catch (error) {
@@ -101,9 +108,6 @@ export const removeRole = async (member: GuildMember, roleName: string) => {
 
 /**
  * @description Gives a user the muted role, which makes it impossible to send messages to the guild.
- * @param member
- * @param reason
- * @param time
  */
 export const muteUser = async (member: GuildMember, reason: string, minutes?: number) => {
   try {
@@ -123,9 +127,21 @@ export const muteUser = async (member: GuildMember, reason: string, minutes?: nu
       user.timer = addTime('minutes', minutes);
     }
 
-    if (!user.strikes.includes(reason)) user.strikes.push(reason);
-    if (!member.roles.cache.has(role.id)) await member.roles.add(role);
-    if (!user.roles.includes(role.id)) user.roles.push(role.id);
+    user.strikes = user.strikes || [];
+
+    if (!user.strikes.includes(reason)) {
+      user.strikes.push(reason);
+    }
+
+    if (!member.roles.cache.has(role.id)) {
+      await member.roles.add(role);
+    }
+
+    user.roles = user.roles || [];
+
+    if (!user.roles.includes(role.id)) {
+      user.roles.push(role.id);
+    }
 
     saveDoc(`${member.guild.id}/${member.user.id}`, user);
 
@@ -137,7 +153,6 @@ export const muteUser = async (member: GuildMember, reason: string, minutes?: nu
 
 /**
  * @description Removes the mute role from the user, allowing them to once again send messages to the guild.
- * @param member
  */
 export const unmuteUser = async (member: GuildMember) => {
   try {
@@ -148,9 +163,15 @@ export const unmuteUser = async (member: GuildMember) => {
 
     if (!role) return;
 
-    if (member.roles.cache.has(role.id)) await member.roles.remove(role);
+    if (member.roles.cache.has(role.id)) {
+      await member.roles.remove(role);
+    }
 
-    if (user.roles.includes(role.id)) user.roles.splice(user.roles.indexOf(role.id), 1);
+    user.roles = user.roles || [];
+
+    if (user.roles.includes(role.id)) {
+      user.roles.splice(user.roles.indexOf(role.id), 1);
+    }
 
     saveDoc(`${member.guild.id}/${member.user.id}`, user);
 

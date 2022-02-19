@@ -1,17 +1,13 @@
-// Dependencies
 import { Guild } from 'discord.js';
 import { ensureDirSync, pathExistsSync, readdirSync, readJsonSync, writeJsonSync } from 'fs-extra';
 
-// Helpers
 import { buildBannedUser, getUser } from './member.helper';
 import { logInfo } from './utils.helper';
 
-// Configurations
 import { DATABASE_DIR } from '../config.json';
 
 /**
  * @description Constructs all the user docs from a guild.
- * @param guild
  */
 export const buildDatabase = async (guild: Guild) => {
   try {
@@ -22,12 +18,20 @@ export const buildDatabase = async (guild: Guild) => {
 
     for (const ban of banned.array()) {
       const user = buildBannedUser(ban.user, ban.reason);
-      if (pathExistsSync(`${guild.id}/${user._id}.json`)) saveDoc(`${guild.id}/${user._id}`, user);
+      const path = `${guild.id}/${user._id}`;
+
+      if (user._id && pathExistsSync(`${path}.json`)) {
+        saveDoc(path, user);
+      }
     }
 
     for (const member of members.array()) {
       const user = await getUser(member);
-      if (pathExistsSync(`${guild.id}/${user._id}.json`)) saveDoc(`${guild.id}/${user._id}`, user);
+      const path = `${guild.id}/${user._id}`;
+
+      if (pathExistsSync(`${path}.json`)) {
+        saveDoc(path, user);
+      }
     }
 
     logInfo(`Built database for ${guild.name}.`);
@@ -38,7 +42,6 @@ export const buildDatabase = async (guild: Guild) => {
 
 /**
  * @description Returns the list of files inside a directory.
- * @param path
  */
 export const readDirectory = async (path: string) => {
   try {
@@ -50,21 +53,12 @@ export const readDirectory = async (path: string) => {
 
 /**
  * @description Ensures a file exists and returns it.
- * @param path
  */
 export const getUserDoc = async (path: string) => {
   try {
-    if (!pathExistsSync(`${DATABASE_DIR}/${path}.json`))
-      saveDoc(path, {
-        _id: '',
-        anniversary: undefined,
-        joinedAt: null,
-        nickname: null,
-        roles: [],
-        strikes: [],
-        timer: undefined,
-        username: ''
-      });
+    if (!pathExistsSync(`${DATABASE_DIR}/${path}.json`)) {
+      return {};
+    }
 
     return getDoc<UserDoc>(path);
   } catch (error) {
@@ -74,7 +68,6 @@ export const getUserDoc = async (path: string) => {
 
 /**
  * @description Returns a file from the database.
- * @param path
  */
 export const getDoc = async <T>(path: string): Promise<T> => {
   try {
@@ -86,13 +79,11 @@ export const getDoc = async <T>(path: string): Promise<T> => {
 
 /**
  * @description Saves a file and logs the event.
- * @param path
- * @param file
  */
 export const saveDoc = async (path: string, file: UserDoc) => {
   try {
     writeJsonSync(`${DATABASE_DIR}/${path}.json`, file);
-    logInfo('Updated file.');
+    logInfo(`Updated file ${file._id}`);
   } catch (error) {
     throw error;
   }

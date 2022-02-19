@@ -1,10 +1,8 @@
-// Dependencies
 import { Guild, MessageEmbed } from 'discord.js';
 import moment, { unitOfTime } from 'moment';
 import { scheduleJob } from 'node-schedule';
 import { createLogger, format, transports } from 'winston';
 
-// Helpers
 import { unmuteUser } from './roles.helper';
 import { getUserDoc, readDirectory } from './storage.helper';
 
@@ -17,8 +15,6 @@ const logger = createLogger({
 
 /**
  * @description Returns a timestamp from the current date until the amount and type of time given.
- * @param type
- * @param amount
  */
 export const addTime = (type: unitOfTime.DurationConstructor, amount: number) => moment().add(amount, type).format();
 
@@ -29,30 +25,33 @@ export const getDate = (date = new Date(), timeFormat = 'Do MMMM YYYY, h:mm:ss a
 
 /**
  * @description Compare two dates.
- * @param date
  */
 export const compareDate = (firstDate: Date, secondDate: Date): boolean => moment(firstDate).isAfter(secondDate);
 
 /**
  * @description Transforms the given number string into a number.
- * @param amount
  */
 export const getNumber = (amount: string) => {
   const numberAmount = parseInt(amount, 10);
 
-  if (numberAmount && numberAmount > 0 && numberAmount < 100 && !isNaN(numberAmount)) return numberAmount;
+  if (numberAmount && numberAmount > 0 && numberAmount < 100 && !isNaN(numberAmount)) {
+    return numberAmount;
+  }
 };
 
 export const getReason = (reason: string, prefix?: string) => {
-  if (!reason) reason = 'No reason provided';
-  if (prefix) reason = reason.replace(prefix, '');
+  if (!reason) {
+    reason = 'No reason provided';
+  }
+  if (prefix) {
+    reason = reason.replace(prefix, '');
+  }
 
   return `Reason: ${reason}`;
 };
 
 /**
  * @description Logs an error entry.
- * @param error
  */
 export const logError = (error: Error) => {
   console.log(error);
@@ -61,7 +60,6 @@ export const logError = (error: Error) => {
 
 /**
  * @description Logs an information entry.
- * @param message
  */
 export const logInfo = (message: string) => {
   logger.log('info', `${message}\nTime: ${getDate()}`);
@@ -76,11 +74,11 @@ export const startTimers = async (guild: Guild) => {
     const userDocs = await readDirectory(guild.id);
 
     for (const docPath of userDocs) {
-      const user = await getUserDoc(`${guild.id}/${docPath}`);
+      const user = await getUserDoc(`${guild.id}/${docPath.replace('.json', '')}`);
 
       if (!user.anniversary || moment(user.timer).isBefore(moment().format())) return;
 
-      const guildUser = guild.members.cache.get(user._id);
+      const guildUser = guild.members.cache.get(user._id || '');
 
       if (!guildUser || !guild.systemChannel) return;
 
@@ -100,13 +98,15 @@ export const startTimers = async (guild: Guild) => {
     const userDocs = await readDirectory(guild.id);
 
     for (const docPath of userDocs) {
-      const user = await getUserDoc(`${guild.id}/${docPath}`);
+      const user = await getUserDoc(`${guild.id}/${docPath.replace('.json', '')}`);
 
       if (!user.timer || moment(user.timer).isBefore(moment().format())) return;
 
-      const guildUser = guild.members.cache.get(user._id);
+      const guildUser = guild.members.cache.get(user._id || '');
 
-      if (guildUser) unmuteUser(guildUser);
+      if (guildUser) {
+        unmuteUser(guildUser);
+      }
     }
   });
 };

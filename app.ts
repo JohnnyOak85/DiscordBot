@@ -1,7 +1,5 @@
-// Dependencies
 import { Client } from 'discord.js';
 
-// Helpers
 import { buildInfoCategory } from './helpers/channels.helper';
 import { getCommands } from './helpers/command.helper';
 import { checkMemberChanges, registerMember } from './helpers/member.helper';
@@ -10,7 +8,6 @@ import { buildDatabase } from './helpers/storage.helper';
 import { logError, logInfo, startTimers } from './helpers/utils.helper';
 import { getReaction } from './helpers/reaction.helper';
 
-// Configurations
 import { PREFIX, TOKEN } from './config.json';
 
 const bot = new Client();
@@ -36,6 +33,8 @@ bot.on('message', async (message) => {
 
     if (reaction) message.react(reaction);
 
+    if (message.content.includes('┻━┻')) message.channel.send('┬─┬ノ( º _ ºノ)');
+
     if (message.channel.type === 'dm') return;
 
     if (await illegalMessage(message)) return;
@@ -50,7 +49,7 @@ bot.on('message', async (message) => {
       return;
     }
 
-    await command.execute(message, args);
+    command.execute(message, args);
   } catch (error) {
     message.channel.send('There was an error trying to execute that command!');
     logError(error as Error);
