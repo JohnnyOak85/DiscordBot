@@ -6,7 +6,7 @@ import { checkMemberChanges, registerMember } from './helpers/member.helper';
 import { illegalMessage } from './helpers/message.helper';
 import { buildDatabase } from './helpers/storage.helper';
 import { logError, logInfo, startTimers } from './helpers/utils.helper';
-import { getReaction } from './helpers/reaction.helper';
+import { getReply } from './helpers/reaction.helper';
 
 import { PREFIX, TOKEN } from './config.json';
 
@@ -29,13 +29,13 @@ bot.on('ready', () => {
 
 bot.on('message', async (message) => {
   try {
-    const reaction = getReaction(message.content.toLowerCase());
-
-    if (reaction) message.react(reaction);
-
-    if (message.content.includes('┻━┻')) message.channel.send('┬─┬ノ( º _ ºノ)');
-
     if (message.channel.type === 'dm') return;
+
+    const reply = await getReply(message.content.toLowerCase(), 'replies');
+    const reaction = await getReply(message.content.toLowerCase(), 'reactions');
+
+    if (reply) message.channel.send(reply);
+    if (reaction) message.react(reaction);
 
     if (await illegalMessage(message)) return;
 

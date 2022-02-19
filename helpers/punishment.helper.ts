@@ -82,7 +82,7 @@ export const warnUser = async (member: GuildMember, reason: string) => {
       return (await muteUser(member, `Warned ${MAX_STRIKES / 2} times, better watch it!`)) || '';
     }
 
-    saveDoc(`${member.guild.id}/${member.user.username}`, user);
+    saveDoc(`${member.guild.id}/${member.user.id}`, user);
 
     return `${member.displayName} has been warned.\n${reason}`;
   } catch (error) {
@@ -122,7 +122,7 @@ export const forgiveUser = async (member: GuildMember, amount: string) => {
  */
 export const listWarnings = async (guildId: string) => {
   try {
-    const userList = await readDirectory(guildId); // TODO Preface it with the guild id/name.
+    const userList = await readDirectory(guildId);
     const warningsList = [];
 
     for await (let username of userList) {
@@ -130,7 +130,7 @@ export const listWarnings = async (guildId: string) => {
       const userDoc = await getUserDoc(`${guildId}/${username}`);
 
       if (userDoc.strikes?.length) {
-        warningsList.push(`${username} - ${userDoc.strikes.length}`);
+        warningsList.push(`${userDoc.username} - ${userDoc.strikes.length}`);
       }
     }
 
@@ -138,7 +138,7 @@ export const listWarnings = async (guildId: string) => {
       return 'I have no record of any warned users.';
     }
 
-    return warningsList.join('/n');
+    return warningsList.join('\n');
   } catch (error) {
     throw error;
   }

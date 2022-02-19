@@ -1,31 +1,24 @@
 import { Message } from 'discord.js';
 
 import { giveRole, removeRole } from './roles.helper';
+import { getDoc } from './storage.helper';
 
 import { Dictionary } from '../interfaces/dictionary.interface';
 
-const reactionMap: Dictionary<string> = {
-  derp: '672740902048890880',
-  derpy: '672740902048890880',
-  gross: '835068013018349629',
-  ninja: '674906124167675904',
-  oof: '767355833319030795',
-  sausage: '835068012968935445',
-  sosig: '835068012968935445',
-  sun: '670297733038604322',
-  'this guy': '748203492480516138',
-  'that guy': '767354452646035496'
-};
-
 /**
- * @description Returns an emoji id based on trigger expressions.
+ * @description Returns an reply based on trigger expressions.
  */
-export const getReaction = (message: string) => {
+export const getReply = async (message: string, file: string) => {
+  const map = await getDoc<Dictionary<string>>(`configurations/${file}`);
   const words = message.split(' ');
 
   for (const word of words) {
-    if (reactionMap[word]) {
-      return reactionMap[word];
+    const specialIndex = `${word} ${words[words.indexOf(word) + 1]}`;
+
+    if (map[word]) {
+      return map[word];
+    } else if (map[specialIndex]) {
+      return map[specialIndex];
     }
   }
 };
