@@ -1,4 +1,4 @@
-import { Guild, GuildChannelManager, PermissionOverwriteOption, Role, TextChannel } from 'discord.js';
+import { Guild, GuildChannelManager, PermissionOverwriteOption, Role } from 'discord.js';
 
 import { logInfo } from './utils.helper';
 import { getDoc } from './storage.helper';
@@ -20,10 +20,8 @@ interface ChannelSchema {
  */
 export const buildInfoChannel = async (guild: Guild, channelName: string) => {
   try {
-    if (!guild.systemChannel) return;
-
-    const channel = await getChannel(guild.channels, channelName, guild.systemChannel);
-    const category = await getChannel(guild.channels, 'information', guild.systemChannel);
+    const channel = await getChannel(guild.channels, channelName);
+    const category = await getChannel(guild.channels, 'information');
 
     if (!channel || !category) return;
 
@@ -38,12 +36,11 @@ export const buildInfoChannel = async (guild: Guild, channelName: string) => {
 /**
  * @description Creates a new channel on the guild.
  */
-const createChannel = async (channelManager: GuildChannelManager, channelName: string, systemChannel: TextChannel) => {
+const createChannel = async (channelManager: GuildChannelManager, channelName: string) => {
   try {
     const channelSchema = await getDoc<ChannelSchema>(`configurations/channels/${channelName}`);
     const channel = await channelManager.create(channelSchema.name, channelSchema.options);
 
-    systemChannel.send(`Created new channel <#${channel?.id}>!`);
     logInfo(`Created channel ${channelSchema.name} on ${channelManager?.guild.name}.`);
 
     return channel;
@@ -80,12 +77,12 @@ export const buildInfoCategory = async (guild: Guild) => {
 /**
  * @description Retrieves a new channel from the guild.
  */
-export const getChannel = async (channelManager: GuildChannelManager, channelName: string, systemChannel: TextChannel) => {
+export const getChannel = async (channelManager: GuildChannelManager, channelName: string) => {
   try {
     const channel = channelManager.cache.find((guildChannel) => guildChannel.name === channelName);
 
     if (!channel) {
-      return await createChannel(channelManager, channelName, systemChannel);
+      return await createChannel(channelManager, channelName);
     }
 
     return channel;

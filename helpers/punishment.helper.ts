@@ -125,8 +125,7 @@ export const listWarnings = async (guildId: string) => {
     const userList = await readDirectory(guildId);
     const warningsList = [];
 
-    for await (let username of userList) {
-      username = username.replace('.json', '');
+    for await (const username of userList) {
       const userDoc = await getUserDoc(`${guildId}/${username}`);
 
       if (userDoc.strikes?.length) {

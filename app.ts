@@ -5,7 +5,8 @@ import { getArgs, getCommand } from './helpers/command.helper';
 import { checkMemberChanges, registerMember } from './helpers/member.helper';
 import { illegalMessage } from './helpers/message.helper';
 import { buildDatabase, recordItem } from './helpers/storage.helper';
-import { logError, logInfo, startTimers } from './helpers/utils.helper';
+import { logError, logInfo } from './helpers/utils.helper';
+import { startTimers } from './helpers/timers.helper';
 import { react } from './helpers/reaction.helper';
 
 import { TOKEN } from './config.json';

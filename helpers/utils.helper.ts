@@ -1,10 +1,5 @@
-import { Guild, MessageEmbed } from 'discord.js';
 import moment, { unitOfTime } from 'moment';
-import { scheduleJob } from 'node-schedule';
 import { createLogger, format, transports } from 'winston';
-
-import { unmuteUser } from './roles.helper';
-import { getUserDoc, readDirectory } from './storage.helper';
 
 const logger = createLogger({
   level: 'info',
@@ -39,7 +34,8 @@ export const getNumber = (amount: string) => {
   }
 };
 
-export const getRandom = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
+export const getRandom = (max: number, min = 1) => Math.floor(Math.random() * (max - min + 1) + min);
+export const getBool = () => Math.random() < 0.5;
 
 export const getReason = (reason: string, prefix?: string) => {
   if (!reason) {
@@ -65,50 +61,4 @@ export const logError = (error: Error) => {
  */
 export const logInfo = (message: string) => {
   logger.log('info', `${message}\nTime: ${getDate()}`);
-};
-
-/**
- * @description Starts timers for repeated tasks.
- */
-export const startTimers = async (guild: Guild) => {
-  // Once per day at midnight check anniversaries.
-  scheduleJob('1 0 * * *', async () => {
-    const userDocs = await readDirectory(guild.id);
-
-    for (const docPath of userDocs) {
-      const user = await getUserDoc(`${guild.id}/${docPath.replace('.json', '')}`);
-
-      if (!user.anniversary || moment(user.timer).isBefore(moment().format())) return;
-
-      const guildUser = guild.members.cache.get(user._id || '');
-
-      if (!guildUser || !guild.systemChannel) return;
-
-      const embed = new MessageEmbed()
-        .setColor('RANDOM')
-        .setTitle('HAPPY ANNIVERSARY!')
-        .setThumbnail(guildUser.user.avatarURL() || '')
-        .setURL('https://www.youtube.com/watch?v=8zgz2xBrvVQ')
-        .addField(`It's ${guildUser.nickname}'s anniversary!`, 'Everyone party!');
-
-      guild.systemChannel.send(embed);
-    }
-  });
-
-  // Once per 5 seconds check times.
-  scheduleJob('*/5 * * * * *', async () => {
-    const userDocs = await readDirectory(guild.id);
-
-    for (const docPath of userDocs) {
-      const user = await getUserDoc(`${guild.id}/${docPath.replace('.json', '')}`);
-
-      if (!user.timer || moment(user.timer).isBefore(moment().format())) return;
-
-      const guildUser = guild.members.cache.get(user._id || '');
-
-      if (guildUser) {
-        unmuteUser(guildUser);
-      }
-    }
-  });
 };

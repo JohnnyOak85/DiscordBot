@@ -1,16 +1,17 @@
 import { Message } from 'discord.js';
-import { getRandom } from '../helpers/utils.helper';
+
+import { getBool } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'coin',
   description: 'Toss a coin',
-  usage: '<command>',
+  usage: ' ',
   moderation: false,
   execute: async (message: Message) => {
     try {
-      const toss = getRandom(1, 2);
+      const toss = getBool();
 
-      if (toss === 1) {
+      if (toss) {
         message.reply('Heads!');
       } else {
         message.reply('Tails!');

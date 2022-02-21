@@ -63,7 +63,7 @@ export const getUserByUsername = async (guildId: string, username: string) => {
     const userList = await readDirectory(guildId);
 
     for await (const user of userList) {
-      const userDoc = await getUserDoc(`users/${user.replace('.json', '')}`);
+      const userDoc = await getUserDoc(`users/${user}`);
 
       if (userDoc.username === username) {
         return userDoc;
@@ -138,7 +138,7 @@ export const registerMember = async (member: GuildMember) => {
     if (!member.joinedAt || !user.joinedAt || !compareDate(member.joinedAt, user.joinedAt)) {
       if (!member.guild.systemChannel) return;
 
-      const rulesChannel = await getChannel(member.guild.channels, 'rules', member.guild.systemChannel);
+      const rulesChannel = await getChannel(member.guild.channels, 'rules');
 
       let message = `Welcome <@${member.user.id}>!`;
 

@@ -69,7 +69,14 @@ export const buildDatabase = async (guild: Guild) => {
  */
 export const readDirectory = async (path: string) => {
   try {
-    return readdirSync(`${DATABASE_DIR}/${path}`);
+    const list = readdirSync(`${DATABASE_DIR}/${path}`);
+    const files = [];
+
+    for (const file of list) {
+      files.push(file.replace('.json', ''));
+    }
+
+    return files;
   } catch (error) {
     throw error;
   }
