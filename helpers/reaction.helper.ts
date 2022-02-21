@@ -4,6 +4,7 @@ import { giveRole, removeRole } from './roles.helper';
 import { getDoc } from './storage.helper';
 
 import { Dictionary } from '../interfaces/dictionary.interface';
+import { getRandom } from './utils.helper';
 
 const getMessages = async (manager: MessageManager) => {
   try {
@@ -126,4 +127,15 @@ export const setReactionMessage = async (embed: MessageEmbed, mapName: string, c
   }
 
   collectReactions(message, map);
+};
+
+export const getRandomQuote = async () => {
+  try {
+    const quotes = await getDoc<string[]>(`quotes`);
+    const index = getRandom(quotes.length, 0);
+
+    return quotes[index];
+  } catch (error) {
+    throw error;
+  }
 };
