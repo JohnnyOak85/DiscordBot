@@ -5,5 +5,5 @@
 /configurations
 /resources
 
-config.json
+*.json
 TODO.md
