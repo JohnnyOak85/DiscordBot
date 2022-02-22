@@ -40,7 +40,7 @@ export class StoryFactory {
       : {
           personal: 'she',
           personals: 'her',
-          possessive: 'hers'
+          possessive: 'her'
         };
 
   private getBlock = (block: string[]) =>
