@@ -45,16 +45,17 @@ export class StoryFactory {
 
   private getBlock = (block: string[]) =>
     block[getRandom(block.length) - 1]
-      .replace('§personals', this.pronouns.personals)
-      .replace('§personal', this.pronouns.personal)
-      .replace('§possessive', this.pronouns.possessive)
-      .replace('§character', this.character)
-      .replace('§country', this.decorators.countries[getRandom(this.decorators.countries.length) - 1])
-      .replace('§burns', this.decorators.burns[getRandom(this.decorators.burns.length) - 1])
-      .replace('§costs', this.decorators.costs[getRandom(this.decorators.costs.length) - 1])
-      .replace('§child', this.getChild())
-      .replace('§years', `${getRandom(44, 3)}`)
-      .replace('§love', this.getLove());
+      .replace(/§personals/g, this.pronouns.personals)
+      .replace(/§personal/g, this.pronouns.personal)
+      .replace(/§possessive/g, this.pronouns.possessive)
+      .replace(/§character/g, this.character)
+      .replace(/§country/g, this.decorators.countries[getRandom(this.decorators.countries.length) - 1])
+      .replace(/§currency/g, this.decorators.currencies[getRandom(this.decorators.currencies.length) - 1])
+      .replace(/§burn/g, this.decorators.burns[getRandom(this.decorators.burns.length) - 1])
+      .replace(/§cost/g, this.decorators.costs[getRandom(this.decorators.costs.length) - 1])
+      .replace(/§child/g, this.getChild())
+      .replace(/§years/g, `${getRandom(44, 3)}`)
+      .replace(/§love/g, this.getLove());
 
   public getStory = async () => {
     const list = await readDirectory('story/blocks');
