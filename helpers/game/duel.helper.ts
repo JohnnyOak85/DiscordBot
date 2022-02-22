@@ -4,6 +4,7 @@ import { getUserDoc } from '../storage.helper';
 import { getBool, getRandom } from '../utils.helper';
 
 import { Monster, Player } from './interfaces';
+import { control } from '../../game-config.json';
 
 export const ensureDuelist = async (path: string) => {
   const duelist = await getUserDoc(path);
@@ -20,35 +21,42 @@ export const ensureDuelist = async (path: string) => {
   };
 };
 
-// TODO Use another attribute to determine this stat or a bigger window.
-const getBoost = (attribute: number, boost: number) => {
-  switch (true) {
-    case boost < 21:
-      return 0;
-    case boost > 80:
-      return attribute * 2;
-    default:
-      return attribute;
+// TODO chance should be luck stat.
+const getBoost = (attribute: number, chance: number) => {
+  const boost = getRandom(chance);
+
+  if (boost < 21) {
+    return 0;
+  } else if (boost > 80) {
+    return attribute * 2;
   }
+
+  return attribute;
 };
 
 const battle = (attacker: Player | Monster, defender: Player | Monster, channel: TextChannel) => {
   try {
-    const damage = Math.max(0, getBoost(attacker.attack, getRandom(100)) - getBoost(defender.defense, getRandom(100)));
+    const damageBoost = getBoost(attacker.attack, 100);
+    const defenseBoost = getBoost(defender.defense, 100);
+    const damage = Math.floor(Math.max(0, damageBoost * (control / (control + defenseBoost))));
 
-    if (damage > 0) {
-      defender.health = Math.max(0, defender.health - damage);
-      channel.send(`${attacker.name} attacks! ${damage} damage!`);
-      channel.send(`${defender.name} has ${defender.health} health.`);
-    } else {
+    if (!damageBoost) {
       channel.send(`${attacker.name} missed!`);
+    } else if (!damage) {
+      channel.send(`${defender.name} defended!`);
+    } else {
+      defender.health = Math.max(0, defender.health - damage);
+      channel.send(`${attacker.name} attacks! ${damage} damage! ${defender.name} has ${defender.health} health.`);
+    }
+
+    if (defender.health <= 0) {
+      return { boutWinner: defender, boutLoser: attacker };
     }
 
     if (getBool()) {
       attacker.health = Math.max(0, attacker.health - defender.attack);
-      channel.send(`${defender.name} counters! ${defender.attack} damage!`);
-      channel.send(`${attacker.name} has ${attacker.health} health.`);
-    } else if (getBool() && damage !== 0) {
+      channel.send(`${defender.name} counters! ${defender.attack} damage! ${attacker.name} has ${attacker.health} health.`);
+    } else if (getBool() && damageBoost) {
       channel.send(`${attacker.name} follows through!`);
 
       return { boutWinner: attacker, boutLoser: defender };
@@ -68,27 +76,25 @@ const getWinner = (attacker: Player | Monster, defender: Player | Monster, chann
 
   channel.send(`${winner.name} wins!`);
 
+  let attackBoost;
+  let defenseBoost;
   if (winner === attacker) {
     const bigSplit = split > Math.max(1, experience / 2);
-    const attackBoost = bigSplit ? split : Math.max(1, experience - split);
-    const defenseBoost = bigSplit ? Math.max(1, experience - split) : split;
+    attackBoost = bigSplit ? split : Math.max(1, experience - split);
+    defenseBoost = bigSplit ? Math.max(1, experience - split) : split;
 
     winner.attack = attackBoost;
     winner.defense = defenseBoost;
-
-    channel.send(`+${attackBoost} attack points.`);
-    channel.send(`+${defenseBoost} defense points.`);
   } else if (winner === defender) {
     const bigSplit = split > experience / 2;
-    const attackBoost = bigSplit ? Math.max(1, experience - split) : split;
-    const defenseBoost = bigSplit ? split : Math.max(1, experience - split);
+    attackBoost = bigSplit ? Math.max(1, experience - split) : split;
+    defenseBoost = bigSplit ? split : Math.max(1, experience - split);
 
     winner.attack = attackBoost;
     winner.defense = defenseBoost;
-
-    channel.send(`+${attackBoost} attack points.`);
-    channel.send(`+${defenseBoost} defense points.`);
   }
+
+  channel.send(`+${attackBoost} attack. +${defenseBoost} defense.`);
 
   return winner;
 };

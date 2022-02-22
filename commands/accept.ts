@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 
 import { acceptChallenge } from '../helpers/game/arena.helper';
 
-import { ARENA } from '../config.json';
+import { arena } from '../game-config.json';
 
 module.exports = {
   name: 'accept',
@@ -11,7 +11,7 @@ module.exports = {
   moderation: false,
   execute: async (message: Message) => {
     try {
-      if (message.channel.type !== 'text' || message.channel.name !== ARENA) return;
+      if (message.channel.type !== 'text' || message.channel.name !== arena) return;
 
       acceptChallenge(message.channel, message.author.id);
     } catch (error) {

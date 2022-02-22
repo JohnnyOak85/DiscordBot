@@ -6,4 +6,10 @@ export const addStage = (name: string, timer: NodeJS.Timeout) => stages.set(name
 
 export const getStage = (name: string) => stages.get(name);
 
-export const deleteStage = (name: string) => stages.delete(name);
+export const findStage = (name: string) => stages.has(name);
+
+export const deleteStage = (name: string) => {
+  const stage = getStage(name);
+  if (stage) clearTimeout(stage);
+  stages.delete(name);
+};

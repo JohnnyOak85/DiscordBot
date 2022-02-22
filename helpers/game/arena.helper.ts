@@ -2,7 +2,7 @@ import { TextChannel } from 'discord.js';
 
 import { ensureDuelist, startRounds } from './duel.helper';
 // import { recordDocChanges } from '../storage.helper';
-import { addStage, deleteStage, getStage } from './stage.helper';
+import { addStage, deleteStage, findStage } from './stage.helper';
 import { buildEmbed } from '../embed.helper';
 
 import { Player } from './interfaces';
@@ -14,16 +14,22 @@ const activeDuel = {
 
 export const acceptChallenge = async (channel: TextChannel, defenderId: string) => {
   try {
-    if (getStage(channel.name) || !activeDuel.challenger || activeDuel.defender !== defenderId) return;
+    if (activeDuel.defender !== defenderId) {
+      channel.send(`<@${defenderId}> there are no open challenges for you.`);
+      return;
+    }
 
-    const challenger = await ensureDuelist(`${channel.guild.name}/${activeDuel.challenger}`);
-    const defender = await ensureDuelist(`${channel.guild.name}/${activeDuel.defender}`);
+    if (!findStage(channel.name) || !activeDuel.challenger) return;
+
+    const challenger = await ensureDuelist(`${channel.guild.id}/${activeDuel.challenger}`);
+    const defender = await ensureDuelist(`${channel.guild.id}/${activeDuel.defender}`);
 
     if (!challenger || !defender) return;
 
     const winner = startRounds(challenger, defender, channel) as Player;
 
     // recordDocChanges(winner, `${channel.guild.name}/${winner.id}`);
+
     deleteStage(channel.name);
   } catch (error) {
     throw error;
@@ -44,6 +50,7 @@ export const issueChallenge = async (channel: TextChannel, challenger: string, d
 
     const timer = setTimeout(() => {
       deleteStage(channel.name);
+      channel.send(`<@${challenger}>'s challenge has expired!`);
     }, 300000);
 
     addStage(channel.name, timer);
