@@ -8,30 +8,42 @@ interface Decorator {
 export class StoryFactory {
   private character = '';
   private decorators: Decorator = {};
+  private personals = '';
+  private personal = '';
+  private possessive = '';
+  private prize = '';
+  private child = '';
 
   constructor(name: string) {
     this.character = name;
-    this.getDecorator();
+    this.initDecorator();
+    this.initPronouns();
   }
 
-  private getDecorator = async () => {
+  private initDecorator = async () => {
     this.decorators = await getDoc<Decorator>('story/decorators');
   };
 
+  private initPronouns = () => {
+    this.personals = this.getNoun('him', 'her');
+    this.personal = this.getNoun('he', 'she');
+    this.possessive = this.getNoun('his', 'her');
+    this.child = this.getNoun('son', 'daughter');
+    this.prize = this.getNoun('guy', 'girl');
+  };
+
   private getValue = () => (getRandom(9) * parseInt('1'.padEnd(getRandom(6), '0'))).toString();
-
   private getDecoration = (decorator: string[]) => decorator[getRandom(decorator.length - 1)];
-
   private getNoun = (male: string, female: string) => (getBool() ? male : female);
 
-  private getBlock = (block: string[]) =>
+  private constructBlock = (block: string[]) =>
     block[getRandom(block.length) - 1]
       .replace(/§character/g, this.character)
-      .replace(/§personals/g, this.getNoun('him', 'her'))
-      .replace(/§personal/g, this.getNoun('he', 'she'))
-      .replace(/§possessive/g, this.getNoun('he', 'her'))
-      .replace(/§child/g, this.getNoun('son', 'daughter'))
-      .replace(/§love/g, this.getNoun('guy', 'girl'))
+      .replace(/§personals/g, this.personals)
+      .replace(/§personal/g, this.personal)
+      .replace(/§possessive/g, this.possessive)
+      .replace(/§child/g, this.child)
+      .replace(/§love/g, this.prize)
       .replace(/§country/g, this.getDecoration(this.decorators.countries))
       .replace(/§currency/g, this.getDecoration(this.decorators.currencies))
       .replace(/§burn/g, this.getDecoration(this.decorators.burns))
@@ -45,7 +57,7 @@ export class StoryFactory {
     for (const item of list) {
       const block = await getDoc<string[]>(`story/blocks/${item}`);
 
-      story = story + this.getBlock(block);
+      story = story + this.constructBlock(block);
     }
 
     return story;
