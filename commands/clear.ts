@@ -3,7 +3,7 @@ import { Message } from 'discord.js';
 
 module.exports = {
   name: 'clear',
-  description: 'Clear a set amount of lines from 1 to 100.',
+  description: 'Clear a set amount of lines from 1 to 99.',
   usage: '<number of lines>',
   moderation: true,
   execute: async (message: Message, args: string[]) => {
@@ -15,8 +15,8 @@ module.exports = {
 
       const amount = parseInt(args[0], 10);
 
-      if (amount < 0 || amount > 100 || isNaN(amount)) {
-        message.channel.send('I need a number from 1 to 100.');
+      if (amount < 0 || amount > 99 || isNaN(amount)) {
+        message.channel.send('I need a number from 1 to 99.');
         return;
       }
 
