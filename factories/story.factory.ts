@@ -30,6 +30,8 @@ export class StoryFactory {
 
   private getLove = () => (getBool() ? 'guy' : 'girl');
 
+  private getValue = () => (getRandom(9) * parseInt('1'.padEnd(getRandom(6), '0'))).toString();
+
   private getPronouns = () =>
     getBool()
       ? {
@@ -52,7 +54,7 @@ export class StoryFactory {
       .replace(/§country/g, this.decorators.countries[getRandom(this.decorators.countries.length) - 1])
       .replace(/§currency/g, this.decorators.currencies[getRandom(this.decorators.currencies.length) - 1])
       .replace(/§burn/g, this.decorators.burns[getRandom(this.decorators.burns.length) - 1])
-      .replace(/§cost/g, this.decorators.costs[getRandom(this.decorators.costs.length) - 1])
+      .replace(/§cost/g, this.getValue())
       .replace(/§child/g, this.getChild())
       .replace(/§years/g, `${getRandom(44, 3)}`)
       .replace(/§love/g, this.getLove());
