@@ -78,6 +78,7 @@ const getWinner = (attacker: Player | Monster, defender: Player | Monster, chann
 
   let attackBoost;
   let defenseBoost;
+  
   if (winner === attacker) {
     const bigSplit = split > Math.max(1, experience / 2);
     attackBoost = bigSplit ? split : Math.max(1, experience - split);
