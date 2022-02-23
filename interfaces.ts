@@ -1,3 +1,7 @@
+export interface DataList {
+  [prop: string]: string;
+}
+
 export interface Duelist {
   attack: number;
   defense: number;
@@ -8,8 +12,4 @@ export interface Duelist {
 
 export interface Monster extends Duelist {
   file: string;
-}
-
-export interface Player extends Duelist {
-  id: string;
 }

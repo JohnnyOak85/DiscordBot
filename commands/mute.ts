@@ -1,9 +1,7 @@
-// Discord
 import { Message } from 'discord.js';
 
-// Helpers
 import { checkMember } from '../helpers/member.helper';
-import { muteUser } from '../helpers/roles.helper';
+import { muteUser } from '../helpers/mute.helper';
 import { getNumber, getReason } from '../helpers/utils.helper';
 
 module.exports = {

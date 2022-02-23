@@ -1,36 +1,46 @@
 import { GuildMember, PartialGuildMember, User } from 'discord.js';
 import { difference } from 'lodash';
 
-import { getUserDoc, readDirectory, saveDoc } from './storage.helper';
 import { compareDate, getDate } from './utils.helper';
-import { getChannel } from './channels.helper';
+import { docExists, findDoc, getDoc, saveDoc } from './database.helper';
+import { StoryFactory } from '../factories/story.factory';
 
-/**
- * @description Guarantees the user document has all needed proprieties.
- */
-const ensureDoc = (user: UserDoc, member: GuildMember) => {
-  if (!user._id) user._id = member.id;
-  if (!user.joinedAt) user.joinedAt = member.joinedAt;
-  if (!user.nickname) user.nickname = member.nickname;
-  if (!user.roles?.length) user.roles = member.roles.cache.map((role) => role.id);
-  if (!user.username) user.username = member.user.username;
+interface UserDoc {
+  _id?: string;
+  anniversary?: Date;
+  attack?: number;
+  defense?: number;
+  joinedAt?: Date | null;
+  health?: number;
+  level?: number;
+  nickname?: string | null;
+  roles?: string[];
+  strikes?: string[];
+  timer?: string;
+  username?: string;
+}
+
+interface BannedUser {
+  user: User;
+  reason: string;
+}
+
+export const ensureUser = (user: UserDoc, member: GuildMember) => {
+  user._id = user._id || member.id;
+  user.joinedAt = user.joinedAt || member.joinedAt;
+  user.nickname = user.nickname || member.nickname;
+  user.roles = user.roles?.length ? user.roles : member.roles.cache.map((role) => role.id);
+  user.username = user.username || member.user.username;
 
   return user;
 };
 
-const validateUsername = (member: GuildMember, user: UserDoc) => {
-  try {
-    if (!member.manageable || !member.nickname) return;
+const getStory = (nickname: string) => {
+  const storyFactory = new StoryFactory(nickname);
 
-    user.nickname = member.nickname;
-  } catch (error) {
-    throw error;
-  }
+  return storyFactory.getStory();
 };
 
-/**
- * @description Creates a user object from a banned user.
- */
 export const buildBannedUser = (user: User, reason: string) => {
   return {
     _id: user.id,
@@ -42,41 +52,21 @@ export const buildBannedUser = (user: User, reason: string) => {
   };
 };
 
-/**
- * @description Returns a user document from the database.
- */
-export const getUser = async (member: GuildMember) => {
-  try {
-    const userDoc = await getUserDoc(`${member.guild.id}/${member.user.id}`);
+export const recordBannedUser = (user: BannedUser, guild: string) =>
+  docExists(guild, user.user.id).then((bool) =>
+    bool ? saveDoc(buildBannedUser(user.user, user.reason), guild, user.user.id) : null
+  );
 
-    return ensureDoc(userDoc, member);
-  } catch (error) {
-    throw error;
-  }
-};
+export const updateUser = () => {};
 
-/**
- * @description Finds a user by the username.
- */
-export const getUserByUsername = async (guildId: string, username: string) => {
-  try {
-    const userList = await readDirectory(guildId);
+export const getUser = (member: GuildMember) =>
+  getDoc<UserDoc>(member.guild.id, member.user.id).then((doc) => ensureUser(doc, member));
 
-    for await (const user of userList) {
-      const userDoc = await getUserDoc(`users/${user}`);
+export const findUser = (guild: string, user: string) => findDoc<UserDoc>(guild, user);
+export const saveUser = (member: GuildMember, doc: UserDoc) => saveDoc(doc, member.guild.id, member.user.id);
 
-      if (userDoc.username === username) {
-        return userDoc;
-      }
-    }
-  } catch (error) {
-    throw error;
-  }
-};
+export const getUserByUsername = (guildId: string, username: string) => findDoc<UserDoc>(guildId, username);
 
-/**
- * @description Checks if the member can be moderated.
- */
 export const checkMember = (moderator: GuildMember, member: GuildMember) => {
   if (!member) {
     return 'You need to mention a valid user.';
@@ -91,15 +81,12 @@ export const checkMember = (moderator: GuildMember, member: GuildMember) => {
   }
 };
 
-/**
- * @description Records an anniversary date for a user.
- */
 export const addUserAnniversary = async (member: GuildMember, date: Date) => {
   try {
     const user = await getUser(member);
     user.anniversary = date;
 
-    saveDoc(`${member.guild.id}/${member.user.id}`, user);
+    saveDoc(user, member.guild.id, member.user.id);
 
     return `The anniversary of ${member.displayName} has been recorded.\n${getDate(date, 'MMMM Do YYYY')}`;
   } catch (error) {
@@ -107,9 +94,6 @@ export const addUserAnniversary = async (member: GuildMember, date: Date) => {
   }
 };
 
-/**
- * @description Checks for changes in the user to be added to the document.
- */
 export const checkMemberChanges = async (oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) => {
   try {
     const user = await getUser(newMember);
@@ -119,9 +103,9 @@ export const checkMemberChanges = async (oldMember: GuildMember | PartialGuildMe
       user.roles?.push(newRole[0].id);
     }
 
-    validateUsername(newMember, user);
+    user.nickname = newMember.manageable && newMember.nickname ? newMember.nickname : '';
 
-    saveDoc(`${newMember.guild.id}/${newMember.user.id}`, user);
+    saveDoc(user, newMember.guild.id, newMember.user.id);
   } catch (error) {
     throw error;
   }
@@ -133,20 +117,14 @@ export const registerMember = async (member: GuildMember) => {
 
     const user = await getUser(member);
 
-    validateUsername(member, user);
+    user.nickname = member.manageable && member.nickname ? member.nickname : '';
 
     if (!member.joinedAt || !user.joinedAt || !compareDate(member.joinedAt, user.joinedAt)) {
-      if (!member.guild.systemChannel) return;
+      member.guild.systemChannel?.send(
+        `Welcome <@${member.user.id}>! Have a story:\n${await getStory(member.nickname || member.displayName)}`
+      );
 
-      const rulesChannel = await getChannel(member.guild.channels, 'rules');
-
-      let message = `Welcome <@${member.user.id}>!`;
-
-      if (rulesChannel) {
-        message += ` Please check the ${rulesChannel?.toString()} and have a good time!`;
-      }
-
-      member.guild.systemChannel?.send(message);
+      return;
     }
 
     user.roles = user.roles || [];

@@ -1,11 +1,8 @@
-import { Guild, GuildChannelManager } from 'discord.js';
+import { GuildChannelManager, Invite } from 'discord.js';
 
-/**
- * @description Creates a new permanent invite for the given channel, otherwise it finds the one for general.
- */
-const createInvite = async (channelManager: GuildChannelManager, channelName: string) => {
+const createInvite = async (channelManager: GuildChannelManager, channelId: string) => {
   try {
-    let channel = channelManager.cache.find((guildChannel) => guildChannel.name === channelName);
+    let channel = channelManager.cache.find((guildChannel) => guildChannel.name === channelId);
 
     if (!channel) {
       channel = channelManager.cache.find((guildChannel) => guildChannel.name === 'general-chat');
@@ -17,32 +14,17 @@ const createInvite = async (channelManager: GuildChannelManager, channelName: st
   }
 };
 
-/**
- * @description Returns a permanent invite for the given channel, otherwise it will default to the general channel..
- */
-export const getInvite = async (guild: Guild, channelName: string) => {
+export const getInvite = async (list: Invite[], channelManager: GuildChannelManager, channelName: string) => {
   try {
-    if (!guild) return;
-
-    const inviteList = await guild.fetchInvites();
-
-    if (!inviteList) {
-      return await createInvite(guild.channels, channelName);
+    if (!list) {
+      return await createInvite(channelManager, channelName);
     }
 
-    const permanentInvite = inviteList.filter((invite) => !invite.temporary);
+    const permanentInvite = list.find((invite) => !invite.temporary && invite.channel.name === channelName);
 
-    if (!permanentInvite.array().length) {
-      return await createInvite(guild.channels, channelName);
-    }
+    if (permanentInvite) return permanentInvite;
 
-    const filteredInvite = permanentInvite.filter((invite) => invite.channel.name === channelName);
-
-    if (!filteredInvite.array().length) {
-      return await createInvite(guild.channels, channelName);
-    }
-
-    return filteredInvite.array()[0];
+    return await createInvite(channelManager, channelName);
   } catch (error) {
     throw error;
   }

@@ -2,9 +2,6 @@ import { Message } from 'discord.js';
 
 import { BOT_ID } from '../config.json';
 
-/**
- * @description Checks if a message has too many uppercase letters.
- */
 const isShouting = (message: string) => {
   let counter = 0;
 
@@ -19,9 +16,6 @@ const isShouting = (message: string) => {
   }
 };
 
-/**
- * @description Check if the message has been sent before by the same author in a short span.
- */
 const repeatedMessage = async (lastMessage: Message, newMessage: Message) => {
   try {
     if (!newMessage.content || !lastMessage || !lastMessage.content) return;
@@ -32,9 +26,6 @@ const repeatedMessage = async (lastMessage: Message, newMessage: Message) => {
   }
 };
 
-/**
- * @description Check if the message is composed of repeated words.
- */
 const repeatedWords = (message: string) => {
   const words = message.split(' ');
 
@@ -55,9 +46,6 @@ const repeatedWords = (message: string) => {
   }
 };
 
-/**
- * @description Checks to see if the messaged doesn't contain anything not permitted.
- */
 const checkMessage = async (message: Message) => {
   try {
     if (message.channel.type === 'dm' || message.channel.type === 'news') return;
@@ -85,9 +73,6 @@ const checkMessage = async (message: Message) => {
   }
 };
 
-/**
- * @description Processes the message to be checked.
- */
 export const illegalMessage = async (message: Message) => {
   try {
     const messages = await message.channel.messages.fetch({ limit: 25 });

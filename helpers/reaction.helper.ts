@@ -1,10 +1,10 @@
 import { Message, MessageEmbed, MessageManager, NewsChannel, TextChannel } from 'discord.js';
 
 import { giveRole, removeRole } from './roles.helper';
-import { getDoc } from './storage.helper';
 
-import { Dictionary } from '../interfaces/dictionary.interface';
+import { DataList } from '../interfaces';
 import { getRandom } from './utils.helper';
+import { getDoc } from './database.helper';
 
 const getMessages = async (manager: MessageManager) => {
   try {
@@ -17,7 +17,7 @@ const getMessages = async (manager: MessageManager) => {
 };
 
 async function cleanString(str: string) {
-  const chars = await getDoc<string[]>(`configurations/chars`);
+  const chars = await getDoc<string[]>('configurations', 'chars');
 
   for (const char of chars) {
     const regex = new RegExp(`\\${char}`, 'g');
@@ -34,7 +34,7 @@ async function cleanString(str: string) {
 const getReply = async (message: string, file: string) => {
   message = await cleanString(message);
 
-  const map = await getDoc<Dictionary<string>>(`configurations/${file}`);
+  const map = await getDoc<DataList>('configurations', file);
   const words = message.split(' ');
 
   for (const word of words) {
@@ -114,7 +114,7 @@ export const setReactionMessage = async (
   stack = false
 ) => {
   const messages = await getMessages(channel.messages);
-  const map = await getDoc<Dictionary<string>>(`configurations/emojis/${mapName}`);
+  const map = await getDoc<DataList>('configurations', mapName);
   const previousMessage = messages.find((oldMessage) => {
     const embeds = oldMessage.embeds.filter((oldEmbed) => oldEmbed.title === embed.title);
 
@@ -138,7 +138,7 @@ export const setReactionMessage = async (
 
 export const getRandomQuote = async () => {
   try {
-    const quotes = await getDoc<string[]>(`quotes`);
+    const quotes = await getDoc<string[]>('', 'quotes');
     const index = getRandom(quotes.length, 0);
 
     return quotes[index];

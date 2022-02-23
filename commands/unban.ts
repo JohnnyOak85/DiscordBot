@@ -1,7 +1,5 @@
-// Discord
 import { Message } from 'discord.js';
 
-// Helpers
 import { getInvite } from '../helpers/invite.helper';
 import { checkMember, getUserByUsername } from '../helpers/member.helper';
 
@@ -57,7 +55,7 @@ module.exports = {
           if (!message.guild) return;
 
           const DMChannel = await banned.user.createDM();
-          const invite = getInvite(message.guild, 'general-chat');
+          const invite = getInvite((await message.guild.fetchInvites()).array(), message.guild.channels, 'general-chat');
 
           DMChannel.send(`You are no longer banned from ${message.guild?.name}\n${invite}`);
         } catch (error) {

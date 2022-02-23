@@ -1,14 +1,11 @@
 import { GuildMember } from 'discord.js';
 
-import { getUser } from './member.helper';
-import { muteUser } from './roles.helper';
-import { getUserDoc, readDirectory, saveDoc } from './storage.helper';
+import { findUser, getUser, saveUser } from './member.helper';
 
 import { MAX_STRIKES } from '../config.json';
+import { listDocs } from './database.helper';
+import { muteUser } from './mute.helper';
 
-/**
- * @description Momentarily removes a user from the guild.
- */
 export const kickUser = async (member: GuildMember, reason: string) => {
   try {
     const user = await getUser(member);
@@ -21,7 +18,7 @@ export const kickUser = async (member: GuildMember, reason: string) => {
       user.strikes.push(reason);
     }
 
-    saveDoc(`${member.guild.id}/${member.user.username}`, user);
+    saveUser(member, user);
 
     return `${member.displayName} has been kicked.\n${reason}`;
   } catch (error) {
@@ -29,9 +26,6 @@ export const kickUser = async (member: GuildMember, reason: string) => {
   }
 };
 
-/**
- * @description Removes a user from the guild.
- */
 export const banUser = async (member: GuildMember, reason: string, days?: number) => {
   try {
     const user = await getUser(member);
@@ -51,7 +45,7 @@ export const banUser = async (member: GuildMember, reason: string, days?: number
 
     user.roles = [];
 
-    saveDoc(`${member.guild.id}/${member.user.id}`, user);
+    saveUser(member, user);
 
     DMChannel.send(`You have been banned from ${member.guild.name}.\n${reason}`);
 
@@ -82,7 +76,7 @@ export const warnUser = async (member: GuildMember, reason: string) => {
       return (await muteUser(member, `Warned ${MAX_STRIKES / 2} times, better watch it!`)) || '';
     }
 
-    saveDoc(`${member.guild.id}/${member.user.id}`, user);
+    saveUser(member, user);
 
     return `${member.displayName} has been warned.\n${reason}`;
   } catch (error) {
@@ -122,13 +116,13 @@ export const forgiveUser = async (member: GuildMember, amount: string) => {
  */
 export const listWarnings = async (guildId: string) => {
   try {
-    const userList = await readDirectory(guildId);
+    const userList = await listDocs(guildId);
     const warningsList = [];
 
     for await (const username of userList) {
-      const userDoc = await getUserDoc(`${guildId}/${username}`);
+      const userDoc = await findUser(guildId, username);
 
-      if (userDoc.strikes?.length) {
+      if (userDoc?.strikes?.length) {
         warningsList.push(`${userDoc.username} - ${userDoc.strikes.length}`);
       }
     }

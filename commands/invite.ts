@@ -1,7 +1,5 @@
-// Discord
 import { Message } from 'discord.js';
 
-// Helpers
 import { getInvite } from '../helpers/invite.helper';
 
 module.exports = {
@@ -13,7 +11,7 @@ module.exports = {
     try {
       if (!message.guild) return;
 
-      const invite = await getInvite(message.guild, args[0]);
+      const invite = await getInvite((await message.guild.fetchInvites()).array(), message.guild.channels, args[0]);
 
       message.reply(invite ? `Here's the invite:\n${invite}` : `I couldn't get your invite!`);
     } catch (error) {

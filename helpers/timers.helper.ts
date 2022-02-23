@@ -2,19 +2,20 @@ import { Guild, MessageEmbed } from 'discord.js';
 import moment from 'moment';
 import { scheduleJob } from 'node-schedule';
 
-import { unmuteUser } from './roles.helper';
-import { getUserDoc, readDirectory } from './storage.helper';
+import { findUser } from './member.helper';
+import { unmuteUser } from './mute.helper';
+import { listDocs } from './database.helper';
 
 const MIDNIGHT = '1 0 * * *';
 const FIVE_SECONDS = '*/5 * * * * *';
 
 const checkAnniversaries = async (guild: Guild) => {
-  const userDocs = await readDirectory(guild.id);
+  const userDocs = await listDocs(guild.id);
 
   for (const docPath of userDocs) {
-    const user = await getUserDoc(`${guild.id}/${docPath}`);
+    const user = await findUser(guild.id, docPath);
 
-    if (!user.anniversary || moment(user.timer).isBefore(moment().format())) return;
+    if (!user?.anniversary || moment(user.timer).isBefore(moment().format())) return;
 
     const guildUser = guild.members.cache.get(user._id || '');
 
@@ -32,12 +33,12 @@ const checkAnniversaries = async (guild: Guild) => {
 };
 
 const checkExpirations = async (guild: Guild) => {
-  const userDocs = await readDirectory(guild.id);
+  const userDocs = await listDocs(guild.id);
 
   for (const docPath of userDocs) {
-    const user = await getUserDoc(`${guild.id}/${docPath}`);
+    const user = await findUser(guild.id, docPath);
 
-    if (!user.timer || moment(user.timer).isBefore(moment().format())) return;
+    if (!user?.timer || moment(user.timer).isBefore(moment().format())) return;
 
     const guildUser = guild.members.cache.get(user._id || '');
 

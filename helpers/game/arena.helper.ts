@@ -1,11 +1,8 @@
 import { TextChannel } from 'discord.js';
 
 import { ensureDuelist, startRounds } from './duel.helper';
-// import { recordDocChanges } from '../storage.helper';
 import { CollectionFactory } from '../../factories/collection.factory';
 import { buildEmbed } from '../embed.helper';
-
-import { Player } from './interfaces';
 
 const duels = new CollectionFactory<{
   challenger: string;
@@ -27,14 +24,12 @@ export const acceptChallenge = async (channel: TextChannel, defenderId: string) 
       return;
     }
 
-    const challenger = await ensureDuelist(`${channel.guild.id}/${duel.challenger}`);
-    const defender = await ensureDuelist(`${channel.guild.id}/${defenderId}`);
+    const challenger = await ensureDuelist(channel.guild.id, duel.challenger);
+    const defender = await ensureDuelist(channel.guild.id, defenderId);
 
     if (!challenger || !defender) return;
 
-    const winner = startRounds(challenger, defender, channel) as Player;
-
-    // recordDocChanges(winner, `${channel.guild.name}/${winner.id}`);
+    startRounds(challenger, defender, channel);
 
     cleanUpDuel(defenderId);
   } catch (error) {

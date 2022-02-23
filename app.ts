@@ -1,12 +1,12 @@
 import { Client } from 'discord.js';
 
-import { buildInfoCategory } from './helpers/channels.helper';
 import { executeCommand } from './helpers/command.helper';
 import { checkMemberChanges, registerMember } from './helpers/member.helper';
 import { illegalMessage } from './helpers/message.helper';
-import { buildDatabase, recordItem } from './helpers/storage.helper';
+import { recordData, recordItem } from './helpers/data.helper';
 import { logError, logInfo } from './helpers/utils.helper';
 import { startTimers } from './helpers/timers.helper';
+import { setRolesChannel } from './helpers/roles.helper';
 import { react } from './helpers/reaction.helper';
 
 import { TOKEN } from './config.json';
@@ -19,8 +19,8 @@ bot.on('ready', () => {
   logInfo(`The bot went online.`);
 
   for (const guild of bot.guilds.cache.array()) {
-    buildDatabase(guild);
-    buildInfoCategory(guild);
+    recordData(guild);
+    setRolesChannel(guild.channels.cache.array());
     startTimers(guild);
   }
 

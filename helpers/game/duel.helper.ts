@@ -1,13 +1,18 @@
 import { TextChannel } from 'discord.js';
 
-import { getUserDoc } from '../storage.helper';
+import { findUser } from '../member.helper';
 import { getBool, getRandom } from '../utils.helper';
+import { updateDoc } from '../database.helper';
 
-import { Monster, Player } from './interfaces';
+import { Duelist, Monster } from '../../interfaces';
 import { control } from '../../game-config.json';
 
-export const ensureDuelist = async (path: string) => {
-  const duelist = await getUserDoc(path);
+interface Player extends Duelist {
+  id: string;
+}
+
+export const ensureDuelist = async (guild: string, user: string) => {
+  const duelist = await findUser(guild, user);
 
   if (!duelist) return;
 
@@ -78,7 +83,7 @@ const getWinner = (attacker: Player | Monster, defender: Player | Monster, chann
 
   let attackBoost;
   let defenseBoost;
-  
+
   if (winner === attacker) {
     const bigSplit = split > Math.max(1, experience / 2);
     attackBoost = bigSplit ? split : Math.max(1, experience - split);
@@ -97,7 +102,7 @@ const getWinner = (attacker: Player | Monster, defender: Player | Monster, chann
 
   channel.send(`+${attackBoost} attack. +${defenseBoost} defense.`);
 
-  return winner;
+  if (winner.hasOwnProperty('id')) updateDoc(winner, channel.guild.id, (winner as Player).id);
 };
 
 export const startRounds = (challenger: Player | Monster, challenged: Player | Monster, channel: TextChannel) => {
@@ -111,5 +116,5 @@ export const startRounds = (challenger: Player | Monster, challenged: Player | M
     defender = roundResult.boutLoser;
   }
 
-  return getWinner(challenger, challenged, channel);
+  getWinner(challenger, challenged, channel);
 };

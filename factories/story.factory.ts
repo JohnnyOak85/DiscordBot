@@ -1,4 +1,4 @@
-import { getDoc, readDirectory } from '../helpers/storage.helper';
+import { getDoc, listDocs } from '../helpers/database.helper';
 import { getBool, getRandom } from '../helpers/utils.helper';
 
 interface Decorator {
@@ -21,7 +21,7 @@ export class StoryFactory {
   }
 
   private initDecorator = async () => {
-    this.decorators = await getDoc<Decorator>('story/decorators');
+    this.decorators = await getDoc<Decorator>('story', 'decorators');
   };
 
   private initPronouns = () => {
@@ -51,11 +51,11 @@ export class StoryFactory {
       .replace(/§years/g, `${getRandom(44, 3)}`);
 
   public getStory = async () => {
-    const list = await readDirectory('story/blocks');
+    const list = await listDocs('story/blocks');
     let story = `${this.character}`;
 
     for (const item of list) {
-      const block = await getDoc<string[]>(`story/blocks/${item}`);
+      const block = await getDoc<string[]>('story/blocks/', item);
 
       story = story + this.constructBlock(block);
     }
