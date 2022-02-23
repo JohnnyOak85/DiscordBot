@@ -1,4 +1,4 @@
-import { Collection, Message } from 'discord.js';
+import { Message } from 'discord.js';
 
 import { BOT_ID } from '../config.json';
 
@@ -22,10 +22,8 @@ const isShouting = (message: string) => {
 /**
  * @description Check if the message has been sent before by the same author in a short span.
  */
-const repeatedMessage = async (messages: Collection<string, Message>, newMessage: Message) => {
+const repeatedMessage = async (lastMessage: Message, newMessage: Message) => {
   try {
-    const lastMessage = messages.array()[1];
-
     if (!newMessage.content || !lastMessage || !lastMessage.content) return;
 
     if (lastMessage.id !== newMessage.id && lastMessage.content === newMessage.content) return true;
@@ -79,7 +77,7 @@ const checkMessage = async (message: Message) => {
     const messages = await message.channel.messages.fetch({ limit: 25 });
     const authorMessages = messages.filter((oldMessage) => oldMessage.author.id === message.author.id);
 
-    if (await repeatedMessage(authorMessages, message)) {
+    if (await repeatedMessage(authorMessages.array()[1], message)) {
       return 'we heard you the first time!';
     }
   } catch (error) {
