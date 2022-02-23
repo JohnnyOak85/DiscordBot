@@ -1,28 +1,24 @@
-import { Collection, Message } from 'discord.js';
+import { Message } from 'discord.js';
 import { readdirSync } from 'fs-extra';
 
 import { PREFIX } from '../config.json';
+import { CollectionFactory } from '../factories/collection.factory';
 
-interface Command {
+const commands = new CollectionFactory<{
   description: string;
   execute: (message: Message, args?: string[]) => void;
   moderation: boolean;
   name: string;
   usage: string;
-}
+}>();
 
-const commands = new Collection<string, Command>();
-
-/**
- * @description Builds the command list.
- */
 const setCommands = () => {
   try {
     const commandList = readdirSync(`${__dirname}/../commands`);
 
     for (const command of commandList) {
       const commandFile = require(`../commands/${command}`);
-      commands.set(commandFile.name, commandFile);
+      commands.addItem(commandFile.name, commandFile);
     }
   } catch (error) {
     throw error;
@@ -31,28 +27,29 @@ const setCommands = () => {
 
 export const getCommands = () => {
   try {
-    if (!commands.array().length) {
+    if (!commands.isSet()) {
       setCommands();
     }
 
-    return commands;
+    return commands.getList();
   } catch (error) {
     throw error;
   }
 };
 
-export const getArgs = (message: string) => message.slice(PREFIX.length).trim().split(/ +/g);
-
-export const getCommand = (message: string, name: string) => {
-  try {
-    if (!commands.array().length) {
-      setCommands();
-    }
-
-    if (!message.startsWith(PREFIX) || message[1] === PREFIX || message.length === 1) return;
-
-    return commands.get(name);
-  } catch (error) {
-    throw error;
+export const getCommand = (name: string) => {
+  if (!commands.isSet()) {
+    setCommands();
   }
+
+  return commands.getItem(name);
+};
+
+export const executeCommand = (message: Message) => {
+  const args = message.content.slice(PREFIX.length).trim().split(/ +/g);
+  const command = getCommand(args.shift()?.toLowerCase() || '');
+
+  if (!message.content.startsWith(PREFIX) || message.content[1] === PREFIX || message.content.length === 1 || !command) return;
+
+  command.execute(message, args);
 };

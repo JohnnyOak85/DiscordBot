@@ -1,7 +1,7 @@
 import { Client } from 'discord.js';
 
 import { buildInfoCategory } from './helpers/channels.helper';
-import { getArgs, getCommand } from './helpers/command.helper';
+import { executeCommand } from './helpers/command.helper';
 import { checkMemberChanges, registerMember } from './helpers/member.helper';
 import { illegalMessage } from './helpers/message.helper';
 import { buildDatabase, recordItem } from './helpers/storage.helper';
@@ -35,27 +35,20 @@ bot.on('message', async (message) => {
 
     if (await illegalMessage(message)) return;
 
-    const args = getArgs(message.content);
-    const command = getCommand(message.content, args.shift()?.toLowerCase() || '');
-
-    if (!command) {
-      return;
-    }
-
-    command.execute(message, args);
+    executeCommand(message);
   } catch (error) {
     message.channel.send('There was an error trying to execute that command!');
     logError(error as Error);
   }
 });
 
-bot.on('messageUpdate', async (oldMessage, newMessage) => {
+bot.on('messageUpdate', async (oldMessage, message) => {
   try {
-    if (newMessage.partial) return;
+    if (message.partial || message.channel.type === 'dm' || message.author.bot) return;
 
-    react(newMessage);
+    react(message);
 
-    illegalMessage(newMessage);
+    illegalMessage(message);
   } catch (error) {
     logError(error as Error);
   }
