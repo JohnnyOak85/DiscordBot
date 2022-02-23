@@ -63,7 +63,7 @@ export const react = async (message: Message) => {
 /**
  * @description Listens to all reactions to a given message.
  */
-export const collectReactions = async (message: Message, emojiList: EmojiMap) => {
+export const collectReactions = async (message: Message, emojiList: EmojiMap, stack = false) => {
   try {
     for (const emoji of Object.keys(emojiList)) {
       if (!message.reactions.cache.array().length) {
@@ -80,6 +80,10 @@ export const collectReactions = async (message: Message, emojiList: EmojiMap) =>
 
       if (!member || member.user.bot || !emojiList[reaction.emoji.name]) return;
 
+      giveRole(member, emojiList[reaction.emoji.name]);
+
+      if (stack) return;
+
       for (const collectedReaction of collector.collected.array()) {
         if (collectedReaction.emoji.name === reaction.emoji.name) continue;
 
@@ -90,8 +94,6 @@ export const collectReactions = async (message: Message, emojiList: EmojiMap) =>
         collectedReaction.users.remove(collectedUser);
         removeRole(member, emojiList[collectedReaction.emoji.name]);
       }
-
-      giveRole(member, emojiList[reaction.emoji.name]);
     });
 
     collector.on('remove', async (reaction, user) => {
@@ -105,7 +107,12 @@ export const collectReactions = async (message: Message, emojiList: EmojiMap) =>
   }
 };
 
-export const setReactionMessage = async (embed: MessageEmbed, mapName: string, channel: TextChannel | NewsChannel) => {
+export const setReactionMessage = async (
+  embed: MessageEmbed,
+  mapName: string,
+  channel: TextChannel | NewsChannel,
+  stack = false
+) => {
   const messages = await getMessages(channel.messages);
   const map = await getDoc<Dictionary<string>>(`configurations/emojis/${mapName}`);
   const previousMessage = messages.find((oldMessage) => {
@@ -126,7 +133,7 @@ export const setReactionMessage = async (embed: MessageEmbed, mapName: string, c
     message = previousMessage;
   }
 
-  collectReactions(message, map);
+  collectReactions(message, map, stack);
 };
 
 export const getRandomQuote = async () => {

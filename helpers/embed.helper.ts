@@ -3,7 +3,7 @@ import { MessageEmbed } from 'discord.js';
 import { getDoc } from './storage.helper';
 
 interface Embed {
-  description: string;
+  description?: string;
   title: string;
 }
 
@@ -13,5 +13,5 @@ export const getEmbed = async (embed: string) => {
   return new MessageEmbed(doc[embed]);
 };
 
-export const buildEmbed = (embed: Embed, color: string, path?: string) =>
-  new MessageEmbed(embed).setColor(color || 'DEFAULT').setThumbnail(path || '');
+export const buildEmbed = (embed: Embed, color = 'DEFAULT', path = '') =>
+  new MessageEmbed(embed).setColor(color).setThumbnail(path);
