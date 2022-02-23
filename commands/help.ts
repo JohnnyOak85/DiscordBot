@@ -1,10 +1,7 @@
-// Discord
 import { Message } from 'discord.js';
 
-// Helpers
-import { getCommands } from '../helpers/command.helper';
+import { getCommand, getCommands } from '../helpers/command.helper';
 
-// Configurations
 import { PREFIX } from '../config.json';
 
 module.exports = {
@@ -21,7 +18,7 @@ module.exports = {
       if (!args.length) {
         reply.push('List of commands:');
 
-        for (const command of commands.array()) {
+        for (const command of commands) {
           if (!isVerified && command.moderation) continue;
 
           reply.push(` * ${PREFIX}${command.name}`);
@@ -35,7 +32,7 @@ module.exports = {
         return;
       }
 
-      const taggedCommand = commands.get(args[0].toLowerCase());
+      const taggedCommand = getCommand(args[0].toLowerCase());
 
       if (!taggedCommand) {
         message.channel.send('That command does not exist.');
