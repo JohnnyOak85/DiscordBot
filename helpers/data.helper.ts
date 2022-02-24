@@ -1,4 +1,4 @@
-import { Emoji, Guild, GuildEmoji, Role } from 'discord.js';
+import { Emoji, Guild, GuildEmoji, Message, Role } from 'discord.js';
 import { ensureDirSync } from 'fs-extra';
 
 import { ensureUser, recordBannedUser } from './member.helper';
@@ -7,7 +7,7 @@ import { logError, logInfo } from './utils.helper';
 import { setRolesChannel } from './roles.helper';
 import { startTimers } from './timers.helper';
 
-import { DATABASE_DIR } from '../config.json';
+import { DATABASE_DIR, REACTION_TOTAL, QUOTE_REACTION } from '../config.json';
 import { DataList } from '../interfaces';
 
 async function recordMap(list: (GuildEmoji | Role)[], mapName: string) {
@@ -71,6 +71,20 @@ export const collectData = (guilds: Guild[]) => {
     }
 
     console.log('Ready.');
+  } catch (error) {
+    logError(error);
+  }
+};
+
+export const recordQuote = async (message: Message, emoji: string, count: number) => {
+  if (count < REACTION_TOTAL || emoji !== QUOTE_REACTION) return;
+
+  try {
+    const quotes = await getDoc<string[]>('', 'quotes');
+
+    quotes.push(`${message.content}\n${message.member?.nickname}, ${message.createdAt.getFullYear()}`);
+
+    saveDoc(quotes, '', 'quotes');
   } catch (error) {
     logError(error);
   }
