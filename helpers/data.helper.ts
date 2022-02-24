@@ -24,7 +24,7 @@ const recordData = async (guild: Guild) => {
     ensureDirSync(`${DATABASE_DIR}/${guild.id}`);
 
     for (const ban of (await guild.fetchBans()).array()) {
-      recordBannedUser(ban, guild.id);
+      recordBannedUser(ban.user, ban.reason, guild.id);
     }
 
     for (const member of (await guild.members.fetch()).array()) {

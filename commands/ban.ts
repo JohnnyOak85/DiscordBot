@@ -39,8 +39,6 @@ module.exports = {
           throw error;
         }
       }
-
-      return;
     } catch (error) {
       logError(error);
     }

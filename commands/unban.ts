@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 
-import { getInvite } from '../helpers/invite.helper';
-import { checkMember, getUserByUsername } from '../helpers/member.helper';
+import { getUserByUsername } from '../helpers/member.helper';
+import { unbanUser } from '../helpers/punishment.helper';
 import { logError } from '../helpers/utils.helper';
 
 module.exports = {
@@ -39,26 +39,9 @@ module.exports = {
             return;
           }
 
-          const member = await message.guild?.members.fetch(banned);
-
-          if (member) {
-            const warning = checkMember(message.member, member);
-
-            if (warning) {
-              message.channel.send(warning);
-              return;
-            }
-          }
-
-          message.guild?.members.unban(banned?.user);
-          message.guild?.systemChannel?.send(`${banned.user.username} is no longer banned.`);
-
           if (!message.guild) return;
 
-          const DMChannel = await banned.user.createDM();
-          const invite = getInvite((await message.guild.fetchInvites()).array(), message.guild.channels, 'general-chat');
-
-          DMChannel.send(`You are no longer banned from ${message.guild?.name}\n${invite}`);
+          unbanUser(message.guild, banned.user);
         } catch (error) {
           throw error;
         }

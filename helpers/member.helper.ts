@@ -1,4 +1,4 @@
-import { GuildMember, PartialGuildMember, User } from 'discord.js';
+import { GuildMember, Role, User } from 'discord.js';
 import { difference } from 'lodash';
 
 import { compareDate, getDate, logError } from './utils.helper';
@@ -12,17 +12,13 @@ interface UserDoc {
   defense?: number;
   joinedAt?: Date | null;
   health?: number;
+  removed?: boolean;
   level?: number;
   nickname?: string | null;
   roles?: string[];
   strikes?: string[];
   timer?: string;
   username?: string;
-}
-
-interface BannedUser {
-  user: User;
-  reason: string;
 }
 
 export const ensureUser = (user: UserDoc, member: GuildMember) => {
@@ -46,16 +42,15 @@ export const buildBannedUser = (user: User, reason: string) => {
     _id: user.id,
     joinedAt: null,
     nickname: null,
+    removed: true,
     roles: [],
     strikes: [reason],
     username: user.username
   };
 };
 
-export const recordBannedUser = (user: BannedUser, guild: string) =>
-  docExists(guild, user.user.id).then((bool) =>
-    bool ? saveDoc(buildBannedUser(user.user, user.reason), guild, user.user.id) : null
-  );
+export const recordBannedUser = (user: User, reason: string, guild: string) =>
+  docExists(guild, user.id).then((bool) => (bool ? saveDoc(buildBannedUser(user, reason), guild, user.id) : null));
 
 export const updateUser = () => {};
 
@@ -94,18 +89,18 @@ export const addUserAnniversary = async (member: GuildMember, date: Date) => {
   }
 };
 
-export const checkMemberChanges = async (oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) => {
+export const checkMemberChanges = async (member: GuildMember, oldRoles: Role[]) => {
   try {
-    const user = await getUser(newMember);
-    const newRole = difference(oldMember.roles.cache.array(), newMember.roles.cache.array());
+    const user = await getUser(member);
+    const newRole = difference(oldRoles, member.roles.cache.array());
 
     if (newRole.length) {
       user.roles?.push(newRole[0].id);
     }
 
-    user.nickname = newMember.manageable && newMember.nickname ? newMember.nickname : '';
+    user.nickname = member.manageable && member.nickname ? member.nickname : '';
 
-    saveDoc(user, newMember.guild.id, newMember.user.id);
+    saveDoc(user, member.guild.id, member.user.id);
   } catch (error) {
     logError(error);
   }
@@ -124,6 +119,7 @@ export const registerMember = async (member: GuildMember) => {
         `Welcome <@${member.user.id}>! Have a story:\n${await getStory(member.nickname || member.displayName)}`
       );
 
+      saveDoc(user, member.guild.id, member.user.id);
       return;
     }
 
@@ -139,7 +135,27 @@ export const registerMember = async (member: GuildMember) => {
       member.setNickname(user.nickname);
     }
 
+    user.removed = false;
+
+    saveDoc(user, member.guild.id, member.user.id);
+
     member.guild.systemChannel?.send(`Rejoice! <@${member.user.id}> is back!`);
+  } catch (error) {
+    logError(error);
+  }
+};
+
+export const removeUser = async (member: GuildMember | undefined) => {
+  try {
+    if (!member || member.user.bot) return;
+
+    const user = await getUser(member);
+
+    user.removed = true;
+
+    saveDoc(user, member.guild.id, member.user.id);
+
+    member.guild.systemChannel?.send(`<@${member.user.id}> has left the building!`);
   } catch (error) {
     logError(error);
   }

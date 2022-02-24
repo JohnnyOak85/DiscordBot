@@ -1,10 +1,11 @@
-import { GuildMember } from 'discord.js';
+import { Guild, GuildMember, User } from 'discord.js';
 
 import { findUser, getUser, saveUser } from './member.helper';
 
 import { MAX_STRIKES } from '../config.json';
 import { listDocs } from './database.helper';
 import { muteUser } from './mute.helper';
+import { getInvite } from './invite.helper';
 
 export const kickUser = async (member: GuildMember, reason: string) => {
   try {
@@ -13,6 +14,7 @@ export const kickUser = async (member: GuildMember, reason: string) => {
     member.kick(reason);
 
     user.strikes = user.strikes || [];
+    user.removed = true;
 
     if (!user.strikes.includes(reason)) {
       user.strikes.push(reason);
@@ -44,6 +46,7 @@ export const banUser = async (member: GuildMember, reason: string, days?: number
     }
 
     user.roles = [];
+    user.removed = true;
 
     saveUser(member, user);
 
@@ -155,6 +158,20 @@ export const getUserWarnings = async (member: GuildMember) => {
     }
 
     return reply;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const unbanUser = async (guild: Guild, user: User) => {
+  try {
+    guild.members.unban(user);
+    guild.systemChannel?.send(`${user.username} is no longer banned.`);
+
+    const DMChannel = await user.createDM();
+    const invite = getInvite((await guild.fetchInvites()).array(), guild.channels, 'general-chat');
+
+    DMChannel.send(`You are no longer banned from ${guild?.name}\n${invite}`);
   } catch (error) {
     throw error;
   }
