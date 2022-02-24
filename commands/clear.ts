@@ -1,5 +1,6 @@
-// Discord
 import { Message } from 'discord.js';
+
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'clear',
@@ -22,7 +23,7 @@ module.exports = {
 
       message.channel.messages.channel.bulkDelete(amount + 1, true);
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

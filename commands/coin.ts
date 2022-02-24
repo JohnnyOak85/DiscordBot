@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 
-import { getBool } from '../helpers/utils.helper';
+import { getBool, logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'coin',
@@ -17,7 +17,7 @@ module.exports = {
         message.reply('Tails!');
       }
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

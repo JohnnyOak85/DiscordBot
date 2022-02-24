@@ -51,7 +51,7 @@ export const getReason = (reason: string, prefix?: string) => {
 /**
  * @description Logs an error entry.
  */
-export const logError = (error: Error) => {
+export const logError = (error: any) => {
   console.log(error);
   logger.log('error', `${error.message}\n${error}\nTime: ${getDate()}`);
 };

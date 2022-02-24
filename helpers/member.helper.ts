@@ -1,7 +1,7 @@
 import { GuildMember, PartialGuildMember, User } from 'discord.js';
 import { difference } from 'lodash';
 
-import { compareDate, getDate } from './utils.helper';
+import { compareDate, getDate, logError } from './utils.helper';
 import { docExists, findDoc, getDoc, saveDoc } from './database.helper';
 import { StoryFactory } from '../factories/story.factory';
 
@@ -107,7 +107,7 @@ export const checkMemberChanges = async (oldMember: GuildMember | PartialGuildMe
 
     saveDoc(user, newMember.guild.id, newMember.user.id);
   } catch (error) {
-    throw error;
+    logError(error);
   }
 };
 
@@ -141,6 +141,6 @@ export const registerMember = async (member: GuildMember) => {
 
     member.guild.systemChannel?.send(`Rejoice! <@${member.user.id}> is back!`);
   } catch (error) {
-    throw error;
+    logError(error);
   }
 };

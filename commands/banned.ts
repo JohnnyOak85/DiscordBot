@@ -1,5 +1,6 @@
-// Discord
 import { Message } from 'discord.js';
+
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'banned',
@@ -30,7 +31,7 @@ module.exports = {
       message.channel.send(reply);
       return;
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

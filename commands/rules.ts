@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 
 import { getDoc } from '../helpers/database.helper';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'rules',
@@ -13,7 +14,7 @@ module.exports = {
 
       message.guild?.systemChannel?.send(rules.join('\n'));
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

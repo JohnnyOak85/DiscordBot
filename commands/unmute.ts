@@ -2,6 +2,7 @@ import { Message } from 'discord.js';
 
 import { checkMember } from '../helpers/member.helper';
 import { unmuteUser } from '../helpers/mute.helper';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'unmute',
@@ -34,7 +35,7 @@ module.exports = {
         }
       }
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

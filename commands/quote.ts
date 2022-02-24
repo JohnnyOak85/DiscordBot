@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 
 import { getRandomQuote } from '../helpers/reaction.helper';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'quote',
@@ -13,7 +14,7 @@ module.exports = {
 
       message.channel.send(quote);
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

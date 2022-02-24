@@ -3,6 +3,9 @@ import { ensureDirSync } from 'fs-extra';
 
 import { ensureUser, recordBannedUser } from './member.helper';
 import { docExists, getDoc, saveDoc, updateDoc } from './database.helper';
+import { logError, logInfo } from './utils.helper';
+import { setRolesChannel } from './roles.helper';
+import { startTimers } from './timers.helper';
 
 import { DATABASE_DIR } from '../config.json';
 import { DataList } from '../interfaces';
@@ -16,7 +19,7 @@ async function recordMap(list: (GuildEmoji | Role)[], mapName: string) {
   saveDoc(map, 'configurations', mapName);
 }
 
-export const recordData = async (guild: Guild) => {
+const recordData = async (guild: Guild) => {
   try {
     ensureDirSync(`${DATABASE_DIR}/${guild.id}`);
 
@@ -35,7 +38,7 @@ export const recordData = async (guild: Guild) => {
     recordMap(guild.emojis.cache.array(), 'emojis');
     recordMap(guild.roles.cache.array(), 'roles');
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 };
 
@@ -53,6 +56,22 @@ export const recordItem = async (item: Role | Emoji, map: string, record = true)
 
     saveDoc(doc, 'configurations', map);
   } catch (error) {
-    throw error;
+    logError(error);
+  }
+};
+
+export const collectData = (guilds: Guild[]) => {
+  try {
+    logInfo(`The bot went online.`);
+
+    for (const guild of guilds) {
+      recordData(guild);
+      setRolesChannel(guild.channels.cache.array());
+      startTimers(guild);
+    }
+
+    console.log('Ready.');
+  } catch (error) {
+    logError(error);
   }
 };

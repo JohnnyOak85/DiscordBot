@@ -1,6 +1,10 @@
 import { Message } from 'discord.js';
 
+import { logError } from './utils.helper';
+
 import { BOT_ID } from '../config.json';
+import { react } from './reaction.helper';
+import { executeCommand } from './command.helper';
 
 const isShouting = (message: string) => {
   let counter = 0;
@@ -73,7 +77,7 @@ const checkMessage = async (message: Message) => {
   }
 };
 
-export const illegalMessage = async (message: Message) => {
+const illegalMessage = async (message: Message) => {
   try {
     const messages = await message.channel.messages.fetch({ limit: 25 });
     const botMessages = messages.filter((filteredMessage) => filteredMessage.author.id === BOT_ID);
@@ -97,5 +101,32 @@ export const illegalMessage = async (message: Message) => {
     return true;
   } catch (error) {
     throw error;
+  }
+};
+
+export const checkMessageUpdate = (message: Message | undefined) => {
+  if (!message || message.channel.type === 'dm' || message.author.bot) return;
+
+  try {
+    react(message);
+
+    illegalMessage(message);
+  } catch (error) {
+    logError(error);
+  }
+};
+
+export const checkIncomingMessage = async (message: Message) => {
+  if (message.channel.type === 'dm' || message.author.bot) return;
+
+  try {
+    react(message);
+
+    if (await illegalMessage(message)) return;
+
+    executeCommand(message);
+  } catch (error) {
+    message.channel.send('There was an error trying to execute that command!');
+    logError(error);
   }
 };

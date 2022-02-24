@@ -52,6 +52,10 @@ const checkExpirations = async (guild: Guild) => {
  * @description Starts timers for repeated tasks.
  */
 export const startTimers = async (guild: Guild) => {
-  scheduleJob(MIDNIGHT, () => checkAnniversaries(guild));
-  scheduleJob(FIVE_SECONDS, () => checkExpirations(guild));
+  try {
+    scheduleJob(MIDNIGHT, () => checkAnniversaries(guild));
+    scheduleJob(FIVE_SECONDS, () => checkExpirations(guild));
+  } catch (error) {
+    throw error;
+  }
 };

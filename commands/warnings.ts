@@ -1,9 +1,8 @@
-// Discord
 import { Message } from 'discord.js';
 
-// Helpers
 import { checkMember } from '../helpers/member.helper';
 import { listWarnings, getUserWarnings } from '../helpers/punishment.helper';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'warnings',
@@ -41,7 +40,7 @@ module.exports = {
         }
       }
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

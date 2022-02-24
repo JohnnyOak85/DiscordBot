@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 
 import { acceptChallenge } from '../helpers/game/arena.helper';
+import { logError } from '../helpers/utils.helper';
 
 import { arena } from '../game-config.json';
 
@@ -15,7 +16,7 @@ module.exports = {
 
       acceptChallenge(message.channel, message.author.id);
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

@@ -3,6 +3,7 @@ import { Message } from 'discord.js';
 import { issueChallenge } from '../helpers/game/arena.helper';
 
 import { arena } from '../game-config.json';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'challenge',
@@ -27,7 +28,7 @@ module.exports = {
 
       issueChallenge(message.channel, message.author.id, mentions[0].id);
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

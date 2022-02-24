@@ -1,8 +1,7 @@
-// Discord
 import { Message } from 'discord.js';
 
-// Helpers
 import { addUserAnniversary } from '../helpers/member.helper';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'bday',
@@ -39,7 +38,7 @@ module.exports = {
 
       message.guild?.systemChannel?.send(reply);
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

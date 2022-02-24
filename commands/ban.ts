@@ -1,10 +1,8 @@
-// Discord
 import { Message } from 'discord.js';
 
-// Helpers
 import { checkMember } from '../helpers/member.helper';
 import { banUser } from '../helpers/punishment.helper';
-import { getNumber, getReason } from '../helpers/utils.helper';
+import { getNumber, getReason, logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'ban',
@@ -44,7 +42,7 @@ module.exports = {
 
       return;
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

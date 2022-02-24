@@ -1,12 +1,9 @@
-// Discord
 import { Message } from 'discord.js';
 
-// Helpers
 import { checkMember } from '../helpers/member.helper';
 import { warnUser } from '../helpers/punishment.helper';
-import { getReason } from '../helpers/utils.helper';
+import { getReason, logError } from '../helpers/utils.helper';
 
-// Configurations
 import { MAX_STRIKES } from '../config.json';
 
 module.exports = {
@@ -44,7 +41,7 @@ module.exports = {
         }
       }
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

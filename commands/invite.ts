@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 
 import { getInvite } from '../helpers/invite.helper';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'invite',
@@ -15,7 +16,7 @@ module.exports = {
 
       message.reply(invite ? `Here's the invite:\n${invite}` : `I couldn't get your invite!`);
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

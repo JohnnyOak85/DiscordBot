@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 
 import { checkMember } from '../helpers/member.helper';
 import { muteUser } from '../helpers/mute.helper';
-import { getNumber, getReason } from '../helpers/utils.helper';
+import { getNumber, getReason, logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'mute',
@@ -38,7 +38,7 @@ module.exports = {
         }
       }
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

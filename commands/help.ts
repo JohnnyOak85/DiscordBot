@@ -3,6 +3,7 @@ import { Message } from 'discord.js';
 import { getCommand, getCommands } from '../helpers/command.helper';
 
 import { PREFIX } from '../config.json';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'help',
@@ -47,7 +48,7 @@ module.exports = {
 
       return;
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

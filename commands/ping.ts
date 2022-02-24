@@ -1,5 +1,7 @@
 import { Message } from 'discord.js';
 
+import { logError } from '../helpers/utils.helper';
+
 module.exports = {
   name: 'ping',
   description: 'Check if the bot is on',
@@ -9,7 +11,7 @@ module.exports = {
     try {
       message.reply('Pong!');
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

@@ -1,10 +1,12 @@
 import { Message, MessageEmbed, MessageManager, NewsChannel, TextChannel } from 'discord.js';
 
 import { giveRole, removeRole } from './roles.helper';
-
-import { DataList } from '../interfaces';
 import { getRandom } from './utils.helper';
 import { getDoc } from './database.helper';
+
+import { DataList } from '../interfaces';
+
+type EmojiMap = { [name: string]: string };
 
 const getMessages = async (manager: MessageManager) => {
   try {

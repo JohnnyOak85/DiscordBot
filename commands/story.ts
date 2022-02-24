@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 
 import { StoryFactory } from '../factories/story.factory';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'story',
@@ -17,7 +18,7 @@ module.exports = {
 
       message.channel.send(await storyFactory.getStory());
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };

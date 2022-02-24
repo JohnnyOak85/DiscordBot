@@ -2,6 +2,7 @@ import { Message } from 'discord.js';
 
 import { getInvite } from '../helpers/invite.helper';
 import { checkMember, getUserByUsername } from '../helpers/member.helper';
+import { logError } from '../helpers/utils.helper';
 
 module.exports = {
   name: 'unban',
@@ -65,7 +66,7 @@ module.exports = {
 
       return;
     } catch (error) {
-      throw error;
+      logError(error);
     }
   }
 };
