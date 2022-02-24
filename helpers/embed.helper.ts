@@ -1,11 +1,8 @@
-import { EmbedFieldData, MessageEmbed } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 
 interface Embed {
   color?: string;
   description?: string;
-  fieldName?: string;
-  fieldValue?: string;
-  fields?: EmbedFieldData[];
   title: string;
   thumb?: string | null;
   url?: string;
@@ -17,5 +14,4 @@ export const buildEmbed = (embed: Embed) =>
     .setThumbnail(embed.thumb || '')
     .setTitle(embed.title || '')
     .setURL(embed.url || '')
-    .addField(embed.fieldName || '', embed.fieldValue || '')
     .setDescription(embed.description || '');

@@ -24,12 +24,12 @@ const checkAnniversaries = async (guild: Guild) => {
 
     const embed = buildEmbed({
       color: 'RANDOM',
-      fieldName: `It's ${guildUser.nickname}'s anniversary!`,
-      fieldValue: 'Everyone party!',
       title: 'HAPPY ANNIVERSARY!',
       thumb: guildUser.user.avatarURL(),
       url: 'https://www.youtube.com/watch?v=8zgz2xBrvVQ'
     });
+
+    embed.addField(`It's ${guildUser.nickname}'s anniversary!`, 'Everyone party!');
 
     guild.systemChannel.send(embed);
   }
