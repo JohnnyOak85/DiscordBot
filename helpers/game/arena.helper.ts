@@ -44,10 +44,11 @@ export const issueChallenge = async (channel: TextChannel, challenger: string, d
       return;
     }
 
-    const embed = buildEmbed(
-      { description: `<@${challenger}> has challenged <@${defender}>!`, title: '**CHALLENGE ISSUED**' },
-      '#ff2050'
-    );
+    const embed = buildEmbed({
+      color: '#ff2050',
+      description: `<@${challenger}> has challenged <@${defender}>!`,
+      title: '**CHALLENGE ISSUED**'
+    });
 
     channel.send(embed);
 
