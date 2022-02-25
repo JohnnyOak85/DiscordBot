@@ -1,9 +1,10 @@
-import { GuildMember, Role, User } from 'discord.js';
+import { Guild, GuildMember, Role, User } from 'discord.js';
 import { difference } from 'lodash';
 
-import { compareDate, getDate, logError } from './utils.helper';
-import { docExists, findDoc, getDoc, saveDoc } from './database.helper';
+import { compareDate, getDate, increment, logError } from './tools/utils.helper';
+import { docExists, findDoc, getDoc, saveDoc } from './tools/database.helper';
 import { StoryFactory } from '../factories/story.factory';
+import { buildEmbed } from './tools/embed.helper';
 
 interface UserDoc {
   _id?: string;
@@ -12,14 +13,29 @@ interface UserDoc {
   defense?: number;
   joinedAt?: Date | null;
   health?: number;
-  removed?: boolean;
   level?: number;
+  luck?: number;
+  messages?: number;
   nickname?: string | null;
+  removed?: boolean;
   roles?: string[];
   strikes?: string[];
   timer?: string;
   username?: string;
 }
+
+const getStory = (nickname: string) => new StoryFactory(nickname).getStory();
+
+export const recordBannedUser = (user: User, reason: string, guild: string) =>
+  docExists(guild, user.id).then((bool) => (bool ? saveDoc(buildBannedUser(user, reason), guild, user.id) : null));
+
+export const getUser = (member: GuildMember) =>
+  getDoc<UserDoc>(member.guild.id, member.user.id).then((doc) => ensureUser(doc, member));
+
+export const findUser = (guild: string, user: string) => findDoc<UserDoc>(guild, user);
+export const saveUser = (member: GuildMember, doc: UserDoc) => saveDoc(doc, member.guild.id, member.user.id);
+
+export const getUserByUsername = (guildId: string, username: string) => findDoc<UserDoc>(guildId, username);
 
 export const ensureUser = (user: UserDoc, member: GuildMember) => {
   user._id = user._id || member.id;
@@ -31,10 +47,24 @@ export const ensureUser = (user: UserDoc, member: GuildMember) => {
   return user;
 };
 
-const getStory = (nickname: string) => {
-  const storyFactory = new StoryFactory(nickname);
+export const incrementMessages = async (guild: Guild, user: string) => {
+  const doc = await getDoc<UserDoc>(guild.id, user);
 
-  return storyFactory.getStory();
+  if (!doc.roles?.includes('')) return;
+
+  const currentLevel = doc.level || 1;
+
+  doc.messages = (doc.messages || 1) + 1;
+  doc.level = doc.level || 1;
+  doc.level = increment(doc.messages, doc.level || 1);
+
+  if (doc.level > currentLevel) {
+    const embed = buildEmbed({ description: `<@${doc._id}>\n${currentLevel} -> ${doc.level}`, title: 'Level up!' });
+
+    guild.systemChannel?.send(embed);
+  }
+
+  saveDoc(doc, guild.id, user);
 };
 
 export const buildBannedUser = (user: User, reason: string) => {
@@ -48,19 +78,6 @@ export const buildBannedUser = (user: User, reason: string) => {
     username: user.username
   };
 };
-
-export const recordBannedUser = (user: User, reason: string, guild: string) =>
-  docExists(guild, user.id).then((bool) => (bool ? saveDoc(buildBannedUser(user, reason), guild, user.id) : null));
-
-export const updateUser = () => {};
-
-export const getUser = (member: GuildMember) =>
-  getDoc<UserDoc>(member.guild.id, member.user.id).then((doc) => ensureUser(doc, member));
-
-export const findUser = (guild: string, user: string) => findDoc<UserDoc>(guild, user);
-export const saveUser = (member: GuildMember, doc: UserDoc) => saveDoc(doc, member.guild.id, member.user.id);
-
-export const getUserByUsername = (guildId: string, username: string) => findDoc<UserDoc>(guildId, username);
 
 export const checkMember = (moderator: GuildMember, member: GuildMember) => {
   if (!member) {
