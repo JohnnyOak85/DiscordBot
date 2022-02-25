@@ -17,7 +17,12 @@ module.exports = {
       }
 
       const amount = getNumber(args[1]);
-      const reason = getReason(args.slice(1).join(' '), amount?.toString());
+      const reason = getReason(
+        args
+          .slice(1)
+          .join(' ')
+          .replace(amount ? args[1] : '', '')
+      );
 
       for await (const member of message.mentions.members?.array() || []) {
         try {
