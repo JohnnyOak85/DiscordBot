@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 
 import { checkMember } from '../helpers/member.helper';
 import { warnUser } from '../helpers/punishment.helper';
-import { getReason, logError } from '../helpers/utils.helper';
+import { getReason, logError } from '../helpers/tools/utils.helper';
 
 import { MAX_STRIKES } from '../config.json';
 
@@ -20,8 +20,6 @@ module.exports = {
         return;
       }
 
-      const reason = getReason(args.slice(1).join(' '));
-
       for await (const member of message.mentions.members?.array() || []) {
         try {
           const warning = checkMember(message.member, member);
@@ -31,7 +29,7 @@ module.exports = {
             return;
           }
 
-          const reply = await warnUser(member, reason);
+          const reply = await warnUser(member, getReason(args.slice(1).join(' ')));
 
           if (!reply) return;
 

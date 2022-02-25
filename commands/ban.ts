@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 
 import { checkMember } from '../helpers/member.helper';
 import { banUser } from '../helpers/punishment.helper';
-import { getNumber, getReason, logError } from '../helpers/utils.helper';
+import { getNumber, getReason, logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'ban',

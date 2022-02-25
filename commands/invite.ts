@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 
 import { getInvite } from '../helpers/invite.helper';
-import { logError } from '../helpers/utils.helper';
+import { logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'invite',

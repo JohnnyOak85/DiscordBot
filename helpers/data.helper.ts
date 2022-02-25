@@ -2,10 +2,11 @@ import { Emoji, Guild, GuildEmoji, Message, Role } from 'discord.js';
 import { ensureDirSync } from 'fs-extra';
 
 import { ensureUser, recordBannedUser } from './member.helper';
-import { docExists, getDoc, saveDoc, updateDoc } from './database.helper';
-import { logError, logInfo } from './utils.helper';
+import { docExists, getDoc, saveDoc, updateDoc } from './tools/database.helper';
+import { logError, logInfo } from './tools/utils.helper';
 import { setRolesChannel } from './roles.helper';
 import { startTimers } from './timers.helper';
+import { setCommands } from './command.helper';
 
 import { DATABASE_DIR, REACTION_TOTAL, QUOTE_REACTION } from '../config.json';
 import { DataList } from '../interfaces';
@@ -16,6 +17,7 @@ async function recordMap(list: (GuildEmoji | Role)[], mapName: string) {
   for (const item of list) {
     map[item.id] = item.name;
   }
+
   saveDoc(map, 'configurations', mapName);
 }
 
@@ -65,6 +67,7 @@ export const collectData = (guilds: Guild[]) => {
     logInfo(`The bot went online.`);
 
     for (const guild of guilds) {
+      setCommands();
       recordData(guild);
       setRolesChannel(guild.channels.cache.array());
       startTimers(guild);

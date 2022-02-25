@@ -4,8 +4,8 @@ import { scheduleJob } from 'node-schedule';
 
 import { findUser } from './member.helper';
 import { unmuteUser } from './mute.helper';
-import { listDocs } from './database.helper';
-import { buildEmbed } from './embed.helper';
+import { listDocs } from './tools/database.helper';
+import { buildEmbed } from './tools/embed.helper';
 
 const MIDNIGHT = '1 0 * * *';
 const FIVE_SECONDS = '*/5 * * * * *';
@@ -51,9 +51,6 @@ const checkExpirations = async (guild: Guild) => {
   }
 };
 
-/**
- * @description Starts timers for repeated tasks.
- */
 export const startTimers = async (guild: Guild) => {
   try {
     scheduleJob(MIDNIGHT, () => checkAnniversaries(guild));

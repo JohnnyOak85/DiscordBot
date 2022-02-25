@@ -1,8 +1,8 @@
 import { GuildMember } from 'discord.js';
 
 import { getUser } from './member.helper';
-import { saveDoc } from './database.helper';
-import { addTime } from './utils.helper';
+import { saveDoc } from './tools/database.helper';
+import { addTime } from './tools/utils.helper';
 
 export const muteUser = async (member: GuildMember, reason: string, minutes?: number) => {
   try {

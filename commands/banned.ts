@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 
-import { logError } from '../helpers/utils.helper';
+import { getReason, logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'banned',
@@ -23,9 +23,7 @@ module.exports = {
       }
 
       for await (const bannedUser of bannedList.array()) {
-        if (!bannedUser.reason) bannedUser.reason = 'No reason provided';
-
-        reply = `${reply}${bannedUser.user.username}: ${bannedUser.reason}\n`;
+        reply = `${reply}${bannedUser.user.username}: ${getReason(bannedUser.reason)}\n`;
       }
 
       message.channel.send(reply);

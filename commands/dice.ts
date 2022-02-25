@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 
-import { getRandom, logError } from '../helpers/utils.helper';
+import { getRandom, logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'dice',
@@ -9,9 +9,7 @@ module.exports = {
   moderation: false,
   execute: async (message: Message) => {
     try {
-      const roll = getRandom(6);
-
-      message.reply(`Rolled a ${roll}!`);
+      message.reply(`Rolled a ${getRandom(6)}!`);
     } catch (error) {
       logError(error);
     }

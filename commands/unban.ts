@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 
 import { getUserByUsername } from '../helpers/member.helper';
 import { unbanUser } from '../helpers/punishment.helper';
-import { logError } from '../helpers/utils.helper';
+import { logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'unban',

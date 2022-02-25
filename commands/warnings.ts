@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 
 import { checkMember } from '../helpers/member.helper';
 import { listWarnings, getUserWarnings } from '../helpers/punishment.helper';
-import { logError } from '../helpers/utils.helper';
+import { logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'warnings',
@@ -17,9 +17,7 @@ module.exports = {
       }
 
       if (!message.mentions.members?.array().length) {
-        const reply = await listWarnings(message.guild?.id || '');
-
-        message.channel.send(reply);
+        message.channel.send(await listWarnings(message.guild?.id || ''));
         return;
       }
 
@@ -32,9 +30,7 @@ module.exports = {
             return;
           }
 
-          const reply = await getUserWarnings(member);
-
-          message.channel.send(reply);
+          message.channel.send(await getUserWarnings(member));
         } catch (error) {
           throw error;
         }

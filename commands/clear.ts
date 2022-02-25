@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 
-import { logError } from '../helpers/utils.helper';
+import { getNumber, logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'clear',
@@ -14,9 +14,9 @@ module.exports = {
         return;
       }
 
-      const amount = parseInt(args[0], 10);
+      const amount = getNumber(args[0]);
 
-      if (amount < 0 || amount > 99 || isNaN(amount)) {
+      if (!amount) {
         message.channel.send('I need a number from 1 to 99.');
         return;
       }

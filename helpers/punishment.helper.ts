@@ -3,7 +3,7 @@ import { Guild, GuildMember, User } from 'discord.js';
 import { findUser, getUser, saveUser } from './member.helper';
 
 import { MAX_STRIKES } from '../config.json';
-import { listDocs } from './database.helper';
+import { listDocs } from './tools/database.helper';
 import { muteUser } from './mute.helper';
 import { getInvite } from './invite.helper';
 

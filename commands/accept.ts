@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 
 import { acceptChallenge } from '../helpers/game/arena.helper';
-import { logError } from '../helpers/utils.helper';
+import { logError } from '../helpers/tools/utils.helper';
 
 import { arena } from '../game-config.json';
 

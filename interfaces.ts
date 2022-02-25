@@ -5,11 +5,9 @@ export interface DataList {
 export interface Duelist {
   attack: number;
   defense: number;
+  id: string;
   health: number;
   level: number;
+  luck?: number;
   name: string;
-}
-
-export interface Monster extends Duelist {
-  file: string;
 }

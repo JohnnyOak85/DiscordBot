@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 
-import { getBool, logError } from '../helpers/utils.helper';
+import { getBool, logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'coin',
@@ -9,13 +9,7 @@ module.exports = {
   moderation: false,
   execute: async (message: Message) => {
     try {
-      const toss = getBool();
-
-      if (toss) {
-        message.reply('Heads!');
-      } else {
-        message.reply('Tails!');
-      }
+      getBool() ? message.reply('Heads!') : message.reply('Tails!');
     } catch (error) {
       logError(error);
     }

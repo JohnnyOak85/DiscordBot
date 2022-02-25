@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 
 import { StoryFactory } from '../factories/story.factory';
-import { logError } from '../helpers/utils.helper';
+import { logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'story',
@@ -10,13 +10,13 @@ module.exports = {
   moderation: false,
   execute: async (message: Message) => {
     try {
-      const user = message.mentions.members?.array()[0];
-
-      if (!user) return;
-
-      const storyFactory = new StoryFactory(user.nickname || user.displayName);
-
-      message.channel.send(await storyFactory.getStory());
+      message.mentions.members?.array()[0]
+        ? message.channel.send(
+            await new StoryFactory(
+              message.mentions.members?.array()[0].nickname || message.mentions.members?.array()[0].displayName
+            ).getStory()
+          )
+        : undefined;
     } catch (error) {
       logError(error);
     }

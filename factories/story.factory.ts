@@ -1,5 +1,5 @@
-import { getDoc, listDocs } from '../helpers/database.helper';
-import { getBool, getRandom } from '../helpers/utils.helper';
+import { getDoc, listDocs } from '../helpers/tools/database.helper';
+import { getBool, getRandom } from '../helpers/tools/utils.helper';
 
 interface Decorator {
   [name: string]: string[];
@@ -32,7 +32,7 @@ export class StoryFactory {
     this.prize = this.getNoun('guy', 'girl');
   };
 
-  private getValue = () => (getRandom(9) * parseInt('1'.padEnd(getRandom(6), '0'))).toString();
+  private getValue = () => (getRandom(9) * parseInt('1'.padEnd(getRandom(6), '0'), 10)).toString();
   private getDecoration = (decorator: string[]) => decorator[getRandom(decorator.length - 1)];
   private getNoun = (male: string, female: string) => (getBool() ? male : female);
 
@@ -51,10 +51,9 @@ export class StoryFactory {
       .replace(/§years/g, `${getRandom(44, 3)}`);
 
   public getStory = async () => {
-    const list = await listDocs('story/blocks');
     let story = `${this.character}`;
 
-    for (const item of list) {
+    for (const item of await listDocs('story/blocks')) {
       const block = await getDoc<string[]>('story/blocks/', item);
 
       story = story + this.constructBlock(block);

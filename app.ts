@@ -3,7 +3,7 @@ import { Client } from 'discord.js';
 import { checkMemberChanges, recordBannedUser, registerMember, removeUser } from './helpers/member.helper';
 import { checkIncomingMessage, checkMessageUpdate } from './helpers/message.helper';
 import { collectData, recordItem, recordQuote } from './helpers/data.helper';
-import { logError } from './helpers/utils.helper';
+import { logError } from './helpers/tools/utils.helper';
 import { unbanUser } from './helpers/punishment.helper';
 
 import { TOKEN } from './config.json';

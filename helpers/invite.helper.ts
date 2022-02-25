@@ -16,15 +16,13 @@ const createInvite = async (channelManager: GuildChannelManager, channelId: stri
 
 export const getInvite = async (list: Invite[], channelManager: GuildChannelManager, channelName: string) => {
   try {
-    if (!list) {
+    if (!list.length) {
       return await createInvite(channelManager, channelName);
     }
 
     const permanentInvite = list.find((invite) => !invite.temporary && invite.channel.name === channelName);
 
-    if (permanentInvite) return permanentInvite;
-
-    return await createInvite(channelManager, channelName);
+    return permanentInvite ? permanentInvite : await createInvite(channelManager, channelName);
   } catch (error) {
     throw error;
   }

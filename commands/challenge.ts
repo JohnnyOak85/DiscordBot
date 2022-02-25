@@ -3,7 +3,7 @@ import { Message } from 'discord.js';
 import { issueChallenge } from '../helpers/game/arena.helper';
 
 import { arena } from '../game-config.json';
-import { logError } from '../helpers/utils.helper';
+import { logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'challenge',

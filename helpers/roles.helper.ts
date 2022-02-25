@@ -1,6 +1,6 @@
 import { GuildChannel, GuildMember } from 'discord.js';
 
-import { buildEmbed } from './embed.helper';
+import { buildEmbed } from './tools/embed.helper';
 import { getUser, saveUser } from './member.helper';
 import { setReactionMessage } from './reaction.helper';
 

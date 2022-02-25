@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 
-import { getRandomQuote } from '../helpers/reaction.helper';
-import { logError } from '../helpers/utils.helper';
+import { getQuote } from '../helpers/reaction.helper';
+import { logError } from '../helpers/tools/utils.helper';
 
 module.exports = {
   name: 'quote',
@@ -10,9 +10,7 @@ module.exports = {
   moderation: false,
   execute: async (message: Message) => {
     try {
-      const quote = await getRandomQuote();
-
-      message.channel.send(quote);
+      message.channel.send(await getQuote());
     } catch (error) {
       logError(error);
     }
