@@ -2,7 +2,7 @@ import { TextChannel } from 'discord.js';
 
 import { ensureDuelist, startRounds } from './duel.helper';
 import { CollectionFactory } from '../../factories/collection.factory';
-import { buildEmbed } from '../embed.helper';
+import { buildEmbed } from '../tools/embed.helper';
 
 const duels = new CollectionFactory<{
   challenger: string;
@@ -44,20 +44,21 @@ export const issueChallenge = async (channel: TextChannel, challenger: string, d
       return;
     }
 
-    const embed = buildEmbed({
-      color: '#ff2050',
-      description: `<@${challenger}> has challenged <@${defender}>!`,
-      title: '**CHALLENGE ISSUED**'
+    channel.send(
+      buildEmbed({
+        color: '#ff2050',
+        description: `<@${challenger}> has challenged <@${defender}>!`,
+        title: '**CHALLENGE ISSUED**'
+      })
+    );
+
+    duels.addItem(defender, {
+      challenger,
+      timer: setTimeout(() => {
+        duels.deleteItem(defender);
+        channel.send(`<@${challenger}>'s challenge has expired!`);
+      }, 300000)
     });
-
-    channel.send(embed);
-
-    const timer = setTimeout(() => {
-      duels.deleteItem(defender);
-      channel.send(`<@${challenger}>'s challenge has expired!`);
-    }, 300000);
-
-    duels.addItem(defender, { challenger, timer });
   } catch (error) {
     throw error;
   }

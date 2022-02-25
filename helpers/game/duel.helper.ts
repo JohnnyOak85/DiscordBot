@@ -1,35 +1,38 @@
 import { TextChannel } from 'discord.js';
 
 import { findUser } from '../member.helper';
-import { getBool, getRandom } from '../utils.helper';
-import { updateDoc } from '../database.helper';
+import { getRandom, increment } from '../tools/utils.helper';
+import { saveDoc } from '../tools/database.helper';
 
-import { Duelist, Monster } from '../../interfaces';
+import { Duelist } from '../../interfaces';
 import { control } from '../../game-config.json';
+import { buildEmbed } from '../tools/embed.helper';
 
-interface Player extends Duelist {
-  id: string;
-}
+const recordWinner = async (winner: Duelist, guild: string) => {
+  const doc = await findUser(guild, winner.id);
+
+  winner.health = doc?.health || 100;
+
+  saveDoc(Object.assign(doc, winner), guild, winner.id);
+};
 
 export const ensureDuelist = async (guild: string, user: string) => {
   const duelist = await findUser(guild, user);
 
-  if (!duelist) return;
-
-  return {
-    attack: duelist.attack || 15,
-    defense: duelist.defense || 15,
-    health: duelist.health || 100,
-    id: duelist._id || '',
-    level: duelist.level || 1,
-    name: duelist.username || 'Duelist'
-  };
+  return duelist
+    ? {
+        attack: duelist.attack || 15,
+        defense: duelist.defense || 15,
+        health: duelist.health || 100,
+        id: duelist._id || '',
+        level: duelist.level || 1,
+        luck: duelist.luck || 1,
+        name: duelist.username || 'Duelist'
+      }
+    : undefined;
 };
 
-// TODO chance should be luck stat.
-const getBoost = (attribute: number, chance: number) => {
-  const boost = getRandom(chance);
-
+const getBoost = (attribute: number, boost: number) => {
   if (boost < 21) {
     return 0;
   } else if (boost > 80) {
@@ -39,10 +42,10 @@ const getBoost = (attribute: number, chance: number) => {
   return attribute;
 };
 
-const battle = (attacker: Player | Monster, defender: Player | Monster, channel: TextChannel) => {
+const battle = (attacker: Duelist, defender: Duelist, channel: TextChannel) => {
   try {
-    const damageBoost = getBoost(attacker.attack, 100);
-    const defenseBoost = getBoost(defender.defense, 100);
+    const damageBoost = getBoost(attacker.attack, getRandom());
+    const defenseBoost = getBoost(defender.defense, getRandom());
     const damage = Math.floor(Math.max(0, damageBoost * (control / (control + defenseBoost))));
 
     if (!damageBoost) {
@@ -58,10 +61,10 @@ const battle = (attacker: Player | Monster, defender: Player | Monster, channel:
       return { boutWinner: defender, boutLoser: attacker };
     }
 
-    if (getBool()) {
+    if (getRandom(defender.luck) >= 50) {
       attacker.health = Math.max(0, attacker.health - defender.attack);
       channel.send(`${defender.name} counters! ${defender.attack} damage! ${attacker.name} has ${attacker.health} health.`);
-    } else if (getBool() && damageBoost) {
+    } else if (getRandom(attacker.luck) >= 50 && damageBoost) {
       channel.send(`${attacker.name} follows through!`);
 
       return { boutWinner: attacker, boutLoser: defender };
@@ -73,7 +76,7 @@ const battle = (attacker: Player | Monster, defender: Player | Monster, channel:
   }
 };
 
-const getWinner = (attacker: Player | Monster, defender: Player | Monster, channel: TextChannel) => {
+const getWinner = (attacker: Duelist, defender: Duelist, channel: TextChannel) => {
   const winner = defender.health > 0 ? defender : attacker;
   const loser = defender.health > 0 ? attacker : defender;
   const experience = Math.max(1, Math.floor((loser.level * 2) / winner.level));
@@ -100,12 +103,24 @@ const getWinner = (attacker: Player | Monster, defender: Player | Monster, chann
     winner.defense = defenseBoost;
   }
 
+  if (winner.id.includes('_')) return;
+
+  const currentLevel = winner.level;
+
+  winner.level = increment(winner.attack + winner.defense, winner.level);
+
   channel.send(`+${attackBoost} attack. +${defenseBoost} defense.`);
 
-  if (winner.hasOwnProperty('id')) updateDoc(winner, channel.guild.id, (winner as Player).id);
+  if (winner.level > currentLevel) {
+    const embed = buildEmbed({ description: `<@${winner.id}>\n${currentLevel} -> ${winner.level}`, title: 'Level up!' });
+
+    channel.guild.systemChannel?.send(embed);
+  }
+
+  recordWinner(winner, channel.guild.id);
 };
 
-export const startRounds = (challenger: Player | Monster, challenged: Player | Monster, channel: TextChannel) => {
+export const startRounds = (challenger: Duelist, challenged: Duelist, channel: TextChannel) => {
   let attacker = challenger;
   let defender = challenged;
 

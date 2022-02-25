@@ -8,6 +8,6 @@ export interface Duelist {
   id: string;
   health: number;
   level: number;
-  luck?: number;
+  luck: number;
   name: string;
 }
