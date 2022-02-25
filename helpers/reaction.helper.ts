@@ -1,24 +1,14 @@
-import { Message, MessageEmbed, MessageManager, NewsChannel, TextChannel } from 'discord.js';
+import { Message, MessageEmbed, NewsChannel, TextChannel } from 'discord.js';
 
 import { giveRole, removeRole } from './roles.helper';
-import { getRandom } from './utils.helper';
-import { getDoc } from './database.helper';
+import { getRandom } from './tools/utils.helper';
+import { getDoc } from './tools/database.helper';
 
 import { DataList } from '../interfaces';
 
 type EmojiMap = { [name: string]: string };
 
-const getMessages = async (manager: MessageManager) => {
-  try {
-    const messages = await manager.fetch();
-
-    return messages.array();
-  } catch (error) {
-    throw error;
-  }
-};
-
-async function cleanString(str: string) {
+const cleanString = async (str: string) => {
   const chars = await getDoc<string[]>('configurations', 'chars');
 
   for (const char of chars) {
@@ -28,7 +18,7 @@ async function cleanString(str: string) {
   }
 
   return str;
-}
+};
 
 /**
  * @description Returns an reply based on trigger expressions.
@@ -115,7 +105,7 @@ export const setReactionMessage = async (
   channel: TextChannel | NewsChannel,
   stack = false
 ) => {
-  const messages = await getMessages(channel.messages);
+  const messages = (await channel.messages.fetch()).array();
   const map = await getDoc<DataList>('configurations', mapName);
   const previousMessage = messages.find((oldMessage) => {
     const embeds = oldMessage.embeds.filter((oldEmbed) => oldEmbed.title === embed.title);
@@ -123,11 +113,6 @@ export const setReactionMessage = async (
     if (embeds.length) return oldMessage;
   });
   let message;
-  let print = false;
-
-  if (mapName === 'roles') {
-    print = true;
-  }
 
   if (!messages.length || !previousMessage?.embeds.length) {
     message = await channel.send(embed);
@@ -138,13 +123,4 @@ export const setReactionMessage = async (
   collectReactions(message, map, stack);
 };
 
-export const getRandomQuote = async () => {
-  try {
-    const quotes = await getDoc<string[]>('', 'quotes');
-    const index = getRandom(quotes.length, 0);
-
-    return quotes[index];
-  } catch (error) {
-    throw error;
-  }
-};
+export const getQuote = () => getDoc<string[]>('', 'quotes').then((quotes) => quotes[getRandom(quotes.length, 0)]);
