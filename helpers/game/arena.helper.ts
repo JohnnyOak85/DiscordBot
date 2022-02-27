@@ -1,8 +1,10 @@
 import { TextChannel } from 'discord.js';
 
-import { ensureDuelist, startRounds } from './duel.helper';
+import { startRounds } from './duel.helper';
 import { CollectionFactory } from '../../factories/collection.factory';
 import { buildEmbed } from '../tools/embed.helper';
+import { ensureDuelist } from './player';
+import { getBool } from '../tools/utils.helper';
 
 const duels = new CollectionFactory<{
   challenger: string;
@@ -18,18 +20,25 @@ const cleanUpDuel = (name: string) => {
 export const acceptChallenge = async (channel: TextChannel, defenderId: string) => {
   try {
     const duel = duels.getItem(defenderId);
+    let attacker;
+    let defender;
 
     if (!duel) {
       channel.send(`<@${defenderId}> there are no open challenges for you.`);
       return;
     }
 
-    const challenger = await ensureDuelist(channel.guild.id, duel.challenger);
-    const defender = await ensureDuelist(channel.guild.id, defenderId);
+    if (getBool()) {
+      attacker = await ensureDuelist(channel.guild.id, duel.challenger);
+      defender = await ensureDuelist(channel.guild.id, defenderId);
+    } else {
+      attacker = await ensureDuelist(channel.guild.id, defenderId);
+      defender = await ensureDuelist(channel.guild.id, duel.challenger);
+    }
 
-    if (!challenger || !defender) return;
+    if (!attacker || !defender) return;
 
-    startRounds(challenger, defender, channel);
+    startRounds(attacker, defender, channel);
 
     cleanUpDuel(defenderId);
   } catch (error) {
@@ -39,8 +48,11 @@ export const acceptChallenge = async (channel: TextChannel, defenderId: string) 
 
 export const issueChallenge = async (channel: TextChannel, challenger: string, defender: string) => {
   try {
-    if (duels.findItem(defender)) {
+    if (duels.findItem(defender) || duels.getList().find((item) => item.challenger === defender)) {
       channel.send('This fighter already has an open challenge.');
+      return;
+    } else if (duels.findItem(challenger) || duels.getList().find((item) => item.challenger === challenger)) {
+      channel.send('You already have an open challenge.');
       return;
     }
 

@@ -1,7 +1,7 @@
 import { Guild, GuildMember, Role, User } from 'discord.js';
 import { difference } from 'lodash';
 
-import { compareDate, getDate, increment, logError } from './tools/utils.helper';
+import { checkRepeats, compareDate, getBool, getDate, increment, logError } from './tools/utils.helper';
 import { docExists, findDoc, getDoc, saveDoc } from './tools/database.helper';
 import { StoryFactory } from '../factories/story.factory';
 import { buildEmbed } from './tools/embed.helper';
@@ -14,6 +14,7 @@ interface UserDoc {
   joinedAt?: Date | null;
   health?: number;
   level?: number;
+  losses?: number;
   luck?: number;
   messages?: number;
   nickname?: string | null;
@@ -22,6 +23,7 @@ interface UserDoc {
   strikes?: string[];
   timer?: string;
   username?: string;
+  wins?: number;
 }
 
 const getStory = (nickname: string) => new StoryFactory(nickname).getStory();
@@ -50,16 +52,22 @@ export const ensureUser = (user: UserDoc, member: GuildMember) => {
 export const incrementMessages = async (guild: Guild, user: string) => {
   const doc = await getDoc<UserDoc>(guild.id, user);
 
-  if (!doc.roles?.includes('')) return;
+  if (!doc.roles?.includes('')) return; // TODO Add game role id
 
   const currentLevel = doc.level || 1;
+  let description = `<@${doc._id}>\n**${currentLevel} -> ${doc.level}**`;
 
   doc.messages = (doc.messages || 1) + 1;
   doc.level = doc.level || 1;
   doc.level = increment(doc.messages, doc.level || 1);
 
+  if (doc.messages.toString().length > 2 && checkRepeats(doc.messages.toString()) && getBool()) {
+    doc.luck = (doc.luck || 1) + 1;
+    description = `${description}\n**+1 luck.**`;
+  }
+
   if (doc.level > currentLevel) {
-    const embed = buildEmbed({ description: `<@${doc._id}>\n${currentLevel} -> ${doc.level}`, title: 'Level up!' });
+    const embed = buildEmbed({ description, title: 'Level up!' });
 
     guild.systemChannel?.send(embed);
   }
