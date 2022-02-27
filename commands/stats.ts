@@ -11,9 +11,7 @@ module.exports = {
   game: true,
   execute: async (message: Message) => {
     try {
-      const stats = await getStats(message.guild?.id || '', message.author.id);
-
-      message.reply(stats);
+      message.reply(await getStats(message.guild?.id || '', message.author.id));
     } catch (error) {
       logError(error);
     }

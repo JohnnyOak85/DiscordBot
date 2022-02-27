@@ -10,6 +10,7 @@ import { setCommands } from './command.helper';
 
 import { DATABASE_DIR, REACTION_TOTAL, QUOTE_REACTION } from '../config.json';
 import { DataList } from '../interfaces';
+import { startAreas } from './game/game.helper';
 
 async function recordMap(list: (GuildEmoji | Role)[], mapName: string) {
   const map: DataList = {};
@@ -62,7 +63,7 @@ export const recordItem = async (item: Role | Emoji, map: string, record = true)
   }
 };
 
-export const collectData = (guilds: Guild[]) => {
+export const start = (guilds: Guild[]) => {
   try {
     logInfo(`The bot went online.`);
 
@@ -71,6 +72,7 @@ export const collectData = (guilds: Guild[]) => {
       recordData(guild);
       setRolesChannel(guild.channels.cache.array());
       startTimers(guild);
+      startAreas(guild.channels.cache.array());
     }
 
     console.log('Ready.');

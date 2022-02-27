@@ -1,4 +1,4 @@
-import { GuildChannel, GuildMember } from 'discord.js';
+import { GuildChannel, GuildMember, Role, TextChannel } from 'discord.js';
 
 import { buildEmbed } from './tools/embed.helper';
 import { getUser, saveUser } from './member.helper';
@@ -6,10 +6,17 @@ import { setReactionMessage } from './reaction.helper';
 
 import { ROLES_DESCRIPTION } from '../config.json';
 
+export const grantRole = async (roles: Role[], members: GuildMember[], name: string, id: string) => {
+  const role = roles.find((r) => r.name.includes(name));
+  const member = members.find((m) => m.id === id);
+
+  if (!role || !member) return;
+
+  member.roles.add(role);
+};
+
 export const giveRole = async (member: GuildMember, roleName: string) => {
   try {
-    if (!member.guild.systemChannel) return;
-
     const user = await getUser(member);
     const role = member.guild.roles.cache.find((guildRole) => guildRole.name.toLowerCase() === roleName.toLowerCase());
 
@@ -32,8 +39,6 @@ export const giveRole = async (member: GuildMember, roleName: string) => {
 
 export const removeRole = async (member: GuildMember, roleName: string) => {
   try {
-    if (!member.guild.systemChannel) return;
-
     const user = await getUser(member);
     const role = member.guild.roles.cache.find((guildRole) => guildRole.name.toLowerCase() === roleName.toLowerCase());
 
@@ -57,9 +62,9 @@ export const removeRole = async (member: GuildMember, roleName: string) => {
 
 export const setRolesChannel = async (channels: GuildChannel[]) => {
   try {
-    const rolesChannel = channels.find((channel) => channel.name === 'roles');
+    const rolesChannel = channels.find((channel) => channel.name === 'roles' && channel.type === 'text');
 
-    if (!rolesChannel || !rolesChannel.isText()) return;
+    if (!rolesChannel) return;
 
     const colorEmbed = buildEmbed({ title: 'React to pick your color.' });
     const roleEmbed = buildEmbed({
@@ -67,8 +72,8 @@ export const setRolesChannel = async (channels: GuildChannel[]) => {
       title: 'React to pick your roles.'
     });
 
-    setReactionMessage(colorEmbed, 'colors', rolesChannel);
-    setReactionMessage(roleEmbed, 'roles', rolesChannel, true);
+    setReactionMessage(colorEmbed, 'colors', rolesChannel as TextChannel);
+    setReactionMessage(roleEmbed, 'roles', rolesChannel as TextChannel, true);
   } catch (error) {
     throw error;
   }

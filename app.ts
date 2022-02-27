@@ -2,7 +2,7 @@ import { Client } from 'discord.js';
 
 import { checkMemberChanges, recordBannedUser, registerMember, removeUser } from './helpers/member.helper';
 import { checkIncomingMessage, checkMessageUpdate } from './helpers/message.helper';
-import { collectData, recordItem, recordQuote } from './helpers/data.helper';
+import { start, recordItem, recordQuote } from './helpers/data.helper';
 import { logError } from './helpers/tools/utils.helper';
 import { unbanUser } from './helpers/punishment.helper';
 
@@ -12,7 +12,7 @@ const bot = new Client();
 
 bot.login(TOKEN);
 
-bot.on('ready', () => collectData(bot.guilds.cache.array()));
+bot.on('ready', () => start(bot.guilds.cache.array()));
 
 bot.on('message', async (message) => checkIncomingMessage(message));
 bot.on('messageUpdate', async (oldMessage, message) => checkMessageUpdate(message.partial ? undefined : message));

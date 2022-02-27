@@ -1,4 +1,4 @@
-import { Message, MessageEmbed, NewsChannel, TextChannel } from 'discord.js';
+import { Message, MessageEmbed, TextChannel } from 'discord.js';
 
 import { giveRole, removeRole } from './roles.helper';
 import { getRandom } from './tools/utils.helper';
@@ -99,12 +99,7 @@ export const collectReactions = async (message: Message, emojiList: EmojiMap, st
   }
 };
 
-export const setReactionMessage = async (
-  embed: MessageEmbed,
-  mapName: string,
-  channel: TextChannel | NewsChannel,
-  stack = false
-) => {
+export const setReactionMessage = async (embed: MessageEmbed, mapName: string, channel: TextChannel, stack = false) => {
   const messages = (await channel.messages.fetch()).array();
   const map = await getDoc<DataList>('configurations', mapName);
   const previousMessage = messages.find((oldMessage) => {
