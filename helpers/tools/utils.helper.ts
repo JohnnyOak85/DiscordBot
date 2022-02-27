@@ -1,7 +1,7 @@
 import moment, { unitOfTime } from 'moment';
 import { createLogger, format, transports } from 'winston';
 
-import { control } from '../../game-config.json';
+import { level_control } from '../../game-config.json';
 
 const logger = createLogger({
   level: 'info',
@@ -14,7 +14,7 @@ export const addTime = (type: unitOfTime.DurationConstructor, amount: number) =>
 export const getDate = (date = new Date(), timeFormat = 'Do MMMM YYYY, h:mm:ss a') => moment(date).format(timeFormat);
 export const compareDate = (firstDate: Date, secondDate: Date): boolean => moment(firstDate).isAfter(secondDate);
 
-const checkControl = (num: number) => num * control + (num - 1) * control;
+const checkControl = (num: number) => num * level_control + (num - 1) * level_control;
 const checkAmount = (amount: number) => amount && amount > 0 && amount < 99 && !isNaN(amount);
 
 export const getNumber = (amount: string) => (checkAmount(parseInt(amount, 10)) ? parseInt(amount, 10) : undefined);
@@ -23,6 +23,7 @@ export const increment = (num: number, toInc: number) => (num >= checkControl(to
 export const getBool = () => Math.random() < 0.5;
 
 export const getReason = (reason: string) => (reason ? `Reason: ${reason}` : 'No reason provided');
+export const checkRepeats = (str: string) => new RegExp('(\\d)\\1{' + (str.length - 1) + '}', 'gm').test(str);
 
 export const logError = (error: any) => logger.log('error', `${error.message}\n${error}\nTime: ${getDate()}`);
 export const logInfo = (message: string) => logger.log('info', `${message}\nTime: ${getDate()}`);
