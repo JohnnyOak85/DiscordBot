@@ -16,11 +16,11 @@ const checkAnniversaries = async (guild: Guild) => {
   for (const docPath of userDocs) {
     const user = await findUser(guild.id, docPath);
 
-    if (!user?.anniversary || user.removed || moment(user.timer).isBefore(moment().format())) return;
+    if (!user?.anniversary || user.removed || moment(user.timer).isBefore(moment().format())) continue;
 
     const guildUser = guild.members.cache.get(user._id || '');
 
-    if (!guildUser || !guild.systemChannel) return;
+    if (!guildUser || !guild.systemChannel) continue;
 
     const embed = buildEmbed({
       color: 'RANDOM',
@@ -41,7 +41,7 @@ const checkExpirations = async (guild: Guild) => {
   for (const docPath of userDocs) {
     const user = await findUser(guild.id, docPath);
 
-    if (!user?.timer || moment(user.timer).isBefore(moment().format())) return;
+    if (!user?.timer || moment(user.timer).isBefore(moment().format())) continue;
 
     const guildUser = guild.members.cache.get(user._id || '');
 

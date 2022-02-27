@@ -12,4 +12,4 @@ export const saveDoc = <T>(doc: T, folder: string, id: string) => writeJSON(`${D
 export const updateDoc = <T>(doc: T, folder: string, id: string) =>
   getDoc(folder, id).then((d) => saveDoc(Object.assign(d, doc), folder, id));
 export const findDoc = <T>(folder: string, doc: string) =>
-  docExists(folder, doc).then((bool) => (bool ? getDoc<T>(folder, doc) : null));
+  docExists(folder, doc).then((bool) => (bool ? getDoc<T>(folder, doc) : undefined));
