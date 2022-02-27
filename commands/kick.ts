@@ -9,6 +9,7 @@ module.exports = {
   description: 'Mention a user and that user gets removed from the guild.',
   usage: '<user> <reason>',
   moderation: true,
+  game: false,
   execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('BAN_MEMBERS')) {

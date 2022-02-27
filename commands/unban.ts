@@ -9,6 +9,7 @@ module.exports = {
   description: 'Provide a username and that user will have access to the server again.',
   usage: '<username>',
   moderation: true,
+  game: false,
   execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('BAN_MEMBERS')) {

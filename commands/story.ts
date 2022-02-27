@@ -8,6 +8,7 @@ module.exports = {
   description: 'Get a random story',
   usage: '<user>',
   moderation: false,
+  game: false,
   execute: async (message: Message) => {
     try {
       message.mentions.members?.array()[0]

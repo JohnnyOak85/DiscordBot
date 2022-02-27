@@ -7,6 +7,7 @@ import { CollectionFactory } from '../factories/collection.factory';
 const commands = new CollectionFactory<{
   description: string;
   execute: (message: Message, args?: string[]) => void;
+  game: boolean;
   moderation: boolean;
   name: string;
   usage: string;
@@ -38,11 +39,11 @@ export const executeCommand = (message: Message) => {
   }
 };
 
-export const getCommandsDescription = (verified: boolean) => {
+export const getCommandsDescription = (verified: boolean, isGame: boolean) => {
   const reply = ['List of commands:'];
 
   for (const command of commands.getList()) {
-    if (!verified && command.moderation) continue;
+    if ((!verified && command.moderation) || (!isGame && command?.game)) continue;
 
     reply.push(` * ${PREFIX}${command.name}`);
   }
@@ -53,9 +54,10 @@ export const getCommandsDescription = (verified: boolean) => {
   return reply;
 };
 
-export const getCommandDescription = (name: string) => {
+export const getCommandDescription = (name: string, verified: boolean, isGame: boolean) => {
   const command = commands.getItem(name);
 
+  if (!verified || (command?.game && !isGame)) return 'You have no access to this command.';
   if (!command) return 'That command does not exist.';
 
   const reply = [`**Name:** ${command.name}`];

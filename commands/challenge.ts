@@ -10,6 +10,7 @@ module.exports = {
   description: 'Challenge another user to combat! Only works in the arena channel.',
   usage: '<user>',
   moderation: false,
+  game: true,
   execute: async (message: Message) => {
     try {
       const mentions = message.mentions.members?.array();

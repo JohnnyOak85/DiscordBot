@@ -8,6 +8,7 @@ module.exports = {
   description: 'Returns a permanent invite for a given channel, or one for general.',
   usage: '<channel name>',
   moderation: false,
+  game: false,
   execute: async (message: Message, args: string[]) => {
     try {
       if (!message.guild) return;

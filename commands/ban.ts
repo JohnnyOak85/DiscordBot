@@ -10,6 +10,7 @@ module.exports = {
     'Mention a user and that user will be banned from the guild. Can be temporary if provided with a number between 1 and 100.',
   usage: '<user> <number of days> <reason>',
   moderation: true,
+  game: false,
   execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('BAN_MEMBERS')) {

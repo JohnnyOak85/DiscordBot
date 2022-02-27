@@ -8,6 +8,7 @@ module.exports = {
   description: 'List all rules.',
   usage: ' ',
   moderation: false,
+  game: false,
   execute: async (message: Message) => {
     try {
       message.guild?.systemChannel?.send((await getDoc<string[]>('configurations', 'rules')).join('\n'));

@@ -13,6 +13,7 @@ module.exports = {
   } warnings and banned after ${MAX_STRIKES}.`,
   usage: '<user> <reason>',
   moderation: true,
+  game: false,
   execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {

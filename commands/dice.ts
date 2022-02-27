@@ -7,6 +7,7 @@ module.exports = {
   description: 'Roll a dice',
   usage: ' ',
   moderation: false,
+  game: false,
   execute: async (message: Message) => {
     try {
       message.reply(`Rolled a ${getRandom(6)}!`);

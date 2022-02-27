@@ -9,6 +9,7 @@ module.exports = {
   description: 'Mention a user and that user will no longer be muted.',
   usage: '<user>',
   moderation: true,
+  game: false,
   execute: async (message: Message) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {

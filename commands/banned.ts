@@ -7,6 +7,7 @@ module.exports = {
   description: 'Lists all the users that have been banned.',
   usage: ' ',
   moderation: true,
+  game: false,
   execute: async (message: Message) => {
     try {
       if (!message.member?.hasPermission('BAN_MEMBERS')) {

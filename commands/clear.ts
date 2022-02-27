@@ -7,6 +7,7 @@ module.exports = {
   description: 'Clear a set amount of lines from 1 to 99.',
   usage: '<number of lines>',
   moderation: true,
+  game: false,
   execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {

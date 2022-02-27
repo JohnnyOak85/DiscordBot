@@ -7,6 +7,7 @@ module.exports = {
   description: 'Toss a coin',
   usage: ' ',
   moderation: false,
+  game: false,
   execute: async (message: Message) => {
     try {
       getBool() ? message.reply('Heads!') : message.reply('Tails!');

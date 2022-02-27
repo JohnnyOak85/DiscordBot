@@ -8,6 +8,7 @@ module.exports = {
   description: 'Adds a birthday date to be celebrated.',
   usage: '<user> <MM-DD-YYYY>',
   moderation: false,
+  game: false,
   execute: async (message: Message, args: string[]) => {
     try {
       const member = message.mentions.members?.array()[0];

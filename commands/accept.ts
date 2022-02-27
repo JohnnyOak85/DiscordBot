@@ -10,6 +10,7 @@ module.exports = {
   description: 'Accept a challenge another user issued. Only works in the arena channel.',
   usage: ' ',
   moderation: false,
+  game: true,
   execute: async (message: Message) => {
     try {
       if (message.channel.type !== 'text' || message.channel.name !== arena) return;

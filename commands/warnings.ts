@@ -9,6 +9,7 @@ module.exports = {
   description: "Lists all users with strikes. If provided with a user, it will list that user's strikes",
   usage: '<user>',
   moderation: true,
+  game: false,
   execute: async (message: Message) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {

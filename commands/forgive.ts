@@ -9,6 +9,7 @@ module.exports = {
   description: 'Mention a user and that user will get a strike removed.',
   usage: '<user>',
   moderation: true,
+  game: false,
   execute: async (message: Message, args: string[]) => {
     try {
       if (!message.member?.hasPermission('MANAGE_MESSAGES')) {

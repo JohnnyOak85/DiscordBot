@@ -8,6 +8,7 @@ module.exports = {
   description: 'Generate a random quote',
   usage: ' ',
   moderation: false,
+  game: false,
   execute: async (message: Message) => {
     try {
       message.channel.send(await getQuote());
