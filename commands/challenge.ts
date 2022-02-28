@@ -1,13 +1,13 @@
 import { Message } from 'discord.js';
 
 import { issueChallenge } from '../helpers/game/arena.helper';
-
-import { arena } from '../game-config.json';
 import { logError } from '../helpers/tools/utils.helper';
+
+import { arena, NAME } from '../game-config.json';
 
 module.exports = {
   name: 'challenge',
-  description: 'Challenge another user to combat! Only works in the arena channel.',
+  description: `Challenge another user to combat! Only works in ${NAME}`,
   usage: '<user>',
   moderation: false,
   game: true,
