@@ -37,7 +37,7 @@ export const getResults = async (attacker: Duelist, defender: Duelist, channel: 
     channel.guild.roles.cache.array(),
     channel.guild.members.cache.array(),
     BOSSES.find((b) => defender.id.toLowerCase().includes(b)) || '',
-    attacker.id
+    winner.id
   );
 
   getBuffs(
