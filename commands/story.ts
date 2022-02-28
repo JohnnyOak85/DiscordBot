@@ -11,13 +11,13 @@ module.exports = {
   game: false,
   execute: async (message: Message) => {
     try {
-      message.mentions.members?.array()[0]
-        ? message.channel.send(
-            await new StoryFactory(
-              message.mentions.members?.array()[0].nickname || message.mentions.members?.array()[0].displayName
-            ).getStory()
-          )
-        : undefined;
+      if (message.mentions.members?.array()[0]) {
+        message.channel.send(
+          await new StoryFactory(
+            message.mentions.members?.array()[0].nickname || message.mentions.members?.array()[0].displayName
+          ).getStory()
+        );
+      }
     } catch (error) {
       logError(error);
     }

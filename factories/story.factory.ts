@@ -16,25 +16,20 @@ export class StoryFactory {
 
   constructor(name: string) {
     this.character = name;
-    this.initDecorator();
-    this.initPronouns();
   }
-
-  private initDecorator = async () => {
-    this.decorators = await getDoc<Decorator>('story', 'decorators');
-  };
-
-  private initPronouns = () => {
-    this.personals = this.getNoun('him', 'her');
-    this.personal = this.getNoun('he', 'she');
-    this.possessive = this.getNoun('his', 'her');
-    this.child = this.getNoun('son', 'daughter');
-    this.prize = this.getNoun('guy', 'girl');
-  };
 
   private getValue = () => (getRandom(9) * parseInt('1'.padEnd(getRandom(6), '0'), 10)).toString();
   private getDecoration = (decorator: string[]) => decorator[getRandom(decorator.length - 1)];
   private getNoun = (male: string, female: string) => (getBool() ? male : female);
+
+  private initPronouns = () => {
+    this.personals = 'they';
+    this.personal = 'they';
+    this.possessive = 'their';
+
+    this.child = this.getNoun('son', 'daughter');
+    this.prize = this.getNoun('guy', 'girl');
+  };
 
   private constructBlock = (block: string[]) =>
     block[getRandom(block.length) - 1]
@@ -52,6 +47,9 @@ export class StoryFactory {
 
   public getStory = async () => {
     let story = `${this.character}`;
+
+    this.decorators = await getDoc<Decorator>('story', 'decorators');
+    this.initPronouns();
 
     for (const item of await listDocs('story/blocks')) {
       const block = await getDoc<string[]>('story/blocks/', item);
