@@ -1,119 +1,69 @@
 import { TextChannel } from 'discord.js';
 
 import { findUser } from '../member.helper';
-import { saveDoc } from '../tools/database.helper';
-import { buildEmbed } from '../tools/embed.helper';
-import { getRandom, increment } from '../tools/utils.helper';
+import { getBuffs, getDeBuffs } from './results';
 
 import { Duelist } from '../../interfaces';
+import { addRole } from '../roles.helper';
+import { BOSSES } from '../../game-config.json';
+import { saveDoc } from '../tools/database.helper';
 
 export const getStats = async (guild: string, user: string) => {
   const player = await findUser(guild, user);
 
-  return `\nLevel: ${player?.level}\nHealth: ${player?.health}\nAttack: ${player?.attack}\nDefense: ${player?.defense}\nLuck: ${player?.luck}`;
+  return `\nLevel: ${player?.level}\nHealth: ${player?.health}\nAttack: ${player?.attack}\nDefense: ${player?.defense}\nLuck: ${player?.luck}\nWins: ${player?.wins}\nLosses: ${player?.losses}`;
 };
 
 export const ensureDuelist = async (guild: string, user: string) => {
   const duelist = await findUser(guild, user);
 
-  return duelist
-    ? {
-        attack: duelist.attack || 15,
-        defense: duelist.defense || 15,
-        health: duelist.health || 100,
-        id: duelist._id || '',
-        level: duelist.level || 1,
-        luck: duelist.luck || 1,
-        name: duelist.username || 'Duelist'
-      }
-    : undefined;
+  return {
+    attack: duelist?.attack || 15,
+    defense: duelist?.defense || 15,
+    health: duelist?.health || 100,
+    id: duelist?._id || '',
+    level: duelist?.level || 1,
+    luck: duelist?.luck || 1,
+    name: duelist?.username || 'Duelist'
+  };
 };
 
-const recordWinner = async (winner: Duelist, guild: string) => {
-  const doc = await findUser(guild, winner.id);
-
-  winner.health = winner.health < (doc?.health || 100) ? doc?.health || 100 : winner.health;
-
-  if (doc) {
-    doc.wins = (doc?.wins || 0) + 1;
-  }
-
-  saveDoc(Object.assign(doc, winner), guild, winner.id);
-};
-
-const recordLoser = async (loser: Duelist, guild: string) => {
-  const doc = await findUser(guild, loser.id);
-
-  if (doc) {
-    doc.losses = (doc?.losses || 0) + 1;
-  }
-
-  saveDoc(doc, guild, loser.id);
-};
-
-const levelUp = async (winner: Duelist, guild: string) => {
-  const currentLevel = winner.level;
-
-  winner.level = increment(winner.attack + winner.defense, winner.level);
-
-  if (winner.level > currentLevel) {
-    const gain = getRandom(winner.level * 4, winner.level);
-
-    const doc = await findUser(guild, winner.id);
-
-    winner.health = (doc?.health || 100) + gain;
-
-    return `<@${winner.id}>\n**${currentLevel}** -> **${winner.level}**\n**+${gain} health.`;
-  }
-};
-
-export const getWinner = async (attacker: Duelist, defender: Duelist, channel: TextChannel) => {
+export const getResults = async (attacker: Duelist, defender: Duelist, channel: TextChannel) => {
   const winner = defender.health > 0 ? defender : attacker;
   const loser = defender.health > 0 ? attacker : defender;
   const experience = Math.max(1, Math.floor((loser.level * 2) / winner.level));
-  const split = getRandom(experience);
 
-  channel.send(`**${winner.name}** wins!`);
+  addRole(
+    channel.guild.roles.cache.array(),
+    channel.guild.members.cache.array(),
+    BOSSES.find((b) => defender.id.toLowerCase().includes(b)) || '',
+    attacker.id
+  );
 
-  let attackBoost = 0;
-  let defenseBoost = 0;
+  getBuffs(
+    winner,
+    experience,
+    winner === attacker,
+    winner.level + winner.attack + winner.defense < loser.level + loser.attack + loser.defense,
+    channel
+  );
 
-  if (winner === attacker) {
-    const bigSplit = split > Math.max(1, experience / 2);
+  getDeBuffs(loser, channel);
+};
 
-    attackBoost = bigSplit ? split : Math.max(1, experience - split);
-    defenseBoost = bigSplit ? Math.max(1, experience - split) : split;
-  } else if (winner === defender) {
-    const bigSplit = split > experience / 2;
+export const resetPlayer = async (guild: string, user: string) => {
+  const doc = await findUser(guild, user);
 
-    attackBoost = bigSplit ? Math.max(1, experience - split) : split;
-    defenseBoost = bigSplit ? split : Math.max(1, experience - split);
-  }
+  if (!doc) return;
 
-  winner.attack = winner.attack + attackBoost;
-  winner.defense = winner.defense + defenseBoost;
+  doc.attack = 15;
+  doc.defense = 15;
+  doc.health = 100;
+  doc.level = 1;
+  doc.luck = 1;
+  doc.losses = 0;
+  doc.wins = 0;
+  doc.messages = 0;
 
-  if (winner.id.includes('_')) return;
-
-  const levelled = await levelUp(winner, channel.guild.id);
-  let reply = `+${attackBoost} attack. +${defenseBoost} defense.`;
-
-  if (winner.level + winner.attack + winner.defense < loser.level + loser.attack + loser.defense) {
-    winner.luck = winner.luck + 1;
-    reply = `${reply} +1 luck.`;
-  }
-
-  if (levelled) {
-    const embed = buildEmbed({
-      description: `${levelled} ${reply}**`,
-      title: 'Level up!'
-    });
-
-    channel.send(embed);
-  } else {
-    channel.send(`**${reply}**`);
-  }
-
-  recordWinner(winner, channel.guild.id);
-  recordLoser(loser, channel.guild.id);
+  saveDoc(doc, guild, user);
 };

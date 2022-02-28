@@ -1,10 +1,10 @@
-import { Guild, GuildMember, Role, User } from 'discord.js';
-import { difference } from 'lodash';
+import { Guild, GuildMember, User } from 'discord.js';
 
 import { checkRepeats, compareDate, getBool, getDate, increment, logError } from './tools/utils.helper';
 import { docExists, findDoc, getDoc, saveDoc } from './tools/database.helper';
 import { StoryFactory } from '../factories/story.factory';
 import { buildEmbed } from './tools/embed.helper';
+import { bulkAddRoles, upgradeRole } from './roles.helper';
 
 interface UserDoc {
   _id?: string;
@@ -51,15 +51,17 @@ export const ensureUser = (user: UserDoc, member: GuildMember) => {
 
 export const incrementMessages = async (guild: Guild, user: string, wonRaffle: boolean) => {
   const doc = await getDoc<UserDoc>(guild.id, user);
-
-  if (!doc.roles?.includes('')) return; // TODO Add game role id
-
   const currentLevel = doc.level || 1;
+
+  if (!doc.roles?.includes('') || currentLevel >= 50) return; // TODO Add game role id
+
   let description = `<@${doc._id}>\n**${currentLevel} -> ${doc.level}**`;
 
   doc.messages = (doc.messages || 1) + 1;
   doc.level = doc.level || 1;
   doc.level = increment(doc.messages, doc.level || 1);
+
+  const upgrade = await upgradeRole(guild.members.cache.array(), user, doc.level);
 
   if (wonRaffle) {
     doc.luck = (doc.luck || 1) + 1;
@@ -70,6 +72,10 @@ export const incrementMessages = async (guild: Guild, user: string, wonRaffle: b
   if (doc.messages.toString().length > 2 && checkRepeats(doc.messages.toString()) && getBool()) {
     doc.luck = (doc.luck || 1) + 1;
     description = `${description}\n**+1 luck.**`;
+  }
+
+  if (upgrade) {
+    description = `${description}\n**Rank up! -> ${upgrade}!**`;
   }
 
   if (doc.level > currentLevel) {
@@ -120,13 +126,14 @@ export const addUserAnniversary = async (member: GuildMember, date: Date) => {
   }
 };
 
-export const checkMemberChanges = async (member: GuildMember, oldRoles: Role[]) => {
+export const checkMemberChanges = async (member: GuildMember) => {
   try {
     const user = await getUser(member);
-    const newRole = difference(oldRoles, member.roles.cache.array());
 
-    if (newRole.length) {
-      user.roles?.push(newRole[0].id);
+    user.roles = [];
+
+    for (const role of member.roles.cache.array()) {
+      user.roles?.push(role.id);
     }
 
     user.nickname = member.manageable && member.nickname ? member.nickname : '';
@@ -142,35 +149,27 @@ export const registerMember = async (member: GuildMember) => {
     if (member.user.bot) return;
 
     const user = await getUser(member);
+    let reply = '';
 
     user.nickname = member.manageable && member.nickname ? member.nickname : '';
 
     if (!member.joinedAt || !user.joinedAt || !compareDate(member.joinedAt, user.joinedAt)) {
-      member.guild.systemChannel?.send(
-        `Welcome <@${member.user.id}>! Have a story:\n${await getStory(member.nickname || member.displayName)}`
-      );
+      reply = `Welcome <@${member.user.id}>! Have a story:\n${await getStory(member.nickname || member.displayName)}`;
+    } else {
+      bulkAddRoles(member, member.guild.roles.cache.array(), user.roles || []);
 
-      saveDoc(user, member.guild.id, member.user.id);
-      return;
-    }
-
-    user.roles = user.roles || [];
-
-    for (const role of user.roles) {
-      if (await member.guild.roles.fetch(role)) {
-        member.roles.add(role);
+      if (user.nickname) {
+        member.setNickname(user.nickname);
       }
-    }
 
-    if (user.nickname) {
-      member.setNickname(user.nickname);
-    }
+      user.removed = false;
 
-    user.removed = false;
+      reply = `Rejoice! <@${member.user.id}> is back!`;
+    }
 
     saveDoc(user, member.guild.id, member.user.id);
 
-    member.guild.systemChannel?.send(`Rejoice! <@${member.user.id}> is back!`);
+    member.guild.systemChannel?.send(reply);
   } catch (error) {
     logError(error);
   }
