@@ -20,9 +20,6 @@ const cleanString = async (str: string) => {
   return str;
 };
 
-/**
- * @description Returns an reply based on trigger expressions.
- */
 const getReply = async (message: string, file: string) => {
   message = await cleanString(message);
 
@@ -52,9 +49,6 @@ export const react = async (message: Message) => {
   }
 };
 
-/**
- * @description Listens to all reactions to a given message.
- */
 export const collectReactions = async (message: Message, emojiList: EmojiMap, stack = false) => {
   try {
     for (const emoji of Object.keys(emojiList)) {
