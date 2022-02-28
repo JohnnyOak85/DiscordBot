@@ -1,6 +1,6 @@
 import { Message, MessageEmbed, TextChannel } from 'discord.js';
 
-import { giveRole, removeRole } from './roles.helper';
+import { addRole, removeRole } from './roles.helper';
 import { getRandom } from './tools/utils.helper';
 import { getDoc } from './tools/database.helper';
 
@@ -66,7 +66,7 @@ export const collectReactions = async (message: Message, emojiList: EmojiMap, st
 
       if (!member || member.user.bot || !emojiList[reaction.emoji.name]) return;
 
-      giveRole(member, emojiList[reaction.emoji.name]);
+      addRole(member.guild.roles.cache.array(), [member], emojiList[reaction.emoji.name], member.id);
 
       if (stack) return;
 
@@ -78,7 +78,7 @@ export const collectReactions = async (message: Message, emojiList: EmojiMap, st
         if (!collectedUser) continue;
 
         collectedReaction.users.remove(collectedUser);
-        removeRole(member, emojiList[collectedReaction.emoji.name]);
+        removeRole(member.guild.roles.cache.array(), [member], emojiList[collectedReaction.emoji.name], member.id);
       }
     });
 
@@ -86,7 +86,7 @@ export const collectReactions = async (message: Message, emojiList: EmojiMap, st
       const member = await message.guild?.members.fetch(user);
       if (!member || member.user.bot || !emojiList[reaction.emoji.name]) return;
 
-      removeRole(member, emojiList[reaction.emoji.name]);
+      removeRole(member.guild.roles.cache.array(), [member], emojiList[reaction.emoji.name], member.id);
     });
   } catch (error) {
     throw error;
