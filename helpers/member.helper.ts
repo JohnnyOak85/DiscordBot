@@ -49,7 +49,7 @@ export const ensureUser = (user: UserDoc, member: GuildMember) => {
   return user;
 };
 
-export const incrementMessages = async (guild: Guild, user: string) => {
+export const incrementMessages = async (guild: Guild, user: string, wonRaffle: boolean) => {
   const doc = await getDoc<UserDoc>(guild.id, user);
 
   if (!doc.roles?.includes('')) return; // TODO Add game role id
@@ -60,6 +60,12 @@ export const incrementMessages = async (guild: Guild, user: string) => {
   doc.messages = (doc.messages || 1) + 1;
   doc.level = doc.level || 1;
   doc.level = increment(doc.messages, doc.level || 1);
+
+  if (wonRaffle) {
+    doc.luck = (doc.luck || 1) + 1;
+
+    guild.systemChannel?.send(buildEmbed({ description: 'You just won the daily raffle! **+1 luck.**', title: 'LUCKY!' }));
+  }
 
   if (doc.messages.toString().length > 2 && checkRepeats(doc.messages.toString()) && getBool()) {
     doc.luck = (doc.luck || 1) + 1;

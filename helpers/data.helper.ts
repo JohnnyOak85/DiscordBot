@@ -7,10 +7,11 @@ import { logError, logInfo } from './tools/utils.helper';
 import { setRolesChannel } from './roles.helper';
 import { startTimers } from './timers.helper';
 import { setCommands } from './command.helper';
+import { startAreas } from './game/game.helper';
+import { startRaffle } from './game/raffle';
 
 import { DATABASE_DIR, REACTION_TOTAL, QUOTE_REACTION } from '../config.json';
 import { DataList } from '../interfaces';
-import { startAreas } from './game/game.helper';
 
 async function recordMap(list: (GuildEmoji | Role)[], mapName: string) {
   const map: DataList = {};
@@ -73,6 +74,7 @@ export const start = (guilds: Guild[]) => {
       setRolesChannel(guild.channels.cache.array());
       startTimers(guild);
       startAreas(guild.channels.cache.array());
+      startRaffle();
     }
 
     console.log('Ready.');

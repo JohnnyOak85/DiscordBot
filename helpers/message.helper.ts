@@ -6,6 +6,7 @@ import { BOT_ID } from '../config.json';
 import { react } from './reaction.helper';
 import { executeCommand } from './command.helper';
 import { incrementMessages } from './member.helper';
+import { checkWord } from './game/raffle';
 
 const isShouting = (message: string) => {
   let counter = 0;
@@ -122,7 +123,7 @@ export const checkIncomingMessage = async (message: Message) => {
 
   try {
     if (message.guild) {
-      incrementMessages(message.guild, message.author.id);
+      incrementMessages(message.guild, message.author.id, checkWord(message.content.split(' ')));
     }
 
     react(message);
