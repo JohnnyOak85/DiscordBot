@@ -54,11 +54,11 @@ const levelUp = async (winner: Duelist, channel: TextChannel, reply: string) => 
 const recordWinner = async (winner: Duelist, guild: string) => {
   const doc = await findUser(guild, winner.id);
 
+  if (!doc) return;
+
   winner.health = winner.health < (doc?.health || 100) ? doc?.health || 100 : winner.health;
 
-  if (doc) {
-    doc.wins = (doc?.wins || 0) + 1;
-  }
+  doc.wins = (doc?.wins || 0) + 1;
 
   saveDoc(Object.assign(doc, winner), guild, winner.id);
 };
@@ -68,9 +68,11 @@ const recordLoser = async (loser: Duelist, guild: string) => {
 
   if (!doc) return;
 
+  loser.health = loser.health < (doc?.health || 100) ? doc?.health || 100 : loser.health;
+
   doc.losses = (doc?.losses || 0) + 1;
 
-  saveDoc(doc, guild, loser.id);
+  saveDoc(Object.assign(doc, loser), guild, loser.id);
 };
 
 export const getBuffs = (player: Duelist, experience: number, attacker: boolean, lucky: boolean, channel: TextChannel) => {
@@ -104,13 +106,14 @@ export const getBuffs = (player: Duelist, experience: number, attacker: boolean,
 
 export const getDeBuffs = (player: Duelist, channel: TextChannel) => {
   if (player.id.includes('_')) return;
+
   const attackDeBuff = getBool() ? 1 : 2;
   const defenseDeBuff = getBool() ? 1 : 2;
 
-  player.attack = player.attack - attackDeBuff;
-  player.defense = player.defense - defenseDeBuff;
+  player.attack = player.attack < 15 ? 15 : player.attack - attackDeBuff;
+  player.defense = player.defense < 15 ? 15 : player.defense - defenseDeBuff;
 
-  channel.send(`**${player.name}**\n**-${attackDeBuff} attack. -${defenseDeBuff} defense.**`);
-  
+  channel.send(`**${player.name}** lost!\n**-${attackDeBuff} attack. -${defenseDeBuff} defense.**`);
+
   recordLoser(player, channel.guild.id);
 };
