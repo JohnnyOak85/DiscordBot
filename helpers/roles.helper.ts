@@ -9,7 +9,7 @@ import { DataList } from '../interfaces';
 
 const getName = (roles: Role[], list: string[]) =>
   roles.find((r) => list.includes(r.name.toLowerCase()))?.name.toLowerCase() || '';
-const findName = (roles: Role[]) => getDoc<DataList>('game', 'role_upgrades').then((l) => l[getName(roles, Object.keys(l))]);
+const findName = (roles: Role[]) => getDoc<DataList>('game', 'ranks').then((l) => l[getName(roles, Object.keys(l))]);
 
 export const addRole = async (roles: Role[], members: GuildMember[], roleName: string, memberId: string) => {
   const role = roles.find((r) => r.name.toLowerCase().includes(roleName.toLowerCase()));
@@ -42,7 +42,7 @@ export const upgradeRole = async (members: GuildMember[], memberId: string, leve
 
   const toRemove = member.guild.roles.cache.filter((r) => r !== upgrade);
 
-  bulkRemoveRoles(member, toRemove.array(), Object.keys(await getDoc<DataList>('game', 'role_upgrades')));
+  bulkRemoveRoles(member, toRemove.array(), Object.keys(await getDoc<DataList>('game', 'ranks')));
 
   return upgrade.name;
 };
