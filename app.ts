@@ -20,7 +20,7 @@ bot.on('messageReactionAdd', (reaction) => recordQuote(reaction.message, reactio
 
 bot.on('guildMemberAdd', (member) => registerMember(member));
 bot.on('guildMemberRemove', (member) => removeUser(member.partial ? undefined : member));
-bot.on('guildMemberUpdate', (oldMember, member) => checkMemberChanges(member, oldMember.roles.cache.array()));
+bot.on('guildMemberUpdate', (oldMember, member) => checkMemberChanges(member));
 
 bot.on('emojiCreate', (emoji) => recordItem(emoji, 'emojis'));
 bot.on('emojiDelete', (emoji) => recordItem(emoji, 'emojis', false));
