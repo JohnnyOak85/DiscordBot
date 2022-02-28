@@ -45,7 +45,7 @@ const levelUp = async (winner: Duelist, channel: TextChannel, reply: string) => 
 
     channel.send(embed);
   } else {
-    channel.send(reply);
+    channel.send(`${reply}**`);
   }
 
   recordWinner(winner, channel.guild.id);
@@ -104,9 +104,13 @@ export const getBuffs = (player: Duelist, experience: number, attacker: boolean,
 
 export const getDeBuffs = (player: Duelist, channel: TextChannel) => {
   if (player.id.includes('_')) return;
+  const attackDeBuff = getBool() ? 1 : 2;
+  const defenseDeBuff = getBool() ? 1 : 2;
 
-  player.attack = getBool() ? player.attack - 1 : player.attack - 2;
-  player.defense = getBool() ? player.defense - 1 : player.defense - 2;
+  player.attack = player.attack - attackDeBuff;
+  player.defense = player.defense - defenseDeBuff;
 
+  channel.send(`**${player.name}**\n**-${attackDeBuff} attack. -${defenseDeBuff} defense.**`);
+  
   recordLoser(player, channel.guild.id);
 };
