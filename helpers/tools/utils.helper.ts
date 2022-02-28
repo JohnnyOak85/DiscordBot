@@ -15,7 +15,7 @@ export const getDate = (date = new Date(), timeFormat = 'Do MMMM YYYY, h:mm:ss a
 export const compareDate = (firstDate: Date, secondDate: Date): boolean => moment(firstDate).isAfter(secondDate);
 
 const checkControl = (num: number) => num * level_control + (num - 1) * level_control;
-const checkAmount = (amount: number) => amount && amount > 0 && amount < 99 && !isNaN(amount);
+const checkAmount = (amount: number) => amount && amount > 0 && amount < 100 && !isNaN(amount);
 
 export const getNumber = (amount: string) => (checkAmount(parseInt(amount, 10)) ? parseInt(amount, 10) : undefined);
 export const getRandom = (max = 100, min = 1) => Math.floor(Math.random() * (max - min + 1) + min);
@@ -23,7 +23,7 @@ export const increment = (num: number, toInc: number) => (num >= checkControl(to
 export const getBool = () => Math.random() < 0.5;
 
 export const getReason = (reason: string) => (reason ? `Reason: ${reason}` : 'No reason provided');
-export const checkRepeats = (str: string) => new RegExp('(\\d)\\1{' + (str.length - 1) + '}', 'gm').test(str);
+export const checkRepeats = (str: string) => str.length === (str.match(new RegExp(str[0], 'g')) || []).length;
 
 export const logError = (error: any) => logger.log('error', `${error.message}\n${error}\nTime: ${getDate()}`);
 export const logInfo = (message: string) => logger.log('info', `${message}\nTime: ${getDate()}`);
