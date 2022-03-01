@@ -1,19 +1,18 @@
 import { TextChannel } from 'discord.js';
-
 import { CollectionFactory } from '../../factories/collection.factory';
-import { buildEmbed } from '../tools/embed.helper';
+import { Duelist } from '../../interfaces';
+import { clearMessage } from '../message.helper';
 import { docExists, getDoc } from '../tools/database.helper';
+import { buildEmbed } from '../tools/embed.helper';
 import { getRandom } from '../tools/utils.helper';
 import { startRounds } from './duel.helper';
-
-import { Duelist } from '../../interfaces';
 import { ensureDuelist } from './player';
 
 interface Monster extends Duelist {
   thumb: string;
 }
 
-const monsters = new CollectionFactory<{ monster: Duelist; timer: NodeJS.Timeout }>();
+const monsters = new CollectionFactory<{ id: string; monster: Duelist; timer: NodeJS.Timeout }>();
 
 const cleanUpDuel = (name: string) => {
   const timer = monsters.getItem(name)?.timer;
@@ -50,11 +49,12 @@ export const spawnMonster = async (channel: TextChannel) => {
       thumb: monster.thumb
     });
 
-    monsters.addItem(channel.name, { monster, timer });
+    clearMessage(channel.messages.cache.array(), monsters.getItem(channel.name)?.id || '');
 
-    channel.send(embed);
-    // }, 60000);
-  }, 30000);
+    const id = (await channel.send(embed)).id;
+
+    monsters.addItem(channel.name, { monster, timer, id });
+  }, 90000);
 };
 
 export const engageMonster = async (channel: TextChannel, challengerId: string) => {

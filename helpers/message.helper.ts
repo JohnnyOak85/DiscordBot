@@ -1,12 +1,15 @@
 import { Message } from 'discord.js';
-
-import { logError } from './tools/utils.helper';
-
-import { BOT_ID } from '../config.json';
-import { react } from './reaction.helper';
 import { executeCommand } from './command.helper';
-import { incrementMessages } from './member.helper';
 import { checkWord } from './game/raffle';
+import { incrementMessages } from './member.helper';
+import { react } from './reaction.helper';
+import { logError } from './tools/utils.helper';
+import { BOT_ID } from '../config.json';
+
+export const clearMessage = (list: Message[], id: string) => {
+  const message = list.find((m) => m.id === id);
+  message?.delete();
+};
 
 const isShouting = (message: string) => {
   let counter = 0;
