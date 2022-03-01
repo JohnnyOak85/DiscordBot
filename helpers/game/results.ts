@@ -4,15 +4,14 @@ import { findUser } from '../member.helper';
 import { saveDoc } from '../tools/database.helper';
 import { buildEmbed } from '../tools/embed.helper';
 import { getBool, getRandom, increment } from '../tools/utils.helper';
+import { addRole, upgradeRole } from '../roles.helper';
 
 import { Duelist } from '../../interfaces';
-import { upgradeRole } from '../roles.helper';
+import { BOSSES } from '../../game-config.json';
 
-const getLuckBoost = (player: Duelist, reply: string, lucky: boolean) => {
-  if (lucky) {
-    player.luck = player.luck + 1;
-    reply = `${reply} +1 luck.`;
-  }
+const getLuckBoost = (player: Duelist, reply: string) => {
+  player.luck = player.luck + 1;
+  reply = `${reply} +1 luck.`;
 
   return reply;
 };
@@ -75,8 +74,8 @@ const recordLoser = async (loser: Duelist, guild: string) => {
   saveDoc(Object.assign(doc, loser), guild, loser.id);
 };
 
-export const getBuffs = (player: Duelist, experience: number, attacker: boolean, lucky: boolean, channel: TextChannel) => {
-  if (player.id.includes('_')) return;
+export const getBuffs = (player: Duelist, experience: number, attacker: boolean, adversary: Duelist, channel: TextChannel) => {
+  if (player.id.includes('_') || isNaN(parseInt(player.id, 10))) return;
 
   const split = getRandom(experience);
   let reply = `**${player.name}** wins!`;
@@ -99,21 +98,48 @@ export const getBuffs = (player: Duelist, experience: number, attacker: boolean,
   player.defense = player.defense + defenseBoost;
 
   reply = `${reply}\n**+${attackBoost} attack. +${defenseBoost} defense.`;
-  reply = getLuckBoost(player, reply, lucky);
+
+  if (player.level + player.attack + player.defense < adversary.level + adversary.attack + adversary.defense) {
+    reply = getLuckBoost(player, reply);
+  }
+
+  if (BOSSES.find((b) => adversary.name.toLowerCase().includes(b)) && !player.bestiary.includes(adversary.name)) {
+    addRole(channel.guild.roles.cache.array(), channel.guild.members.cache.array(), adversary.name.toLowerCase(), player.id);
+
+    reply = `${reply}\nYou just defeated **${adversary.name}**! Congratulations!`;
+  }
+
+  if (!player.bestiary.includes(adversary.name)) {
+    player.bestiary.push(adversary.name);
+  }
 
   levelUp(player, channel, reply);
 };
 
 export const getDeBuffs = (player: Duelist, channel: TextChannel) => {
-  if (player.id.includes('_')) return;
+  if (player.id.includes('_') || isNaN(parseInt(player.id, 10))) return;
+
+  let deBuffs = '';
 
   const attackDeBuff = getBool() ? 1 : 2;
   const defenseDeBuff = getBool() ? 1 : 2;
 
-  player.attack = player.attack < 15 ? 15 : player.attack - attackDeBuff;
-  player.defense = player.defense < 15 ? 15 : player.defense - defenseDeBuff;
+  player.attack = player.attack - attackDeBuff;
+  player.defense = player.defense - defenseDeBuff;
 
-  channel.send(`**${player.name}** lost!\n**-${attackDeBuff} attack. -${defenseDeBuff} defense.**`);
+  if (player.attack <= 15) {
+    player.attack = 15;
+  } else {
+    deBuffs = `${deBuffs}-${attackDeBuff} attack.`;
+  }
+
+  if (player.defense <= 15) {
+    player.defense = 15;
+  } else {
+    deBuffs = `${deBuffs} -${defenseDeBuff} defense.`;
+  }
+
+  channel.send(`**${player.name}** lost!\n**${deBuffs}**`);
 
   recordLoser(player, channel.guild.id);
 };

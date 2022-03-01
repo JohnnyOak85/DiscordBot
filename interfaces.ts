@@ -4,6 +4,7 @@ export interface DataList {
 
 export interface Duelist {
   attack: number;
+  bestiary: string[];
   defense: number;
   id: string;
   health: number;

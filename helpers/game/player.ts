@@ -19,6 +19,7 @@ export const ensureDuelist = async (guild: string, user: string) => {
 
   return {
     attack: duelist?.attack || 15,
+    bestiary: duelist?.bestiary || [],
     defense: duelist?.defense || 15,
     health: duelist?.health || 100,
     id: duelist?._id || '',
@@ -36,17 +37,11 @@ export const getResults = async (attacker: Duelist, defender: Duelist, channel: 
   addRole(
     channel.guild.roles.cache.array(),
     channel.guild.members.cache.array(),
-    BOSSES.find((b) => defender.id.toLowerCase().includes(b)) || '',
+    BOSSES.find((b) => loser.id.toLowerCase().includes(b)) || '',
     winner.id
   );
 
-  getBuffs(
-    winner,
-    experience,
-    winner === attacker,
-    winner.level + winner.attack + winner.defense < loser.level + loser.attack + loser.defense,
-    channel
-  );
+  getBuffs(winner, experience, winner === attacker, loser, channel);
 
   getDeBuffs(loser, channel);
 };

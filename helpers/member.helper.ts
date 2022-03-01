@@ -10,6 +10,7 @@ interface UserDoc {
   _id?: string;
   anniversary?: Date;
   attack?: number;
+  bestiary?: string[];
   defense?: number;
   joinedAt?: Date | null;
   health?: number;
@@ -148,12 +149,26 @@ export const registerMember = async (member: GuildMember) => {
   try {
     if (member.user.bot) return;
 
-    const user = await getUser(member);
+    let user;
+
+    try {
+      user = await getUser(member);
+    } catch (error) {
+      user = {
+        _id: member.id,
+        nickname: member.nickname,
+        roles: member.roles.cache.map((role) => role.id),
+        username: member.user.username
+      };
+    }
+
     let reply = '';
 
     user.nickname = member.manageable && member.nickname ? member.nickname : '';
 
-    if (!member.joinedAt || !user.joinedAt || !compareDate(member.joinedAt, user.joinedAt)) {
+    if (!user.joinedAt) {
+      user.joinedAt = member.joinedAt;
+
       reply = `Welcome <@${member.user.id}>! Have a story:\n${await getStory(member.nickname || member.displayName)}`;
     } else {
       bulkAddRoles(member, member.guild.roles.cache.array(), user.roles || []);
